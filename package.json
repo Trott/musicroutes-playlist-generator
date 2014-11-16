@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/Trott/musicroutes-freebase-demo/issues"
   },
-  "homepage": "https://github.com/Trott/musicroutes-freebase-demo"
+  "homepage": "https://github.com/Trott/musicroutes-freebase-demo",
+  "dependencies": {
+    "freebase": "^3.0.1"
+  }
 }
