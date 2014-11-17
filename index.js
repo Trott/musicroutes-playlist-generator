@@ -50,9 +50,9 @@ exports.getTracksWithContributors = function (mids, callback) {
     }],
   }];
 
-  var cleanup = function (data) {
-    if (data instanceof Array) {
-      var result = data.map(function (value) {
+  var cleanup = function (result) {
+    if (result instanceof Array) {
+      var rv = result.map(function (value) {
         if (value.track_contributions instanceof Array) {
           return value.track_contributions.map(function (value) {
             if (value.track) {
@@ -61,7 +61,7 @@ exports.getTracksWithContributors = function (mids, callback) {
           });
         }
       });
-      return [].concat.apply([], result);
+      return [].concat.apply([], rv);
     }
   };
   var myCallback = callbackify(callback, cleanup);
