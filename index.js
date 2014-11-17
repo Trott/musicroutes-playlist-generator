@@ -17,7 +17,7 @@ var callbackify = function (callback) {
   };
 };
 
-exports.getArtistId = function (name, callback) {
+exports.getArtistMids = function (name, callback) {
   var query = [{
     mid: null,
     name: name,
