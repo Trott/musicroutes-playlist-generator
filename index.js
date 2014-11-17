@@ -1,38 +1,13 @@
 var freebase = require("freebase");
 
 // Freebase.js does not use the Node convention of Error object as first callback parameter.
-var callbackify = function (callback) {
+var callbackify = function (callback, cleanup) {
   return function (data) {
     if (!data) {
       callback(new Error("unknown error"));
     }
     if (data.result) {
-      var result = data.result.map(function (value) {
-        return value.mid;
-      });
-      callback(null, result);
-    } else {
-      callback(data);
-    }
-  };
-};
-
-var callbackify2 = function (callback) {
-  return function (data) {
-    if (!data) {
-      callback(new Error("unknown error"));
-    }
-    if (data.result instanceof Array) {
-      var result = data.result.map(function (value) {
-        if (value.track_contributions instanceof Array) {
-          return value.track_contributions.map(function (value) {
-            if (value.track) {
-              return value.track.mid;
-            }
-          });
-        }
-      });
-      result = [].concat.apply([], result);
+      var result = cleanup(data.result);
       callback(null, result);
     } else {
       callback(data);
@@ -51,7 +26,15 @@ exports.getArtistMids = function (name, callback) {
     type: "/music/artist"
   }];
 
-  var myCallback = callbackify(callback);
+  var cleanup = function (result) {
+    if (result instanceof Array) {
+      return result.map(function (value) {
+        return value.mid;
+      });
+    }
+  };
+
+  var myCallback = callbackify(callback, cleanup);
   freebase.mqlread(query, options, myCallback);
 };
 
@@ -67,7 +50,21 @@ exports.getTracksWithContributors = function (mids, callback) {
     }],
   }];
 
-  var myCallback = callbackify2(callback);
+  var cleanup = function (data) {
+    if (data instanceof Array) {
+      var result = data.map(function (value) {
+        if (value.track_contributions instanceof Array) {
+          return value.track_contributions.map(function (value) {
+            if (value.track) {
+              return value.track.mid;
+            }
+          });
+        }
+      });
+      return [].concat.apply([], result);
+    }
+  };
+  var myCallback = callbackify(callback, cleanup);
   freebase.mqlread(query, options, myCallback);
 };
 
