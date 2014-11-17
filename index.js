@@ -1,18 +1,8 @@
 var freebase = require("freebase");
 
-exports.getArtistId = function (name, callback) {
-  var query = [{
-    mid: null,
-    name: name,
-    type: "/music/artist"
-  }];
-
-  var options = {
-    html_escape: false,
-  };
-
-  // Freebase.js does not use the Node convention of Error object as first callback parameter.
-  var myCallback = function (data) {
+// Freebase.js does not use the Node convention of Error object as first callback parameter.
+var callbackify = function (callback) {
+  return function (data) {
     if (!data) {
       callback(new Error("unknown error"));
     }
@@ -25,6 +15,19 @@ exports.getArtistId = function (name, callback) {
       callback(data);
     }
   };
+};
 
+exports.getArtistId = function (name, callback) {
+  var query = [{
+    mid: null,
+    name: name,
+    type: "/music/artist"
+  }];
+
+  var options = {
+    html_escape: false,
+  };
+
+  var myCallback = callbackify(callback);
   freebase.mqlread(query, options, myCallback);
 };
