@@ -36,4 +36,16 @@ describe('exports', function () {
 			routes.getTracksWithContributors(['/m/03j24kf'], callback);
 		});
 	});
+
+	describe('getTracksByArtists()', function () {
+		it('should retrieve tracks by any of the supplied artists', function (done) {
+			var callback = function (err, data) {
+				expect(err).to.be.null();
+				expect(data).to.contain('/m/0155j9k');
+				done();
+			};
+
+			routes.getTracksByArtists(['/m/03j24kf'], callback);
+		});
+	});
 });

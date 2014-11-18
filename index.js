@@ -70,11 +70,26 @@ exports.getTracksWithContributors = function (mids, callback) {
 
 exports.getTracksByArtists = function (mids, callback) {
   var query = [{
-    mid: null,
-    type: "/music/track",
-    "artist|=": mids
+    "mid|=": mids,
+    "type": "/music/artist",
+    track: [{
+      mid: null
+    }]
   }];
 
-  var myCallback = callbackify(callback);
+  var cleanup = function (result) {
+    if (result instanceof Array) {
+      var rv = result.map(function (value) {
+        if (value.track instanceof Array) {
+          return value.track.map(function (value) {
+            return value.mid;
+          });
+        }
+      });
+      return [].concat.apply([], rv);      
+    }
+  };
+
+  var myCallback = callbackify(callback, cleanup);
   freebase.mqlread(query, options, myCallback);
 };
