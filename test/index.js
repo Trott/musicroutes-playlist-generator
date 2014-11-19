@@ -48,4 +48,17 @@ describe('exports', function () {
 			routes.getTracksByArtists(['/m/03j24kf'], callback);
 		});
 	});
+
+	describe('getArtistsAndContributorsFromTracks()', function () {
+		it('should retrieve Beatles and Brian Jones from "You Know My Name (Look Up The Number)"', function (done) {
+			var callback = function (err, data) {
+				expect(err).to.be.null();
+				expect(data).to.contain('/m/07c0j');
+				expect(data).to.contain('/m/01p95y0');
+				done();
+			};
+
+			routes.getArtistsAndContributorsFromTracks(['/m/0fqv51t'], callback);
+		});
+	});
 });
