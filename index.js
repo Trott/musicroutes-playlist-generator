@@ -1,22 +1,8 @@
 var freebase = require("freebase");
 
-// Freebase.js does not use the Node convention of Error object as first callback parameter.
-var callbackify = function (callback, cleanup) {
-  return function (data) {
-    if (!data) {
-      callback(new Error("unknown error"));
-    }
-    if (data.result) {
-      var result = cleanup(data.result);
-      callback(null, result);
-    } else {
-      callback(data);
-    }
-  };
-};
-
 var options = {
-  html_escape: false
+  html_escape: false,
+  nodeCallback: true
 };
 
 var grabMid = function (value) {
@@ -30,14 +16,15 @@ exports.getArtistMids = function (name, callback) {
     type: "/music/artist"
   }];
 
-  var cleanup = function (result) {
-    if (result instanceof Array) {
-      return result.map(grabMid);
+  var cleanup = function (err, data) {
+    var rv;
+    if (data.result instanceof Array) {
+      rv = data.result.map(grabMid);
     }
+    callback(err, rv);
   };
 
-  var myCallback = callbackify(callback, cleanup);
-  freebase.mqlread(query, options, myCallback);
+  freebase.mqlread(query, options, cleanup);
 };
 
 exports.getTracksWithContributors = function (mids, callback) {
@@ -52,9 +39,10 @@ exports.getTracksWithContributors = function (mids, callback) {
     }],
   }];
 
-  var cleanup = function (result) {
-    if (result instanceof Array) {
-      var rv = result.map(function (value) {
+  var cleanup = function (err, data) {
+    var rv;
+    if (data.result instanceof Array) {
+      rv = data.result.map(function (value) {
         if (value.track_contributions instanceof Array) {
           return value.track_contributions.map(function (value) {
             if (value.track) {
@@ -63,11 +51,11 @@ exports.getTracksWithContributors = function (mids, callback) {
           });
         }
       });
-      return [].concat.apply([], rv);
+      rv = [].concat.apply([], rv);
     }
+    callback(err, rv);
   };
-  var myCallback = callbackify(callback, cleanup);
-  freebase.mqlread(query, options, myCallback);
+  freebase.mqlread(query, options, cleanup);
 };
 
 exports.getTracksByArtists = function (mids, callback) {
@@ -79,19 +67,20 @@ exports.getTracksByArtists = function (mids, callback) {
     }]
   }];
 
-  var cleanup = function (result) {
-    if (result instanceof Array) {
-      var rv = result.map(function (value) {
+  var cleanup = function (err, data) {
+    var rv;
+    if (data.result instanceof Array) {
+      rv = data.result.map(function (value) {
         if (value.track instanceof Array) {
           return value.track.map(grabMid);
         }
       });
-      return [].concat.apply([], rv);      
+      rv = [].concat.apply([], rv);      
     }
+    callback(err, rv);
   };
 
-  var myCallback = callbackify(callback, cleanup);
-  freebase.mqlread(query, options, myCallback);
+  freebase.mqlread(query, options, cleanup);
 };
 
 exports.getArtistsAndContributorsFromTracks = function (mids, callback) {
@@ -107,9 +96,10 @@ exports.getArtistsAndContributorsFromTracks = function (mids, callback) {
     }]
   }];
 
-  var cleanup = function (result) {
-    if (result instanceof Array) {
-      var rv = result.map(function (value) {
+  var cleanup = function (err, data) {
+    var rv;
+    if (data.result instanceof Array) {
+      rv = data.result.map(function (value) {
         var artists = value.artist instanceof Array ? value.artist.map(grabMid) : [];
         var contributors = [];
         if (value.contributions instanceof Array) {
@@ -123,10 +113,10 @@ exports.getArtistsAndContributorsFromTracks = function (mids, callback) {
         }
         return artists.concat(contributors);
       });
-      return [].concat.apply([], rv);
+      rv = [].concat.apply([], rv);
     }
+    callback(err, rv);
   };
 
-  var myCallback = callbackify(callback, cleanup);
-  freebase.mqlread(query, options, myCallback);
+  freebase.mqlread(query, options, cleanup);
 };
