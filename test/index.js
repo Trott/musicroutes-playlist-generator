@@ -73,6 +73,16 @@ describe('exports', function () {
 
 			routes.getTracksWithContributors(['/m/03j24kf'], callback);
 		});
+
+		it('should return an error if there is a network error', function (done) {
+			nock.disableNetConnect();
+			var callback = function (err) {
+				expect(err instanceof Error).to.be.true();
+				done();
+			};
+
+			routes.getTracksWithContributors(['/m/03j24kf'], callback);
+		});
 	});
 
 	describe('getTracksByArtists()', function () {
