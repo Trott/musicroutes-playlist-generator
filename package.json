@@ -4,7 +4,7 @@
   "description": "musicroutes-freebase-demo =========================",
   "main": "index.js",
   "scripts": {
-    "test": "node_modules/lab/bin/lab"
+    "test": "node_modules/lab/bin/lab -t 90"
   },
   "repository": {
     "type": "git",
@@ -17,7 +17,7 @@
   },
   "homepage": "https://github.com/Trott/musicroutes-freebase-demo",
   "dependencies": {
-    "request-json": "^0.5.0"
+    "mqlread": "^1.0.0"
   },
   "devDependencies": {
     "code": "^1.2.1",

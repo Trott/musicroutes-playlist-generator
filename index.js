@@ -1,24 +1,7 @@
-var querystring = require('querystring');
-var client = require('request-json').newClient('https://www.googleapis.com/');
+var freebase = require('mqlread');
 
 var options = {
   html_escape: false
-};
-
-var mqlread = function(query, options, callback) {
-  if (!query) {
-    return callback(null, {});
-  }
-  options = options || {};
-  var url = 'freebase/v1/mqlread?' +
-    querystring.stringify({query: query}) +
-    '&' + querystring.stringify(options);
-  client.get(url, function(err, res, data) {
-    if (!err && data && data.error) {
-      err = new Error(data.error.message);
-    }
-    callback(err, data);
-  });
 };
 
 var grabMid = function (value) {
@@ -40,7 +23,7 @@ exports.getArtistMids = function (name, callback) {
     callback(err, rv);
   };
 
-  mqlread(query, options, cleanup);
+  freebase.mqlread(query, options, cleanup);
 };
 
 exports.getTracksWithContributors = function (mids, callback) {
@@ -71,7 +54,7 @@ exports.getTracksWithContributors = function (mids, callback) {
     }
     callback(err, rv);
   };
-  mqlread(query, options, cleanup);
+  freebase.mqlread(query, options, cleanup);
 };
 
 exports.getTracksByArtists = function (mids, callback) {
@@ -96,7 +79,7 @@ exports.getTracksByArtists = function (mids, callback) {
     callback(err, rv);
   };
 
-  mqlread(query, options, cleanup);
+  freebase.mqlread(query, options, cleanup);
 };
 
 exports.getArtistsAndContributorsFromTracks = function (mids, callback) {
@@ -134,5 +117,5 @@ exports.getArtistsAndContributorsFromTracks = function (mids, callback) {
     callback(err, rv);
   };
 
-  mqlread(query, options, cleanup);
+  freebase.mqlread(query, options, cleanup);
 };
