@@ -97,7 +97,7 @@ exports.getArtistsAndContributorsFromTracks = function (mids, callback) {
 
   var cleanup = function (err, data) {
     var rv;
-    if (data.result instanceof Array) {
+    if (data && data.result instanceof Array) {
       rv = data.result.map(function (value) {
         var artists = value.artist instanceof Array ? value.artist.map(grabMid) : [];
         var contributors = [];

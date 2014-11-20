@@ -118,5 +118,15 @@ describe('exports', function () {
 
 			routes.getArtistsAndContributorsFromTracks(['/m/0fqv51t'], callback);
 		});
+
+		it('should return an error if there is a network error', function (done) {
+			nock.disableNetConnect();
+			var callback = function (err) {
+				expect(err instanceof Error).to.be.true();
+				done();
+			};
+
+			routes.getArtistsAndContributorsFromTracks(['/m/0fqv51t'], callback);
+		});
 	});
 });
