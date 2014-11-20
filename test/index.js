@@ -10,8 +10,16 @@ var lab = exports.lab = Lab.script();
 
 var describe = lab.experiment;
 var it = lab.test;
+var beforeEach = lab.beforeEach;
+
+var nock = require('nock');
 
 describe('exports', function () {
+	beforeEach(function (done) {
+		nock.enableNetConnect();
+		done();
+	});
+
 	describe('getMids()', function () {
 		it('should retrieve MIDs for all artists with the supplied name when artists specified', function (done) {
 			var callback = function (err, data) {
@@ -38,6 +46,16 @@ describe('exports', function () {
 				expect(err).to.be.null();
 				expect(data).to.contain('/m/01czx');
 				expect(data).to.not.contain('/m/0f2hrtz');
+				done();
+			};
+
+			routes.getMids('Black Sabbath', '/music/artist', callback);
+		});
+
+		it('should return an error if there is a network error', function (done) {
+			nock.disableNetConnect();
+			var callback = function (err) {
+				expect(err instanceof Error).to.be.true();
 				done();
 			};
 
