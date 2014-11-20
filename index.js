@@ -19,10 +19,11 @@ var each = function (obj, prop, callback) {
 
 exports.getMids = function (name, type, callback) {
   var cleanup = function (err, data) {
-    var rv;
-    if (data && data.result instanceof Array) {
-      rv = data.result.map(grabMid);
-    }
+    var rv = [];
+    each(data, 'result', function (value) {
+      rv.push(grabMid(value));
+    });
+
     callback(err, rv);
   };
 
