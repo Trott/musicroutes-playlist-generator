@@ -68,7 +68,7 @@ exports.getTracksByArtists = function (mids, callback) {
 
   var cleanup = function (err, data) {
     var rv;
-    if (data.result instanceof Array) {
+    if (data && data.result instanceof Array) {
       rv = data.result.map(function (value) {
         if (value.track instanceof Array) {
           return value.track.map(grabMid);
