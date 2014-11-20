@@ -17,7 +17,6 @@
   },
   "homepage": "https://github.com/Trott/musicroutes-freebase-demo",
   "dependencies": {
-    "freebase": "^3.1.0",
     "request-json": "^0.5.0"
   },
   "devDependencies": {
