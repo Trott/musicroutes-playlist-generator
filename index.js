@@ -1,8 +1,24 @@
-var freebase = require("freebase");
+var querystring = require('querystring');
+var client = require('request-json').newClient('https://www.googleapis.com/');
 
 var options = {
-  html_escape: false,
-  nodeCallback: true
+  html_escape: false
+};
+
+var mqlread = function(query, options, callback) {
+  if (!query) {
+    return callback(null, {});
+  }
+  options = options || {};
+  var url = 'freebase/v1/mqlread?' +
+    querystring.stringify({query: query}) +
+    '&' + querystring.stringify(options);
+  client.get(url, function(err, res, data) {
+    if (!err && data && data.error) {
+      err = new Error(data.error.message);
+    }
+    callback(err, data);
+  });
 };
 
 var grabMid = function (value) {
@@ -10,11 +26,11 @@ var grabMid = function (value) {
 };
 
 exports.getArtistMids = function (name, callback) {
-  var query = [{
+  var query = JSON.stringify([{
     mid: null,
     name: name,
-    type: "/music/artist"
-  }];
+    type: '/music/artist'
+  }]);
 
   var cleanup = function (err, data) {
     var rv;
@@ -24,20 +40,20 @@ exports.getArtistMids = function (name, callback) {
     callback(err, rv);
   };
 
-  freebase.mqlread(query, options, cleanup);
+  mqlread(query, options, cleanup);
 };
 
 exports.getTracksWithContributors = function (mids, callback) {
-  var query = [{
-    "mid|=": mids,
-    "type": "/music/artist",
-    "track_contributions": [{
-      "track": {
+  var query = JSON.stringify([{
+    'mid|=': mids,
+    'type': '/music/artist',
+    'track_contributions': [{
+      'track': {
         mid: null
       },
       limit: 9007199254740992
     }],
-  }];
+  }]);
 
   var cleanup = function (err, data) {
     var rv;
@@ -55,17 +71,17 @@ exports.getTracksWithContributors = function (mids, callback) {
     }
     callback(err, rv);
   };
-  freebase.mqlread(query, options, cleanup);
+  mqlread(query, options, cleanup);
 };
 
 exports.getTracksByArtists = function (mids, callback) {
-  var query = [{
-    "mid|=": mids,
-    "type": "/music/artist",
+  var query = JSON.stringify([{
+    'mid|=': mids,
+    'type': '/music/artist',
     track: [{
       mid: null
     }]
-  }];
+  }]);
 
   var cleanup = function (err, data) {
     var rv;
@@ -75,18 +91,18 @@ exports.getTracksByArtists = function (mids, callback) {
           return value.track.map(grabMid);
         }
       });
-      rv = [].concat.apply([], rv);      
+      rv = [].concat.apply([], rv);
     }
     callback(err, rv);
   };
 
-  freebase.mqlread(query, options, cleanup);
+  mqlread(query, options, cleanup);
 };
 
 exports.getArtistsAndContributorsFromTracks = function (mids, callback) {
-  var query = [{
-    "mid|=": mids,
-    "type": "/music/track",
+  var query = JSON.stringify([{
+    'mid|=': mids,
+    'type': '/music/track',
     artist: [{
       mid: null
     }],
@@ -94,7 +110,7 @@ exports.getArtistsAndContributorsFromTracks = function (mids, callback) {
       mid: null,
       contributor: [{ mid: null }]
     }]
-  }];
+  }]);
 
   var cleanup = function (err, data) {
     var rv;
@@ -118,5 +134,5 @@ exports.getArtistsAndContributorsFromTracks = function (mids, callback) {
     callback(err, rv);
   };
 
-  freebase.mqlread(query, options, cleanup);
+  mqlread(query, options, cleanup);
 };
