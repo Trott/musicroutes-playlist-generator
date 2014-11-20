@@ -4,8 +4,17 @@ var options = {
   html_escape: false
 };
 
-var grabMid = function (value) {
+var grabMid = function (value, prop) {
+  if (prop) {
+    return value[prop] ? value[prop].mid : undefined;
+  }
   return value.mid;
+};
+
+var each = function (obj, prop, callback) {
+  if (obj && obj[prop] instanceof Array) {
+    return obj[prop].forEach(callback);
+  }
 };
 
 exports.getMids = function (name, type, callback) {
@@ -40,19 +49,16 @@ exports.getTracksWithContributors = function (mids, callback) {
 
   var cleanup = function (err, data) {
     var rv = [];
-    if (data && data.result instanceof Array) {
-      data.result.forEach(function (value) {
-        if (value.track_contributions instanceof Array) {
-          value.track_contributions.forEach(function (value) {
-            if (value.track) {
-              rv.push(value.track.mid);
-            }
-          });
-        }
-      });
-    }
+    each(data, 'result',
+      function (value) {
+        each(value, 'track_contributions', function (value) { 
+          rv.push(grabMid(value, 'track')); 
+        });
+      }
+    );
     callback(err, rv);
   };
+
   freebase.mqlread(query, options, cleanup);
 };
 
@@ -66,15 +72,14 @@ exports.getTracksByArtists = function (mids, callback) {
   }]);
 
   var cleanup = function (err, data) {
-    var rv;
-    if (data && data.result instanceof Array) {
-      rv = data.result.map(function (value) {
-        if (value.track instanceof Array) {
-          return value.track.map(grabMid);
-        }
-      });
-      rv = [].concat.apply([], rv);
-    }
+    var rv = [];
+    each(data, 'result', 
+      function (value) {
+        each(value, 'track', function (value) {
+          rv.push(grabMid(value));
+        });
+      }
+    );
     callback(err, rv);
   };
 
