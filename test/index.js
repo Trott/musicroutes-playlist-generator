@@ -12,15 +12,36 @@ var describe = lab.experiment;
 var it = lab.test;
 
 describe('exports', function () {
-	describe('getArtistMids()', function () {
-		it('should retrieve MIDs for all artists with the supplied name', function (done) {
+	describe('getMids()', function () {
+		it('should retrieve MIDs for all artists with the supplied name when artists specified', function (done) {
 			var callback = function (err, data) {
 				expect(err).to.be.null();
 				expect(data).to.contain('/m/0160yj');
 				done();
 			};
 
-			routes.getArtistMids('Magma', callback);
+			routes.getMids('Magma', '/music/artist', callback);
+		});
+
+		it('should retrieve MIDs for all tracks with the supplied name when tracks specified', function (done) {
+			var callback = function (err, data) {
+				expect(err).to.be.null();
+				expect(data).to.contain('/m/0lgj3t');
+				done();
+			};
+
+			routes.getMids('Penny Lane', '/music/track', callback);
+		});
+
+		it('should retrieve only the MIDs for specified type', function (done) {
+			var callback = function (err, data) {
+				expect(err).to.be.null();
+				expect(data).to.contain('/m/01czx');
+				expect(data).to.not.contain('/m/0f2hrtz');
+				done();
+			};
+
+			routes.getMids('Black Sabbath', '/music/artist', callback);
 		});
 	});
 

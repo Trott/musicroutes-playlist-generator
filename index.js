@@ -8,13 +8,7 @@ var grabMid = function (value) {
   return value.mid;
 };
 
-exports.getArtistMids = function (name, callback) {
-  var query = JSON.stringify([{
-    mid: null,
-    name: name,
-    type: '/music/artist'
-  }]);
-
+exports.getMids = function (name, type, callback) {
   var cleanup = function (err, data) {
     var rv;
     if (data.result instanceof Array) {
@@ -22,6 +16,12 @@ exports.getArtistMids = function (name, callback) {
     }
     callback(err, rv);
   };
+
+  var query = JSON.stringify([{
+    mid: null,
+    name: name,
+    type: type
+  }]);
 
   freebase.mqlread(query, options, cleanup);
 };
