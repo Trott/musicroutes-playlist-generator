@@ -39,18 +39,17 @@ exports.getTracksWithContributors = function (mids, callback) {
   }]);
 
   var cleanup = function (err, data) {
-    var rv;
+    var rv = [];
     if (data && data.result instanceof Array) {
-      rv = data.result.map(function (value) {
+      data.result.forEach(function (value) {
         if (value.track_contributions instanceof Array) {
-          return value.track_contributions.map(function (value) {
+          value.track_contributions.forEach(function (value) {
             if (value.track) {
-              return value.track.mid;
+              rv.push(value.track.mid);
             }
           });
         }
       });
-      rv = [].concat.apply([], rv);
     }
     callback(err, rv);
   };
