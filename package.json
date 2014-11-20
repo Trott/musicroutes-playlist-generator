@@ -1,7 +1,7 @@
 {
   "name": "musicroutes-freebase-demo",
   "version": "1.0.0",
-  "description": "musicroutes-freebase-demo =========================",
+  "description": "musicroutes-freebase-demo",
   "main": "index.js",
   "scripts": {
     "test": "node_modules/lab/bin/lab -t 90"
