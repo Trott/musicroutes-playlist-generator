@@ -1,5 +1,7 @@
 var freebase = require('mqlread');
 
+var limit = 9007199254740992;
+
 var options = {
   html_escape: false
 };
@@ -39,12 +41,12 @@ exports.getMids = function (name, type, callback) {
 exports.getTracksWithContributors = function (mids, callback) {
   var query = JSON.stringify([{
     'mid|=': mids,
-    'type': '/music/artist',
-    'track_contributions': [{
-      'track': {
-        mid: null
+    type: '/music/artist',
+    track_contributions: [{
+      track: {
+        mid: null,
       },
-      limit: 9007199254740992
+      limit: limit
     }],
   }]);
 
@@ -66,9 +68,10 @@ exports.getTracksWithContributors = function (mids, callback) {
 exports.getTracksByArtists = function (mids, callback) {
   var query = JSON.stringify([{
     'mid|=': mids,
-    'type': '/music/artist',
+    type: '/music/artist',
     track: [{
-      mid: null
+      mid: null,
+      limit: limit
     }]
   }]);
 
@@ -90,13 +93,17 @@ exports.getTracksByArtists = function (mids, callback) {
 exports.getArtistsAndContributorsFromTracks = function (mids, callback) {
   var query = JSON.stringify([{
     'mid|=': mids,
-    'type': '/music/track',
+    type: '/music/track',
     artist: [{
-      mid: null
+      mid: null,
+      limit: limit
     }],
     contributions: [{
       mid: null,
-      contributor: [{ mid: null }]
+      contributor: [{ 
+        mid: null 
+      }],
+      limit: limit
     }]
   }]);
 
@@ -114,6 +121,42 @@ exports.getArtistsAndContributorsFromTracks = function (mids, callback) {
     });
 
     callback(err, rv);
+  };
+
+  freebase.mqlread(query, options, cleanup);
+};
+
+exports.getArtistDetails = function (mid, callback) {
+  var query = JSON.stringify({
+    mid: mid,
+    name: null,
+    type: '/music/artist'
+  });
+
+  var cleanup = function (err, data) {
+    data = data && data.result;
+    callback(err, data);
+  };
+
+  freebase.mqlread(query, options, cleanup);
+};
+
+exports.getTrackDetails = function (mid, callback) {
+  var query = JSON.stringify({
+    mid: mid,
+    type: '/music/track',
+    name: null,
+    artist: [{
+      name: null,
+    }],
+    releases: [{
+      name: null,
+    }]
+  });
+
+  var cleanup = function (err, data) {
+    data = data && data.result;
+    callback(err, data);
   };
 
   freebase.mqlread(query, options, cleanup);
