@@ -24,6 +24,7 @@
     "jshint": "^2.5.10",
     "lab": "^5.0.2",
     "nock": "^0.50.0",
-    "precommit-hook": "^1.0.7"
+    "precommit-hook": "^1.0.7",
+    "rewire": "^2.1.3"
   }
 }
