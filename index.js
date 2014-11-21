@@ -149,14 +149,25 @@ exports.getTrackDetails = function (mid, callback) {
     artist: [{
       name: null,
     }],
-    releases: [{
-      name: null,
+    tracks: [{
+      release: {
+        name: null
+      },
     }]
   });
 
   var cleanup = function (err, data) {
-    data = data && data.result;
-    callback(err, data);
+    var rv;
+    if (data && data.result) {
+      rv = {};
+      rv.name = data.result.name;
+      rv.artists = data.result.artist;
+      rv.releases = [];
+      each(data.result, 'tracks', function (value) {
+        rv.releases.push(value.release);
+      });
+    }
+    callback(err, rv);
   };
 
   freebase.mqlread(query, options, cleanup);

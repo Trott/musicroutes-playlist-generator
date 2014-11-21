@@ -183,7 +183,7 @@ describe('exports', function () {
 			var callback = function (err, data) {
 				expect(err).to.be.null();
 				expect(data.name).to.equal('Original Faubus Fables');
-				expect(data.artist).to.deep.equal([{name: 'Charles Mingus'}]);
+				expect(data.artists).to.deep.equal([{name: 'Charles Mingus'}]);
 				expect(data.releases).to.deep.contain({name: 'Charles Mingus Presents Charles Mingus'});
 				done();
 			};
