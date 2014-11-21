@@ -101,24 +101,18 @@ exports.getArtistsAndContributorsFromTracks = function (mids, callback) {
   }]);
 
   var cleanup = function (err, data) {
-    var rv;
-    if (data && data.result instanceof Array) {
-      rv = data.result.map(function (value) {
-        var artists = value.artist instanceof Array ? value.artist.map(grabMid) : [];
-        var contributors = [];
-        if (value.contributions instanceof Array) {
-          value.contributions.forEach(function (value) {
-            if (value.contributor instanceof Array) {
-              value.contributor.forEach(function (value) {
-                contributors.push(value.mid);
-              });
-            }
-          });
-        }
-        return artists.concat(contributors);
+    var rv = [];
+    each(data, 'result', function (value) {
+      each(value, 'artist', function (value) {
+        rv.push(grabMid(value));
       });
-      rv = [].concat.apply([], rv);
-    }
+      each(value, 'contributions', function (value) {
+        each(value, 'contributor', function (value) {
+          rv.push(grabMid(value));
+        });
+      });
+    });
+
     callback(err, rv);
   };
 
