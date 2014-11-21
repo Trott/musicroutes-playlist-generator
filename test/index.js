@@ -154,4 +154,52 @@ describe('exports', function () {
 			routes.getArtistsAndContributorsFromTracks(['/m/0fqv51t'], callback);
 		});
 	});
+
+	describe('getArtistDetails()', function () {
+		it('should return the artist name', function (done) {
+			var callback = function (err, data) {
+				expect(err).to.be.null();
+				expect(data.name).to.equal('Bob Dylan');
+				done();
+			};
+
+			routes.getArtistDetails('/m/01vrncs', callback);
+		});
+
+		it('should return an error if there is a network error', function (done) {
+			nock.disableNetConnect();
+			var callback = function (err, data) {
+				expect(err instanceof Error).to.be.true();
+				expect(data).to.be.undefined();
+				done();
+			};
+
+			routes.getArtistDetails('/m/01vrncs', callback);
+		});
+	});
+
+	describe('getTrackDetails()', function () {
+		it('should return the track name, artist, and release title', function (done) {
+			var callback = function (err, data) {
+				expect(err).to.be.null();
+				expect(data.name).to.equal('Original Faubus Fables');
+				expect(data.artist).to.deep.equal([{name: 'Charles Mingus'}]);
+				expect(data.releases).to.deep.contain({name: 'Charles Mingus Presents Charles Mingus'});
+				done();
+			};
+
+			routes.getTrackDetails('/m/0q69hv', callback);
+		});
+
+		it('should return an error if there is a network error', function (done) {
+			nock.disableNetConnect();
+			var callback = function (err, data) {
+				expect(err instanceof Error).to.be.true();
+				expect(data).to.be.undefined();
+				done();
+			};
+
+			routes.getTrackDetails('/m/0q69hv', callback);
+		});
+	});
 });
