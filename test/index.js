@@ -1,6 +1,7 @@
 /*jshint expr: true*/
 
-var routes = require('../index.js');
+var rewire = require('rewire');
+var routes = rewire('../index.js');
 
 var Code = require('code');
 var expect = Code.expect;
@@ -15,7 +16,13 @@ var beforeEach = lab.beforeEach;
 var nock = require('nock');
 
 describe('exports', function () {
+	var revert;
+
 	beforeEach(function (done) {
+		if (typeof revert === 'function') {
+			revert();
+			revert = null;
+		}
 		nock.enableNetConnect();
 		done();
 	});
@@ -79,6 +86,23 @@ describe('exports', function () {
 			nock.disableNetConnect();
 			var callback = function (err) {
 				expect(err instanceof Error).to.be.true();
+				done();
+			};
+
+			routes.getTracksWithContributors(['/m/03j24kf'], callback);
+		});
+
+		it('should return undefined for track_contributions for which there is no track', function (done) {
+			// This should never happen but since we don't actually control what we get
+			// back from Freebase, it conceivably could. There's a defensive coding check
+			// in grabMid() so we have this test to get to 100% code coverage.
+			revert = routes.__set__({freebase: {mqlread: function (query, options, callback) {
+				callback(null, { result: [ { track_contributions: [{}], type: '/music/artist' } ] });
+			}}});
+
+			var callback = function (err, data) {
+				expect(err).to.be.null();
+				expect(data).to.deep.equal([undefined]);
 				done();
 			};
 
