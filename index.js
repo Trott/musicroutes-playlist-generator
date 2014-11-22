@@ -38,8 +38,8 @@ exports.getMids = function (name, type, callback) {
   freebase.mqlread(query, options, cleanup);
 };
 
-exports.getTracksWithContributors = function (mids, callback) {
-  var query = JSON.stringify([{
+exports.getTracksWithContributors = function (mids, options, callback) {
+  var query = [{
     'mid|=': mids,
     type: '/music/artist',
     track_contributions: [{
@@ -48,7 +48,16 @@ exports.getTracksWithContributors = function (mids, callback) {
       },
       limit: limit
     }],
-  }]);
+  }];
+
+  if (options.subquery) {
+    for (var key in options.subquery) {
+      // shallow copy, we're about to throw it away
+      query[0].track_contributions[0].track[key] = options.subquery[key];
+    }
+  }
+
+  query = JSON.stringify(query);
 
   var cleanup = function (err, data) {
     var rv = [];
@@ -65,7 +74,7 @@ exports.getTracksWithContributors = function (mids, callback) {
   freebase.mqlread(query, options, cleanup);
 };
 
-exports.getTracksByArtists = function (mids, callback) {
+exports.getTracksByArtists = function (mids, options, callback) {
   var query = JSON.stringify([{
     'mid|=': mids,
     type: '/music/artist',

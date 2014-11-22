@@ -16,6 +16,10 @@ var beforeEach = lab.beforeEach;
 var nock = require('nock');
 
 describe('exports', function () {
+	var TheBeatles = '/m/07c0j';
+	var PaulMcCartney = '/m/03j24kf';
+	var GeorgeHarrison = '/m/03bnv';
+	var Something = '/m/0mlx6x';
 	var revert;
 
 	beforeEach(function (done) {
@@ -75,11 +79,11 @@ describe('exports', function () {
 			var callback = function (err, data) {
 				expect(err).to.be.null();
 				expect(data).to.be.array();
-				expect(data).to.contain('/m/0mlx6x');
+				expect(data).to.contain(Something);
 				done();
 			};
 
-			routes.getTracksWithContributors(['/m/03j24kf'], callback);
+			routes.getTracksWithContributors([PaulMcCartney], {}, callback);
 		});
 
 		it('should return an error if there is a network error', function (done) {
@@ -89,7 +93,7 @@ describe('exports', function () {
 				done();
 			};
 
-			routes.getTracksWithContributors(['/m/03j24kf'], callback);
+			routes.getTracksWithContributors([PaulMcCartney], {}, callback);
 		});
 
 		it('should return undefined for track_contributions for which there is no track', function (done) {
@@ -106,7 +110,24 @@ describe('exports', function () {
 				done();
 			};
 
-			routes.getTracksWithContributors(['/m/03j24kf'], callback);
+			routes.getTracksWithContributors([PaulMcCartney], {}, callback);
+		});
+
+		it('should run subquery to omit artists specified in options', function (done) {
+			var callback = function (err, data) {
+				expect(err).to.be.null();
+				expect(data).to.not.contain(Something);
+				done();
+			};
+
+			var omitTheBeatles = {
+				artist: [{
+					'mid|=': [TheBeatles, GeorgeHarrison],
+					optional: 'forbidden'
+				}]
+			};
+
+			routes.getTracksWithContributors([PaulMcCartney], {subquery: omitTheBeatles}, callback);
 		});
 	});
 
@@ -118,17 +139,17 @@ describe('exports', function () {
 				done();
 			};
 
-			routes.getTracksByArtists(['/m/03j24kf'], callback);
+			routes.getTracksByArtists([PaulMcCartney], {}, callback);
 		});
 
-		it('should return an error if there is a network error', function (done) {
+		it('should return an error if there is a network error', {}, function (done) {
 			nock.disableNetConnect();
 			var callback = function (err) {
 				expect(err instanceof Error).to.be.true();
 				done();
 			};
 
-			routes.getTracksByArtists(['/m/03j24kf'], callback);
+			routes.getTracksByArtists([PaulMcCartney], {}, callback);
 		});
 	});
 
