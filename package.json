@@ -17,7 +17,8 @@
   },
   "homepage": "https://github.com/Trott/musicroutes-freebase-demo",
   "dependencies": {
-    "mqlread": "^1.0.0"
+    "mqlread": "^1.0.0",
+    "rc": "^0.5.4"
   },
   "devDependencies": {
     "code": "^1.2.1",
