@@ -1,10 +1,9 @@
 var freebase = require('mqlread');
+var options = require('rc')('musicroutes', {
+  html_escape: false
+});
 
 var limit = 9007199254740992;
-
-var options = {
-  html_escape: false
-};
 
 var grabMid = function (value, prop) {
   if (prop) {
