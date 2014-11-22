@@ -6,6 +6,7 @@ var async = require('async');
 var sourceIndividual;
 var seenIndividuals = [];
 var seenTracks = [];
+var seenArtists = [];
 
 var error = function (err) {
 	if (err) {
@@ -26,14 +27,10 @@ var valuesNotIn = function (values, notIn) {
 };
 
 var generatePlaylist = function (individual, done) {
-	async.parallel([
-		routes.getTracksWithContributors.bind(undefined, [individual]),
-		routes.getTracksByArtists.bind(undefined, [individual])
-	],
-	function (err, tracks) {
-		var track;
+	var callback = 	function (err, tracks) {
 		error(err);
-		tracks = tracks[0].concat(tracks[1]);
+		var track;
+
 		var notSeenTracks = valuesNotIn(tracks, seenTracks);
 		if (notSeenTracks.length > 0) {
 			track = random(notSeenTracks);
@@ -41,8 +38,10 @@ var generatePlaylist = function (individual, done) {
 		} else {
 			track = random(tracks);
 		}
-		if (!track) {
-			error(new Error('Could not find a track for ' + individual));
+		if (! track) {
+			nextIndex = nextIndex +1;
+			next[nextIndex]();
+			return;
 		}
 		routes.getTrackDetails(track, function (err, details) {
 			error(err);
@@ -51,6 +50,8 @@ var generatePlaylist = function (individual, done) {
 				error(new Error('No details for ' + track));
 			}
 
+			var theseArtistMids = details.artists.map(function (value) { return value.mid; });
+			seenArtists = seenArtists.concat(valuesNotIn(theseArtistMids, seenArtists));
 			var name = details.name || 'WHOOPS, FREEBASE DOES NOT APPEAR TO HAVE AN ENGLISH NAME FOR THIS TRACK';
 			var artist = details.artists.map(function (value) { 
 				return value.name || 'WHOOPS, FREEBASE DOES NOT APPEAR TO HAVE AN ENGLISH NAME FOR THIS ARTIST'; 
@@ -81,7 +82,30 @@ var generatePlaylist = function (individual, done) {
 				});
 			});
 		});
-	});
+	};
+
+	var options = seenArtists.length === 0 ? {} : {subquery: {
+		artist: [{
+					'mid|=': seenArtists,
+					optional: 'forbidden'
+		}]
+	}};
+
+	// next[nextIndex] = what function to invoke if the current one doesn't find a track
+	var nextIndex = 0;
+	var next = [
+		// Find a track by an artist we haven't seen yet.
+		routes.getTracksWithContributors.bind(undefined, [individual], options, callback),
+		// Look for any track with this contributor credited as a contributor regardless if we've seen the artist already.
+		routes.getTracksWithContributors.bind(undefined, [individual], {}, callback),
+		// Look for any tracks actually credited to this contributor as the main artist. We are desperate!
+		routes.getTracksByArtists.bind(undefined, [individual], {}, callback),
+		// Give up
+		error.bind(undefined, new Error('Could not find any tracks for contributor ' + individual))
+	];
+
+	// Kick it off
+	next[nextIndex]();
 };
 
 var startingPoint = process.argv[2] || 'Todd Rundgren';
