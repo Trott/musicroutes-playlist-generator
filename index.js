@@ -103,7 +103,8 @@ exports.getArtistsAndContributorsFromTracks = function (mids, callback) {
       contributor: [{ 
         mid: null 
       }],
-      limit: limit
+      limit: limit,
+      optional: 'optional'
     }]
   }]);
 
@@ -147,7 +148,8 @@ exports.getTrackDetails = function (mid, callback) {
     type: '/music/track',
     name: null,
     artist: [{
-      name: null,
+      mid: null,
+      name: null
     }],
     tracks: [{
       release: {

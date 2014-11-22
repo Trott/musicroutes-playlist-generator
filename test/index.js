@@ -144,6 +144,16 @@ describe('exports', function () {
 			routes.getArtistsAndContributorsFromTracks(['/m/0fqv51t'], callback);
 		});
 
+		it('should retrieve Todd Rundgren for "Afraid"', function (done) {
+			var callback = function (err, data) {
+				expect(err).to.be.null();
+				expect(data).to.contain('/m/095x_');
+				done();
+			};
+
+			routes.getArtistsAndContributorsFromTracks(['/m/0f2c414'], callback);
+		});
+
 		it('should return an error if there is a network error', function (done) {
 			nock.disableNetConnect();
 			var callback = function (err) {
@@ -183,7 +193,7 @@ describe('exports', function () {
 			var callback = function (err, data) {
 				expect(err).to.be.null();
 				expect(data.name).to.equal('Original Faubus Fables');
-				expect(data.artists).to.deep.equal([{name: 'Charles Mingus'}]);
+				expect(data.artists).to.deep.equal([{name: 'Charles Mingus', mid: '/m/024zq'}]);
 				expect(data.releases).to.deep.contain({name: 'Charles Mingus Presents Charles Mingus'});
 				done();
 			};
