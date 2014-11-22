@@ -5,11 +5,11 @@ var async = require('async');
 
 var sourceIndividual;
 var seenIndividuals = [];
+var seenTracks = [];
 
 var error = function (err) {
 	if (err) {
 		console.log('Error: ', err.message);
-		console.dir(err);
 		process.exit(1);
 	}
 };
@@ -31,13 +31,21 @@ var generatePlaylist = function (individual, done) {
 		routes.getTracksByArtists.bind(undefined, [individual])
 	],
 	function (err, tracks) {
+		var track;
 		error(err);
 		tracks = tracks[0].concat(tracks[1]);
-		var track = random(tracks);
+		var notSeenTracks = valuesNotIn(tracks, seenTracks);
+		if (notSeenTracks.length > 0) {
+			track = random(notSeenTracks);
+			seenTracks.push(track);
+		} else {
+			track = random(tracks);
+		}
+		if (!track) {
+			error(new Error('Could not find a track for ' + individual));
+		}
 		routes.getTrackDetails(track, function (err, details) {
-			if (err) {
-				return console.error('Error: ', err.message);
-			}
+			error(err);
 
 			if (!details) {
 				error(new Error('No details for ' + track));
