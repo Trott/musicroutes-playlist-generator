@@ -39,11 +39,15 @@ var generatePlaylist = function (individual, done) {
 				return console.error('Error: ', err.message);
 			}
 
+			if (!details) {
+				error(new Error('No details for ' + track));
+			}
+
 			var name = details.name || 'WHOOPS, FREEBASE DOES NOT APPEAR TO HAVE AN ENGLISH NAME FOR THIS TRACK';
 			var artist = details.artists.map(function (value) { 
 				return value.name || 'WHOOPS, FREEBASE DOES NOT APPEAR TO HAVE AN ENGLISH NAME FOR THIS ARTIST'; 
 			}).join(' & ');
-			var release = random(details.releases).name || 'WHOOPS, FREEBASE DOES NOT APPEAR TO HAVE AN ENGLISH NAME FOR THIS TRACK';
+			var release = random(details.releases).name || 'WHOOPS, FREEBASE DOES NOT APPEAR TO HAVE AN ENGLISH NAME FOR THIS RELEASE';
 
 			var output = '"' + name + '"';
 			output += '\n' + artist;
@@ -63,7 +67,7 @@ var generatePlaylist = function (individual, done) {
 				}
 				routes.getArtistDetails(contributor, function (err, details) {
 					var name = details.name || 'WHOOPS, FREEBASE DOES NOT HAVE AN ENGLISH NAME FOR THIS PERSON';
-					console.log('\n ... with ' + name + ' who is also on... \n');
+					console.log('\n ... with ' + name + ' ... \n');
 					sourceIndividual = contributor;
 					done();
 				});
@@ -72,9 +76,14 @@ var generatePlaylist = function (individual, done) {
 	});
 };
 
-routes.getMids('Todd Rundgren', '/music/artist', function (err, mids) {
+var startingPoint = process.argv[2] || 'Todd Rundgren';
+routes.getMids(startingPoint, '/music/artist', function (err, mids) {
 	error(err);
 	sourceIndividual = mids[0];
+	if (! sourceIndividual) {
+		console.log('Could not find an artist named ' + process.argv[2]);
+		process.exit(0);
+	}
 	seenIndividuals.push(sourceIndividual);
 	async.forever(
 		function (next) {
