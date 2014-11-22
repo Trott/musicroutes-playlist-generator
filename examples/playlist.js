@@ -4,7 +4,7 @@ var routes = require('../index.js');
 var async = require('async');
 
 var sourceIndividual;
-var seen = [];
+var seenIndividuals = [];
 
 var error = function (err) {
 	if (err) {
@@ -54,10 +54,10 @@ var generatePlaylist = function (individual, done) {
 			routes.getArtistsAndContributorsFromTracks([track], function (err, contributors) {
 				error(err);
 				var contributor;
-				var notSeen = valuesNotIn(contributors, seen);
+				var notSeen = valuesNotIn(contributors, seenIndividuals);
 				if (notSeen.length > 0) {
 					contributor = random(notSeen);
-					seen.push(contributor);
+					seenIndividuals.push(contributor);
 				} else {
 					contributor = random(contributors);
 				}
@@ -75,7 +75,7 @@ var generatePlaylist = function (individual, done) {
 routes.getMids('Todd Rundgren', '/music/artist', function (err, mids) {
 	error(err);
 	sourceIndividual = mids[0];
-	seen.push(sourceIndividual);
+	seenIndividuals.push(sourceIndividual);
 	async.forever(
 		function (next) {
 			generatePlaylist(sourceIndividual, next);
