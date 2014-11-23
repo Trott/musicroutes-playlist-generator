@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-var routes = require('../index.js');
+var routes = require('./lib/routes.js');
 var async = require('async');
 
 var sourceIndividual;
