@@ -92,7 +92,7 @@ var generatePlaylist = function (individual, done) {
 		});
 	};
 
-	var options = seenArtists.length === 0 ? {} : {subquery: {
+	var options = {subquery: {
 		artist: [{
 					'mid|=': seenArtists,
 					optional: 'forbidden'
@@ -103,6 +103,15 @@ var generatePlaylist = function (individual, done) {
 	var nextIndex = 0;
 	var next = [
 		// Find a track by an artist we haven't seen yet.
+		function () {
+			if (seenArtists.length === 0) {
+				// If this is the first track, get one by this artist if we can.
+				routes.getTracksByArtists([individual], {}, callback);
+			} else {
+				// Otherwise, get one by an artist we haven't seen yet
+				routes.getTracksWithContributors([individual], options, callback);
+			}
+		},
 		routes.getTracksWithContributors.bind(undefined, [individual], options, callback),
 		// Look for any track with this contributor credited as a contributor regardless if we've seen the artist already.
 		routes.getTracksWithContributors.bind(undefined, [individual], {}, callback),
