@@ -82,6 +82,7 @@ var generatePlaylist = function (individual, done) {
 						contributor = random(contributors);
 					}
 					routes.getArtistDetails(contributor, function (err, details) {
+						error(err);
 						var name = details.name || 'WHOOPS, FREEBASE DOES NOT HAVE AN ENGLISH NAME FOR THIS PERSON';
 						console.log('\n ... with ' + name + ' ... \n');
 						sourceIndividual = contributor;
