@@ -41,5 +41,15 @@ describe('exports', function () {
 
 			videos.search('fhqwhagads', callback);
 		});
+
+		it('should return an empty items array if no items were found', function (done) {
+			var callback = function (err, data) {
+				expect(err).to.be.null();
+				expect(data.items).to.be.empty();
+				done();
+			};
+
+			videos.search('asdkfhaskdjfhakdjhfkajsdfh', callback);
+		});
 	});
 });
