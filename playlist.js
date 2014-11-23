@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 var routes = require('./lib/routes.js');
+var videos = require('./lib/videos.js');
 var async = require('async');
 
 var sourceIndividual;
@@ -61,26 +62,33 @@ var generatePlaylist = function (individual, done) {
 			var output = '"' + name + '"';
 			output += '\n' + artist;
 			output += '\n_' + release + '_';
+
+			var q = '"' + name + '" "' + artist + '" "' + release + '"';
 			console.log(output);
 
-
-			routes.getArtistsAndContributorsFromTracks([track], function (err, contributors) {
-				error(err);
-				var contributor;
-				var notSeen = valuesNotIn(contributors, seenIndividuals);
-				if (notSeen.length > 0) {
-					contributor = random(notSeen);
-					seenIndividuals.push(contributor);
-				} else {
-					contributor = random(contributors);
+			videos.search(q, function (err, data) {
+				if (data && data.items && data.items[0] && data.items[0].url) {
+					console.log(data.items[0].url);
 				}
-				routes.getArtistDetails(contributor, function (err, details) {
-					var name = details.name || 'WHOOPS, FREEBASE DOES NOT HAVE AN ENGLISH NAME FOR THIS PERSON';
-					console.log('\n ... with ' + name + ' ... \n');
-					sourceIndividual = contributor;
-					done();
+
+				routes.getArtistsAndContributorsFromTracks([track], function (err, contributors) {
+					error(err);
+					var contributor;
+					var notSeen = valuesNotIn(contributors, seenIndividuals);
+					if (notSeen.length > 0) {
+						contributor = random(notSeen);
+						seenIndividuals.push(contributor);
+					} else {
+						contributor = random(contributors);
+					}
+					routes.getArtistDetails(contributor, function (err, details) {
+						var name = details.name || 'WHOOPS, FREEBASE DOES NOT HAVE AN ENGLISH NAME FOR THIS PERSON';
+						console.log('\n ... with ' + name + ' ... \n');
+						sourceIndividual = contributor;
+						done();
+					});
 				});
-			});
+			});			
 		});
 	};
 
