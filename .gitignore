@@ -1,6 +1,3 @@
-# config file for API key
-.apikey
-
 # Logs
 logs
 *.log
