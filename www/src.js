@@ -1,6 +1,6 @@
 /*global document*/
 var routes = require('../lib/routes.js');
-// var videos = require('./lib/videos.js');
+var videos = require('../lib/videos.js');
 var async = require('async');
 
 var resultsElem = document.getElementById('results');
@@ -76,12 +76,22 @@ var generatePlaylist = function (individual, done) {
 
 			resultsElem.appendChild(p);
 
-			// var q = '"' + name + '" "' + artist + '" "' + release + '"';
-			// 
-			// videos.search(q, function (err, data) {
-			// 	if (data && data.items && data.items[0] && data.items[0].url) {
-			// 		console.log(data.items[0].url);
-			// 	}
+			var q = '"' + name + '" "' + artist + '" "' + release + '"';
+			
+			videos.search(q, function (err, data) {
+				if (data && data.items && data.items[0] && data.items[0].url) {
+					// Let's be extra-special careful...
+					if (/https:\/\/youtu\.be\/[\w_-]+$/.test(data.items[0].url)) {
+						var a = document.createElement('a');
+						a.setAttribute('href', data.items[0].url);
+						a.setAttribute('target', '_blank');
+						a.appendChild(document.createTextNode('Video'));
+						p.appendChild(document.createElement('br'));
+						p.appendChild(a);
+					} else {
+						console.log('Whoa! Got a funky video URL: ' + data.items[0].url);
+					}
+				}
 
 				routes.getArtistsAndContributorsFromTracks([track], function (err, contributors) {
 					error(err);
@@ -102,7 +112,7 @@ var generatePlaylist = function (individual, done) {
 						sourceIndividual = contributor;
 						done();
 					});
-				// });
+				});
 			});			
 		});
 	};

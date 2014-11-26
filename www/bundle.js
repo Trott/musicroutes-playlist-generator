@@ -188,7 +188,53 @@ exports.getTrackDetails = function (mid, callback) {
 
   freebase.mqlread(query, options, cleanup);
 };
-},{"../.apikey":1,"mqlread":4}],3:[function(require,module,exports){
+},{"../.apikey":1,"mqlread":28}],3:[function(require,module,exports){
+var hyperquest = require('hyperquest');
+var querystring = require('querystring');
+var extend = require('xtend');
+var flatten = require('flat');
+var apikey = require('../.apikey');
+var options = {
+	key: apikey.key
+};
+
+exports.search = function (q, callback) {
+	var myOptions = extend(options, {part: 'id', maxResults: 1, type: 'video', q: q});
+	var myUrl = 'https://www.googleapis.com/youtube/v3/search?' + querystring.stringify(myOptions);
+	hyperquest(myUrl, {}, function (err, res) {
+		if (err) {
+      callback(err);
+      return;
+    }
+    var body = '';
+    if (res.statusCode !== 200) {
+      err = new Error('Received status code ' + res.statusCode);
+      callback(err);
+      return;
+    }
+    res.on('data', function (chunk) {
+      body +=chunk;
+    });
+
+    res.on('end', function () {
+      var data;
+      try {
+        data = JSON.parse(body);
+      } catch (e) {
+        callback(new Error('Error in received JSON:' + e.message));
+        return;
+      }
+			var rv;
+			rv = {items: []};
+			data = flatten({data: data});
+			if (data['data.items.0.id.videoId']) {
+				rv.items.push({url: 'https://youtu.be/' + data['data.items.0.id.videoId']});
+			}
+			callback(err, rv);
+  	});
+	});
+};
+},{"../.apikey":1,"flat":5,"hyperquest":6,"querystring":70,"xtend":51}],4:[function(require,module,exports){
 (function (process){
 /*!
  * async
@@ -1315,46 +1361,95 @@ exports.getTrackDetails = function (mid, callback) {
 }());
 
 }).call(this,require('_process'))
-},{"_process":42}],4:[function(require,module,exports){
-var hyperquest = require('hyperquest');
-var querystring = require('querystring');
+},{"_process":66}],5:[function(require,module,exports){
+var flat = module.exports = flatten
+flatten.flatten = flatten
+flatten.unflatten = unflatten
 
-exports.mqlread = function(query, options, callback) {
-  var url = 'https://www.googleapis.com/freebase/v1/mqlread?' +
-    querystring.stringify({query: query}) +
-    '&' + querystring.stringify(options);
+function flatten(target, opts) {
+  opts = opts || {}
 
-  hyperquest(url, {}, function(err, res) {
-    if (err) {
-      callback(err);
-      return;
-    }
-    var body = '';
-    if (res.statusCode !== 200) {
-      err = new Error('Received status code ' + res.statusCode);
-      callback(err);
-      return;
-    }
-    res.on('data', function (chunk) {
-      body +=chunk;
-    });
+  var delimiter = opts.delimiter || '.'
+  var output = {}
 
-    res.on('end', function () {
-      var data;
-      try {
-        data = JSON.parse(body);
-      } catch (e) {
-        callback(new Error('Error in received JSON:' + e.message));
-        return;
+  function step(object, prev) {
+    Object.keys(object).forEach(function(key) {
+      var value = object[key]
+      var isarray = opts.safe && Array.isArray(value)
+      var type = Object.prototype.toString.call(value)
+      var isobject = (
+        type === "[object Object]" ||
+        type === "[object Array]"
+      )
+
+      var newKey = prev
+        ? prev + delimiter + key
+        : key
+
+      if (!isarray && isobject) {
+        return step(value, newKey)
       }
-      if (data.error) {
-       err = new Error(data.error.message);
-     }
-      callback(err, data);
-    });
-  });
-};
-},{"hyperquest":5,"querystring":46}],5:[function(require,module,exports){
+
+      output[newKey] = value
+    })
+  }
+
+  step(target)
+
+  return output
+}
+
+function unflatten(target, opts) {
+  opts = opts || {}
+
+  var delimiter = opts.delimiter || '.'
+  var result = {}
+
+  if (Object.prototype.toString.call(target) !== '[object Object]') {
+    return target
+  }
+
+  // safely ensure that the key is
+  // an integer.
+  function getkey(key) {
+    var parsedKey = Number(key)
+
+    return (
+      isNaN(parsedKey) ||
+      key.indexOf('.') !== -1
+    ) ? key
+      : parsedKey
+  }
+
+  Object.keys(target).forEach(function(key) {
+    var split = key.split(delimiter)
+    var key1 = getkey(split.shift())
+    var key2 = getkey(split[0])
+    var recipient = result
+
+    while (key2 !== undefined) {
+      if (recipient[key1] === undefined) {
+        recipient[key1] = (
+          typeof key2 === 'number' &&
+          !opts.object ? [] : {}
+        )
+      }
+
+      recipient = recipient[key1]
+      if (split.length > 0) {
+        key1 = getkey(split.shift())
+        key2 = getkey(split[0])
+      }
+    }
+
+    // unflatten again for 'messy objects'
+    recipient[key1] = unflatten(target[key], opts)
+  })
+
+  return result
+}
+
+},{}],6:[function(require,module,exports){
 (function (process,Buffer){
 var url = require('url');
 var http = require('http');
@@ -1508,7 +1603,7 @@ Req.prototype.setLocation = function (uri) {
 };
 
 }).call(this,require('_process'),require("buffer").Buffer)
-},{"_process":42,"buffer":30,"duplexer2":6,"http":35,"https":39,"through2":26,"url":60}],6:[function(require,module,exports){
+},{"_process":66,"buffer":54,"duplexer2":7,"http":59,"https":63,"through2":27,"url":84}],7:[function(require,module,exports){
 var stream = require("readable-stream");
 
 var duplex2 = module.exports = function duplex2(options, writable, readable) {
@@ -1572,7 +1667,7 @@ DuplexWrapper.prototype._read = function _read(n) {
   this._readable.resume();
 };
 
-},{"readable-stream":16}],7:[function(require,module,exports){
+},{"readable-stream":17}],8:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -1665,7 +1760,7 @@ function forEach (xs, f) {
 }
 
 }).call(this,require('_process'))
-},{"./_stream_readable":9,"./_stream_writable":11,"_process":42,"core-util-is":12,"inherits":13}],8:[function(require,module,exports){
+},{"./_stream_readable":10,"./_stream_writable":12,"_process":66,"core-util-is":13,"inherits":14}],9:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -1713,7 +1808,7 @@ PassThrough.prototype._transform = function(chunk, encoding, cb) {
   cb(null, chunk);
 };
 
-},{"./_stream_transform":10,"core-util-is":12,"inherits":13}],9:[function(require,module,exports){
+},{"./_stream_transform":11,"core-util-is":13,"inherits":14}],10:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -2668,7 +2763,7 @@ function indexOf (xs, x) {
 }
 
 }).call(this,require('_process'))
-},{"./_stream_duplex":7,"_process":42,"buffer":30,"core-util-is":12,"events":34,"inherits":13,"isarray":14,"stream":58,"string_decoder/":15,"util":29}],10:[function(require,module,exports){
+},{"./_stream_duplex":8,"_process":66,"buffer":54,"core-util-is":13,"events":58,"inherits":14,"isarray":15,"stream":82,"string_decoder/":16,"util":53}],11:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -2879,7 +2974,7 @@ function done(stream, er) {
   return stream.push(null);
 }
 
-},{"./_stream_duplex":7,"core-util-is":12,"inherits":13}],11:[function(require,module,exports){
+},{"./_stream_duplex":8,"core-util-is":13,"inherits":14}],12:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -3360,7 +3455,7 @@ function endWritable(stream, state, cb) {
 }
 
 }).call(this,require('_process'))
-},{"./_stream_duplex":7,"_process":42,"buffer":30,"core-util-is":12,"inherits":13,"stream":58}],12:[function(require,module,exports){
+},{"./_stream_duplex":8,"_process":66,"buffer":54,"core-util-is":13,"inherits":14,"stream":82}],13:[function(require,module,exports){
 (function (Buffer){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -3470,7 +3565,7 @@ function objectToString(o) {
   return Object.prototype.toString.call(o);
 }
 }).call(this,require("buffer").Buffer)
-},{"buffer":30}],13:[function(require,module,exports){
+},{"buffer":54}],14:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -3495,12 +3590,12 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],14:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 module.exports = Array.isArray || function (arr) {
   return Object.prototype.toString.call(arr) == '[object Array]';
 };
 
-},{}],15:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -3723,7 +3818,7 @@ function base64DetectIncompleteChar(buffer) {
   this.charLength = this.charReceived ? 3 : 0;
 }
 
-},{"buffer":30}],16:[function(require,module,exports){
+},{"buffer":54}],17:[function(require,module,exports){
 exports = module.exports = require('./lib/_stream_readable.js');
 exports.Stream = require('stream');
 exports.Readable = exports;
@@ -3732,9 +3827,9 @@ exports.Duplex = require('./lib/_stream_duplex.js');
 exports.Transform = require('./lib/_stream_transform.js');
 exports.PassThrough = require('./lib/_stream_passthrough.js');
 
-},{"./lib/_stream_duplex.js":7,"./lib/_stream_passthrough.js":8,"./lib/_stream_readable.js":9,"./lib/_stream_transform.js":10,"./lib/_stream_writable.js":11,"stream":58}],17:[function(require,module,exports){
-arguments[4][7][0].apply(exports,arguments)
-},{"./_stream_readable":18,"./_stream_writable":20,"/Users/richtrott/musicroutes-freebase-demo/node_modules/mqlread/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/lib/_stream_duplex.js":7,"_process":42,"core-util-is":21,"inherits":22}],18:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":8,"./lib/_stream_passthrough.js":9,"./lib/_stream_readable.js":10,"./lib/_stream_transform.js":11,"./lib/_stream_writable.js":12,"stream":82}],18:[function(require,module,exports){
+arguments[4][8][0].apply(exports,arguments)
+},{"./_stream_readable":19,"./_stream_writable":21,"/Users/richtrott/musicroutes-freebase-demo/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/lib/_stream_duplex.js":8,"_process":66,"core-util-is":22,"inherits":23}],19:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -4720,7 +4815,7 @@ function indexOf (xs, x) {
 }
 
 }).call(this,require('_process'))
-},{"_process":42,"buffer":30,"core-util-is":21,"events":34,"inherits":22,"isarray":23,"stream":58,"string_decoder/":24}],19:[function(require,module,exports){
+},{"_process":66,"buffer":54,"core-util-is":22,"events":58,"inherits":23,"isarray":24,"stream":82,"string_decoder/":25}],20:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -4932,7 +5027,7 @@ function done(stream, er) {
   return stream.push(null);
 }
 
-},{"./_stream_duplex":17,"core-util-is":21,"inherits":22}],20:[function(require,module,exports){
+},{"./_stream_duplex":18,"core-util-is":22,"inherits":23}],21:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -5322,18 +5417,18 @@ function endWritable(stream, state, cb) {
 }
 
 }).call(this,require('_process'))
-},{"./_stream_duplex":17,"_process":42,"buffer":30,"core-util-is":21,"inherits":22,"stream":58}],21:[function(require,module,exports){
-module.exports=require(12)
-},{"/Users/richtrott/musicroutes-freebase-demo/node_modules/mqlread/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/node_modules/core-util-is/lib/util.js":12,"buffer":30}],22:[function(require,module,exports){
+},{"./_stream_duplex":18,"_process":66,"buffer":54,"core-util-is":22,"inherits":23,"stream":82}],22:[function(require,module,exports){
 module.exports=require(13)
-},{"/Users/richtrott/musicroutes-freebase-demo/node_modules/mqlread/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/node_modules/inherits/inherits_browser.js":13}],23:[function(require,module,exports){
+},{"/Users/richtrott/musicroutes-freebase-demo/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/node_modules/core-util-is/lib/util.js":13,"buffer":54}],23:[function(require,module,exports){
 module.exports=require(14)
-},{"/Users/richtrott/musicroutes-freebase-demo/node_modules/mqlread/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/node_modules/isarray/index.js":14}],24:[function(require,module,exports){
+},{"/Users/richtrott/musicroutes-freebase-demo/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/node_modules/inherits/inherits_browser.js":14}],24:[function(require,module,exports){
 module.exports=require(15)
-},{"/Users/richtrott/musicroutes-freebase-demo/node_modules/mqlread/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/node_modules/string_decoder/index.js":15,"buffer":30}],25:[function(require,module,exports){
+},{"/Users/richtrott/musicroutes-freebase-demo/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/node_modules/isarray/index.js":15}],25:[function(require,module,exports){
+module.exports=require(16)
+},{"/Users/richtrott/musicroutes-freebase-demo/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/node_modules/string_decoder/index.js":16,"buffer":54}],26:[function(require,module,exports){
 module.exports = require("./lib/_stream_transform.js")
 
-},{"./lib/_stream_transform.js":19}],26:[function(require,module,exports){
+},{"./lib/_stream_transform.js":20}],27:[function(require,module,exports){
 (function (process){
 var Transform = require('readable-stream/transform')
   , inherits  = require('util').inherits
@@ -5433,7 +5528,90 @@ module.exports.obj = through2(function (options, transform, flush) {
 })
 
 }).call(this,require('_process'))
-},{"_process":42,"readable-stream/transform":25,"util":62,"xtend":27}],27:[function(require,module,exports){
+},{"_process":66,"readable-stream/transform":26,"util":86,"xtend":51}],28:[function(require,module,exports){
+var hyperquest = require('hyperquest');
+var querystring = require('querystring');
+
+exports.mqlread = function(query, options, callback) {
+  var url = 'https://www.googleapis.com/freebase/v1/mqlread?' +
+    querystring.stringify({query: query}) +
+    '&' + querystring.stringify(options);
+
+  hyperquest(url, {}, function(err, res) {
+    if (err) {
+      callback(err);
+      return;
+    }
+    var body = '';
+    if (res.statusCode !== 200) {
+      err = new Error('Received status code ' + res.statusCode);
+      callback(err);
+      return;
+    }
+    res.on('data', function (chunk) {
+      body +=chunk;
+    });
+
+    res.on('end', function () {
+      var data;
+      try {
+        data = JSON.parse(body);
+      } catch (e) {
+        callback(new Error('Error in received JSON:' + e.message));
+        return;
+      }
+      if (data.error) {
+       err = new Error(data.error.message);
+     }
+      callback(err, data);
+    });
+  });
+};
+},{"hyperquest":29,"querystring":70}],29:[function(require,module,exports){
+module.exports=require(6)
+},{"/Users/richtrott/musicroutes-freebase-demo/node_modules/hyperquest/index.js":6,"_process":66,"buffer":54,"duplexer2":30,"http":59,"https":63,"through2":50,"url":84}],30:[function(require,module,exports){
+module.exports=require(7)
+},{"/Users/richtrott/musicroutes-freebase-demo/node_modules/hyperquest/node_modules/duplexer2/index.js":7,"readable-stream":40}],31:[function(require,module,exports){
+module.exports=require(8)
+},{"./_stream_readable":33,"./_stream_writable":35,"/Users/richtrott/musicroutes-freebase-demo/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/lib/_stream_duplex.js":8,"_process":66,"core-util-is":36,"inherits":37}],32:[function(require,module,exports){
+module.exports=require(9)
+},{"./_stream_transform":34,"/Users/richtrott/musicroutes-freebase-demo/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/lib/_stream_passthrough.js":9,"core-util-is":36,"inherits":37}],33:[function(require,module,exports){
+module.exports=require(10)
+},{"./_stream_duplex":31,"/Users/richtrott/musicroutes-freebase-demo/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/lib/_stream_readable.js":10,"_process":66,"buffer":54,"core-util-is":36,"events":58,"inherits":37,"isarray":38,"stream":82,"string_decoder/":39,"util":53}],34:[function(require,module,exports){
+module.exports=require(11)
+},{"./_stream_duplex":31,"/Users/richtrott/musicroutes-freebase-demo/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/lib/_stream_transform.js":11,"core-util-is":36,"inherits":37}],35:[function(require,module,exports){
+module.exports=require(12)
+},{"./_stream_duplex":31,"/Users/richtrott/musicroutes-freebase-demo/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/lib/_stream_writable.js":12,"_process":66,"buffer":54,"core-util-is":36,"inherits":37,"stream":82}],36:[function(require,module,exports){
+module.exports=require(13)
+},{"/Users/richtrott/musicroutes-freebase-demo/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/node_modules/core-util-is/lib/util.js":13,"buffer":54}],37:[function(require,module,exports){
+module.exports=require(14)
+},{"/Users/richtrott/musicroutes-freebase-demo/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/node_modules/inherits/inherits_browser.js":14}],38:[function(require,module,exports){
+module.exports=require(15)
+},{"/Users/richtrott/musicroutes-freebase-demo/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/node_modules/isarray/index.js":15}],39:[function(require,module,exports){
+module.exports=require(16)
+},{"/Users/richtrott/musicroutes-freebase-demo/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/node_modules/string_decoder/index.js":16,"buffer":54}],40:[function(require,module,exports){
+module.exports=require(17)
+},{"./lib/_stream_duplex.js":31,"./lib/_stream_passthrough.js":32,"./lib/_stream_readable.js":33,"./lib/_stream_transform.js":34,"./lib/_stream_writable.js":35,"/Users/richtrott/musicroutes-freebase-demo/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/readable.js":17,"stream":82}],41:[function(require,module,exports){
+arguments[4][8][0].apply(exports,arguments)
+},{"./_stream_readable":42,"./_stream_writable":44,"/Users/richtrott/musicroutes-freebase-demo/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/lib/_stream_duplex.js":8,"_process":66,"core-util-is":45,"inherits":46}],42:[function(require,module,exports){
+module.exports=require(19)
+},{"/Users/richtrott/musicroutes-freebase-demo/node_modules/hyperquest/node_modules/through2/node_modules/readable-stream/lib/_stream_readable.js":19,"_process":66,"buffer":54,"core-util-is":45,"events":58,"inherits":46,"isarray":47,"stream":82,"string_decoder/":48}],43:[function(require,module,exports){
+module.exports=require(20)
+},{"./_stream_duplex":41,"/Users/richtrott/musicroutes-freebase-demo/node_modules/hyperquest/node_modules/through2/node_modules/readable-stream/lib/_stream_transform.js":20,"core-util-is":45,"inherits":46}],44:[function(require,module,exports){
+module.exports=require(21)
+},{"./_stream_duplex":41,"/Users/richtrott/musicroutes-freebase-demo/node_modules/hyperquest/node_modules/through2/node_modules/readable-stream/lib/_stream_writable.js":21,"_process":66,"buffer":54,"core-util-is":45,"inherits":46,"stream":82}],45:[function(require,module,exports){
+module.exports=require(13)
+},{"/Users/richtrott/musicroutes-freebase-demo/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/node_modules/core-util-is/lib/util.js":13,"buffer":54}],46:[function(require,module,exports){
+module.exports=require(14)
+},{"/Users/richtrott/musicroutes-freebase-demo/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/node_modules/inherits/inherits_browser.js":14}],47:[function(require,module,exports){
+module.exports=require(15)
+},{"/Users/richtrott/musicroutes-freebase-demo/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/node_modules/isarray/index.js":15}],48:[function(require,module,exports){
+module.exports=require(16)
+},{"/Users/richtrott/musicroutes-freebase-demo/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/node_modules/string_decoder/index.js":16,"buffer":54}],49:[function(require,module,exports){
+module.exports=require(26)
+},{"./lib/_stream_transform.js":43,"/Users/richtrott/musicroutes-freebase-demo/node_modules/hyperquest/node_modules/through2/node_modules/readable-stream/transform.js":26}],50:[function(require,module,exports){
+module.exports=require(27)
+},{"/Users/richtrott/musicroutes-freebase-demo/node_modules/hyperquest/node_modules/through2/through2.js":27,"_process":66,"readable-stream/transform":49,"util":86,"xtend":51}],51:[function(require,module,exports){
 module.exports = extend
 
 function extend() {
@@ -5452,10 +5630,10 @@ function extend() {
     return target
 }
 
-},{}],28:[function(require,module,exports){
+},{}],52:[function(require,module,exports){
 /*global document*/
 var routes = require('../lib/routes.js');
-// var videos = require('./lib/videos.js');
+var videos = require('../lib/videos.js');
 var async = require('async');
 
 var resultsElem = document.getElementById('results');
@@ -5531,12 +5709,22 @@ var generatePlaylist = function (individual, done) {
 
 			resultsElem.appendChild(p);
 
-			// var q = '"' + name + '" "' + artist + '" "' + release + '"';
-			// 
-			// videos.search(q, function (err, data) {
-			// 	if (data && data.items && data.items[0] && data.items[0].url) {
-			// 		console.log(data.items[0].url);
-			// 	}
+			var q = '"' + name + '" "' + artist + '" "' + release + '"';
+			
+			videos.search(q, function (err, data) {
+				if (data && data.items && data.items[0] && data.items[0].url) {
+					// Let's be extra-special careful...
+					if (/https:\/\/youtu\.be\/[\w_-]+$/.test(data.items[0].url)) {
+						var a = document.createElement('a');
+						a.setAttribute('href', data.items[0].url);
+						a.setAttribute('target', '_blank');
+						a.appendChild(document.createTextNode('Video'));
+						p.appendChild(document.createElement('br'));
+						p.appendChild(a);
+					} else {
+						console.log('Whoa! Got a funky video URL: ' + data.items[0].url);
+					}
+				}
 
 				routes.getArtistsAndContributorsFromTracks([track], function (err, contributors) {
 					error(err);
@@ -5557,7 +5745,7 @@ var generatePlaylist = function (individual, done) {
 						sourceIndividual = contributor;
 						done();
 					});
-				// });
+				});
 			});			
 		});
 	};
@@ -5622,9 +5810,9 @@ form.addEventListener('submit', function (evt) {
 	});
 });
 
-},{"../lib/routes.js":2,"async":3}],29:[function(require,module,exports){
+},{"../lib/routes.js":2,"../lib/videos.js":3,"async":4}],53:[function(require,module,exports){
 
-},{}],30:[function(require,module,exports){
+},{}],54:[function(require,module,exports){
 /*!
  * The buffer module from node.js, for the browser.
  *
@@ -6676,7 +6864,7 @@ function decodeUtf8Char (str) {
   }
 }
 
-},{"base64-js":31,"ieee754":32,"is-array":33}],31:[function(require,module,exports){
+},{"base64-js":55,"ieee754":56,"is-array":57}],55:[function(require,module,exports){
 var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 
 ;(function (exports) {
@@ -6798,7 +6986,7 @@ var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 	exports.fromByteArray = uint8ToBase64
 }(typeof exports === 'undefined' ? (this.base64js = {}) : exports))
 
-},{}],32:[function(require,module,exports){
+},{}],56:[function(require,module,exports){
 exports.read = function(buffer, offset, isLE, mLen, nBytes) {
   var e, m,
       eLen = nBytes * 8 - mLen - 1,
@@ -6884,7 +7072,7 @@ exports.write = function(buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128;
 };
 
-},{}],33:[function(require,module,exports){
+},{}],57:[function(require,module,exports){
 
 /**
  * isArray
@@ -6919,7 +7107,7 @@ module.exports = isArray || function (val) {
   return !! val && '[object Array]' == str.call(val);
 };
 
-},{}],34:[function(require,module,exports){
+},{}],58:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -7222,7 +7410,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],35:[function(require,module,exports){
+},{}],59:[function(require,module,exports){
 var http = module.exports;
 var EventEmitter = require('events').EventEmitter;
 var Request = require('./lib/request');
@@ -7368,7 +7556,7 @@ http.STATUS_CODES = {
     510 : 'Not Extended',               // RFC 2774
     511 : 'Network Authentication Required' // RFC 6585
 };
-},{"./lib/request":36,"events":34,"url":60}],36:[function(require,module,exports){
+},{"./lib/request":60,"events":58,"url":84}],60:[function(require,module,exports){
 var Stream = require('stream');
 var Response = require('./response');
 var Base64 = require('Base64');
@@ -7579,7 +7767,7 @@ var isXHR2Compatible = function (obj) {
     if (typeof FormData !== 'undefined' && obj instanceof FormData) return true;
 };
 
-},{"./response":37,"Base64":38,"inherits":40,"stream":58}],37:[function(require,module,exports){
+},{"./response":61,"Base64":62,"inherits":64,"stream":82}],61:[function(require,module,exports){
 var Stream = require('stream');
 var util = require('util');
 
@@ -7701,7 +7889,7 @@ var isArray = Array.isArray || function (xs) {
     return Object.prototype.toString.call(xs) === '[object Array]';
 };
 
-},{"stream":58,"util":62}],38:[function(require,module,exports){
+},{"stream":82,"util":86}],62:[function(require,module,exports){
 ;(function () {
 
   var object = typeof exports != 'undefined' ? exports : this; // #8: web workers
@@ -7763,7 +7951,7 @@ var isArray = Array.isArray || function (xs) {
 
 }());
 
-},{}],39:[function(require,module,exports){
+},{}],63:[function(require,module,exports){
 var http = require('http');
 
 var https = module.exports;
@@ -7778,11 +7966,11 @@ https.request = function (params, cb) {
     return http.request.call(this, params, cb);
 }
 
-},{"http":35}],40:[function(require,module,exports){
-module.exports=require(13)
-},{"/Users/richtrott/musicroutes-freebase-demo/node_modules/mqlread/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/node_modules/inherits/inherits_browser.js":13}],41:[function(require,module,exports){
+},{"http":59}],64:[function(require,module,exports){
 module.exports=require(14)
-},{"/Users/richtrott/musicroutes-freebase-demo/node_modules/mqlread/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/node_modules/isarray/index.js":14}],42:[function(require,module,exports){
+},{"/Users/richtrott/musicroutes-freebase-demo/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/node_modules/inherits/inherits_browser.js":14}],65:[function(require,module,exports){
+module.exports=require(15)
+},{"/Users/richtrott/musicroutes-freebase-demo/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/node_modules/isarray/index.js":15}],66:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -7870,7 +8058,7 @@ process.chdir = function (dir) {
     throw new Error('process.chdir is not supported');
 };
 
-},{}],43:[function(require,module,exports){
+},{}],67:[function(require,module,exports){
 (function (global){
 /*! http://mths.be/punycode v1.2.4 by @mathias */
 ;(function(root) {
@@ -8381,7 +8569,7 @@ process.chdir = function (dir) {
 }(this));
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],44:[function(require,module,exports){
+},{}],68:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -8467,7 +8655,7 @@ var isArray = Array.isArray || function (xs) {
   return Object.prototype.toString.call(xs) === '[object Array]';
 };
 
-},{}],45:[function(require,module,exports){
+},{}],69:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -8554,31 +8742,31 @@ var objectKeys = Object.keys || function (obj) {
   return res;
 };
 
-},{}],46:[function(require,module,exports){
+},{}],70:[function(require,module,exports){
 'use strict';
 
 exports.decode = exports.parse = require('./decode');
 exports.encode = exports.stringify = require('./encode');
 
-},{"./decode":44,"./encode":45}],47:[function(require,module,exports){
+},{"./decode":68,"./encode":69}],71:[function(require,module,exports){
 module.exports = require("./lib/_stream_duplex.js")
 
-},{"./lib/_stream_duplex.js":48}],48:[function(require,module,exports){
-arguments[4][7][0].apply(exports,arguments)
-},{"./_stream_readable":50,"./_stream_writable":52,"/Users/richtrott/musicroutes-freebase-demo/node_modules/mqlread/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/lib/_stream_duplex.js":7,"_process":42,"core-util-is":53,"inherits":40}],49:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":72}],72:[function(require,module,exports){
 arguments[4][8][0].apply(exports,arguments)
-},{"./_stream_transform":51,"/Users/richtrott/musicroutes-freebase-demo/node_modules/mqlread/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/lib/_stream_passthrough.js":8,"core-util-is":53,"inherits":40}],50:[function(require,module,exports){
-module.exports=require(18)
-},{"/Users/richtrott/musicroutes-freebase-demo/node_modules/mqlread/node_modules/hyperquest/node_modules/through2/node_modules/readable-stream/lib/_stream_readable.js":18,"_process":42,"buffer":30,"core-util-is":53,"events":34,"inherits":40,"isarray":41,"stream":58,"string_decoder/":59}],51:[function(require,module,exports){
+},{"./_stream_readable":74,"./_stream_writable":76,"/Users/richtrott/musicroutes-freebase-demo/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/lib/_stream_duplex.js":8,"_process":66,"core-util-is":77,"inherits":64}],73:[function(require,module,exports){
+arguments[4][9][0].apply(exports,arguments)
+},{"./_stream_transform":75,"/Users/richtrott/musicroutes-freebase-demo/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/lib/_stream_passthrough.js":9,"core-util-is":77,"inherits":64}],74:[function(require,module,exports){
 module.exports=require(19)
-},{"./_stream_duplex":48,"/Users/richtrott/musicroutes-freebase-demo/node_modules/mqlread/node_modules/hyperquest/node_modules/through2/node_modules/readable-stream/lib/_stream_transform.js":19,"core-util-is":53,"inherits":40}],52:[function(require,module,exports){
+},{"/Users/richtrott/musicroutes-freebase-demo/node_modules/hyperquest/node_modules/through2/node_modules/readable-stream/lib/_stream_readable.js":19,"_process":66,"buffer":54,"core-util-is":77,"events":58,"inherits":64,"isarray":65,"stream":82,"string_decoder/":83}],75:[function(require,module,exports){
 module.exports=require(20)
-},{"./_stream_duplex":48,"/Users/richtrott/musicroutes-freebase-demo/node_modules/mqlread/node_modules/hyperquest/node_modules/through2/node_modules/readable-stream/lib/_stream_writable.js":20,"_process":42,"buffer":30,"core-util-is":53,"inherits":40,"stream":58}],53:[function(require,module,exports){
-module.exports=require(12)
-},{"/Users/richtrott/musicroutes-freebase-demo/node_modules/mqlread/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/node_modules/core-util-is/lib/util.js":12,"buffer":30}],54:[function(require,module,exports){
+},{"./_stream_duplex":72,"/Users/richtrott/musicroutes-freebase-demo/node_modules/hyperquest/node_modules/through2/node_modules/readable-stream/lib/_stream_transform.js":20,"core-util-is":77,"inherits":64}],76:[function(require,module,exports){
+module.exports=require(21)
+},{"./_stream_duplex":72,"/Users/richtrott/musicroutes-freebase-demo/node_modules/hyperquest/node_modules/through2/node_modules/readable-stream/lib/_stream_writable.js":21,"_process":66,"buffer":54,"core-util-is":77,"inherits":64,"stream":82}],77:[function(require,module,exports){
+module.exports=require(13)
+},{"/Users/richtrott/musicroutes-freebase-demo/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/node_modules/core-util-is/lib/util.js":13,"buffer":54}],78:[function(require,module,exports){
 module.exports = require("./lib/_stream_passthrough.js")
 
-},{"./lib/_stream_passthrough.js":49}],55:[function(require,module,exports){
+},{"./lib/_stream_passthrough.js":73}],79:[function(require,module,exports){
 exports = module.exports = require('./lib/_stream_readable.js');
 exports.Readable = exports;
 exports.Writable = require('./lib/_stream_writable.js');
@@ -8586,12 +8774,12 @@ exports.Duplex = require('./lib/_stream_duplex.js');
 exports.Transform = require('./lib/_stream_transform.js');
 exports.PassThrough = require('./lib/_stream_passthrough.js');
 
-},{"./lib/_stream_duplex.js":48,"./lib/_stream_passthrough.js":49,"./lib/_stream_readable.js":50,"./lib/_stream_transform.js":51,"./lib/_stream_writable.js":52}],56:[function(require,module,exports){
-module.exports=require(25)
-},{"./lib/_stream_transform.js":51,"/Users/richtrott/musicroutes-freebase-demo/node_modules/mqlread/node_modules/hyperquest/node_modules/through2/node_modules/readable-stream/transform.js":25}],57:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":72,"./lib/_stream_passthrough.js":73,"./lib/_stream_readable.js":74,"./lib/_stream_transform.js":75,"./lib/_stream_writable.js":76}],80:[function(require,module,exports){
+module.exports=require(26)
+},{"./lib/_stream_transform.js":75,"/Users/richtrott/musicroutes-freebase-demo/node_modules/hyperquest/node_modules/through2/node_modules/readable-stream/transform.js":26}],81:[function(require,module,exports){
 module.exports = require("./lib/_stream_writable.js")
 
-},{"./lib/_stream_writable.js":52}],58:[function(require,module,exports){
+},{"./lib/_stream_writable.js":76}],82:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -8720,9 +8908,9 @@ Stream.prototype.pipe = function(dest, options) {
   return dest;
 };
 
-},{"events":34,"inherits":40,"readable-stream/duplex.js":47,"readable-stream/passthrough.js":54,"readable-stream/readable.js":55,"readable-stream/transform.js":56,"readable-stream/writable.js":57}],59:[function(require,module,exports){
-module.exports=require(15)
-},{"/Users/richtrott/musicroutes-freebase-demo/node_modules/mqlread/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/node_modules/string_decoder/index.js":15,"buffer":30}],60:[function(require,module,exports){
+},{"events":58,"inherits":64,"readable-stream/duplex.js":71,"readable-stream/passthrough.js":78,"readable-stream/readable.js":79,"readable-stream/transform.js":80,"readable-stream/writable.js":81}],83:[function(require,module,exports){
+module.exports=require(16)
+},{"/Users/richtrott/musicroutes-freebase-demo/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/node_modules/string_decoder/index.js":16,"buffer":54}],84:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -9431,14 +9619,14 @@ function isNullOrUndefined(arg) {
   return  arg == null;
 }
 
-},{"punycode":43,"querystring":46}],61:[function(require,module,exports){
+},{"punycode":67,"querystring":70}],85:[function(require,module,exports){
 module.exports = function isBuffer(arg) {
   return arg && typeof arg === 'object'
     && typeof arg.copy === 'function'
     && typeof arg.fill === 'function'
     && typeof arg.readUInt8 === 'function';
 }
-},{}],62:[function(require,module,exports){
+},{}],86:[function(require,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -10028,4 +10216,4 @@ function hasOwnProperty(obj, prop) {
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./support/isBuffer":61,"_process":42,"inherits":40}]},{},[28]);
+},{"./support/isBuffer":85,"_process":66,"inherits":64}]},{},[52]);
