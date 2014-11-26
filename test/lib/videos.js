@@ -1,7 +1,6 @@
 /*jshint expr: true*/
 
-var rewire = require('rewire');
-var videos = rewire('../../lib/videos.js');
+var videos = require('../../lib/videos.js');
 
 var Code = require('code');
 var expect = Code.expect;
@@ -16,24 +15,22 @@ var beforeEach = lab.beforeEach;
 var nock = require('nock');
 
 describe('exports', function () {
-	var revert;
 
 	beforeEach(function (done) {
-		if (typeof revert === 'function') {
-			revert();
-			revert = null;
-		}
-		nock.enableNetConnect();
+		nock.cleanAll();
+		nock.disableNetConnect();
 		done();
 	});
 
 	describe('search()', function () {
 		it('should retrieve information for a video', function (done) {
-			revert = videos.__set__('youtube', {search: {list: function (opts, callback) {
-				callback(null, { items: [{ id: { videoId: 'F-QR4dY1jbQ' }}]});
-			}}});
+			nock('https://www.googleapis.com')
+			  .filteringPath(/\?.*$/, '')
+				.get('/youtube/v3/search')
+				.reply(200, JSON.stringify({ items: [{ id: { videoId: 'F-QR4dY1jbQ' }}]}));
 
 			var callback = function (err, data) {
+				console.log(err);
 				expect(err).to.be.null();
 				expect(data).to.deep.equal({items: [{url: 'https://youtu.be/F-QR4dY1jbQ'}]});
 				done();
@@ -54,9 +51,10 @@ describe('exports', function () {
 		});
 
 		it('should return an empty items array if no items were found', function (done) {
-			revert = videos.__set__('youtube', {search: {list: function (opts, callback) {
-				callback(null, { items: []});
-			}}});
+			nock('https://www.googleapis.com')
+			  .filteringPath(/\?.*$/, '')
+				.get('/youtube/v3/search')
+				.reply(200, JSON.stringify({items:[]}));
 			
 			var callback = function (err, data) {
 				expect(err).to.be.null();
@@ -65,6 +63,36 @@ describe('exports', function () {
 			};
 
 			videos.search('asdkfhaskdjfhakdjhfkajsdfh', callback);
+		});
+
+		it('should return an error if HTTP response code is not 200', function (done) {
+			nock('https://www.googleapis.com')
+			  .filteringPath(/\?.*$/, '')
+				.get('/youtube/v3/search')
+				.reply(404, JSON.stringify({}));
+
+			var callback = function (err, data) {
+				expect(err).to.be.not.null();
+				expect(data).to.be.undefined();
+				done();
+			};
+
+			videos.search('fhqwhagads', callback);
+		});
+
+		it('should return an error if body cannot be parsed as JSON', function (done) {
+			nock('https://www.googleapis.com')
+			  .filteringPath(/\?.*$/, '')
+				.get('/youtube/v3/search')
+				.reply(200, 'invalid JSON!');
+
+			var callback = function (err, data) {
+				expect(err).to.be.not.null();
+				expect(data).to.be.undefined();
+				done();
+			};
+
+			videos.search('fhqwhagads', callback);
 		});
 	});
 });
