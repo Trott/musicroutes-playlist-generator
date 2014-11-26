@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-var routes = require('./lib/routes.js');
-var videos = require('./lib/videos.js');
+var routes = require('../lib/routes.js');
+var videos = require('../lib/videos.js');
 var async = require('async');
 
 var sourceIndividual;
