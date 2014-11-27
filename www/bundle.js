@@ -5747,7 +5747,7 @@ var generatePlaylist = function (individual, done) {
 			var commonLink = routes.getArtistsAndContributorsFromTracks.bind(undefined, [track], function (err, contributors) {
 				error(err);
 				var contributor;
-				var notSeen = valuesNotIn(contributors, seenIndividuals);
+				var notSeen = valuesNotIn(contributors, seenIndividuals);				
 				if (notSeen.length > 0) {
 					contributor = random(notSeen);
 					seenIndividuals.push(contributor);
@@ -5806,7 +5806,6 @@ var generatePlaylist = function (individual, done) {
 				routes.getTracksWithContributors([individual], options, callback);
 			}
 		},
-		routes.getTracksWithContributors.bind(undefined, [individual], options, callback),
 		// Look for any track with this contributor credited as a contributor regardless if we've seen the artist already.
 		routes.getTracksWithContributors.bind(undefined, [individual], {}, callback),
 		// Look for any tracks actually credited to this contributor as the main artist. We are desperate!
