@@ -5670,6 +5670,8 @@ var resultsElem = document.getElementById('results');
 var form = document.getElementById('startPlaylist');
 var submit = document.getElementById('startPointSubmit');
 var input = document.getElementById('startPoint');
+var continueButton = document.getElementById('continue');
+var startOverButton = document.getElementById('startOver');
 
 var sourceIndividual;
 var seenIndividuals = [];
@@ -5714,6 +5716,7 @@ var generatePlaylist = function (individual, done) {
 			next[nextIndex]();
 			return;
 		}
+
 		routes.getTrackDetails(track, function (err, details) {
 			error(err);
 
@@ -5742,6 +5745,7 @@ var generatePlaylist = function (individual, done) {
 			resultsElem.appendChild(p);
 
 			var commonLink = routes.getArtistsAndContributorsFromTracks.bind(undefined, [track], function (err, contributors) {
+				console.log('getting a common link');
 				error(err);
 				var contributor;
 				var notSeen = valuesNotIn(contributors, seenIndividuals);
@@ -5773,10 +5777,8 @@ var generatePlaylist = function (individual, done) {
 							div.innerHTML = data.items[0].embedHtml;
 							resultsElem.appendChild(div);
 							embedShown = true;
-							done();
-						} else {
-							commonLink();
 						}
+						commonLink();
 					});
 				} else {
 					commonLink();
@@ -5818,6 +5820,29 @@ var generatePlaylist = function (individual, done) {
 	next[nextIndex]();
 };
 
+var go = function () {
+	continueButton.setAttribute('disabled', 'disabled');
+	startOver.setAttribute('disabled', 'disabled');
+	embedShown = false;
+	async.until(
+		function () { 
+			return embedShown;
+		},
+		function (next) {
+			generatePlaylist(sourceIndividual, next);
+		},
+		function (err) {
+			error(err);
+			continueButton.removeAttribute('disabled');
+			startOver.removeAttribute('disabled');
+		}
+	);
+};
+
+continueButton.addEventListener('click', function () {
+	go();	
+});
+
 form.addEventListener('submit', function (evt) {
 	evt.preventDefault();
 	submit.setAttribute('disabled', 'disabled');
@@ -5831,16 +5856,7 @@ form.addEventListener('submit', function (evt) {
 			return;
 		}
 		seenIndividuals.push(sourceIndividual);
-		embedShown = false;
-		async.until(
-			function () { 
-				return embedShown;
-			},
-			function (next) {
-				generatePlaylist(sourceIndividual, next);
-			},
-			error
-		);
+		go();
 	});
 });
 
