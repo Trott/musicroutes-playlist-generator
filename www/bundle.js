@@ -198,11 +198,9 @@ var options = {
 	key: apikey.key
 };
 
-exports.search = function (q, callback) {
-	var myOptions = extend(options, {part: 'id', maxResults: 1, type: 'video', q: q});
-	var myUrl = 'https://www.googleapis.com/youtube/v3/search?' + querystring.stringify(myOptions);
-	hyperquest(myUrl, {}, function (err, res) {
-		if (err) {
+var run = function (url, callback) {
+  hyperquest(url, {}, function (err, res) {
+    if (err) {
       callback(err);
       return;
     }
@@ -224,15 +222,47 @@ exports.search = function (q, callback) {
         callback(new Error('Error in received JSON:' + e.message));
         return;
       }
-			var rv;
-			rv = {items: []};
-			data = flatten({data: data});
-			if (data['data.items.0.id.videoId']) {
-				rv.items.push({url: 'https://youtu.be/' + data['data.items.0.id.videoId']});
-			}
-			callback(err, rv);
-  	});
-	});
+      callback(err, data);
+    });
+  });
+};
+
+exports.embed = function (id, callback) {
+  var myOptions = extend(options, {part: 'player', id: id});
+  var myUrl = 'https://www.googleapis.com/youtube/v3/videos?' + querystring.stringify(myOptions);
+
+  var myCallback = function (err, data) {
+    var rv;
+    if (data) {
+      rv = {items: []};
+      data = flatten({data: data});
+      if (data['data.items.0.player.embedHtml']) {
+        rv.items.push({embedHtml: data['data.items.0.player.embedHtml']});
+      }
+    }
+    callback(err, rv);
+  };
+
+  run(myUrl, myCallback);
+};
+
+exports.search = function (q, callback) {
+	var myOptions = extend(options, {part: 'id', maxResults: '1', type: 'video', videoEmbeddable: 'true', q: q});
+	var myUrl = 'https://www.googleapis.com/youtube/v3/search?' + querystring.stringify(myOptions);
+	
+  var myCallback = function (err, data) {
+    var rv;
+    if (data) {
+      rv = {items: []};
+      data = flatten({data: data});
+      if (data['data.items.0.id.videoId']) {
+        rv.items.push({videoId: data['data.items.0.id.videoId']});
+      }
+    }
+    callback(err, rv);
+  };
+
+  run(myUrl, myCallback);
 };
 },{"../.apikey":1,"flat":5,"hyperquest":6,"querystring":70,"xtend":51}],4:[function(require,module,exports){
 (function (process){
@@ -5665,6 +5695,8 @@ var valuesNotIn = function (values, notIn) {
 	});
 };
 
+var embedShown = false;
+
 var generatePlaylist = function (individual, done) {
 	var callback = 	function (err, tracks) {
 		error(err);
@@ -5709,43 +5741,46 @@ var generatePlaylist = function (individual, done) {
 
 			resultsElem.appendChild(p);
 
+			var commonLink = routes.getArtistsAndContributorsFromTracks.bind(undefined, [track], function (err, contributors) {
+				error(err);
+				var contributor;
+				var notSeen = valuesNotIn(contributors, seenIndividuals);
+				if (notSeen.length > 0) {
+					contributor = random(notSeen);
+					seenIndividuals.push(contributor);
+				} else {
+					contributor = random(contributors);
+				}
+				routes.getArtistDetails(contributor, function (err, details) {
+					error(err);
+					var name = details.name || 'WHOOPS, FREEBASE DOES NOT HAVE AN ENGLISH NAME FOR THIS PERSON';
+					var p = document.createElement('p');
+					p.appendChild(document.createTextNode('...with ' + name + '...'));
+					resultsElem.appendChild(p);
+					sourceIndividual = contributor;
+					done();
+				});
+			});
+
 			var q = '"' + name + '" "' + artist + '" "' + release + '"';
 			
 			videos.search(q, function (err, data) {
-				if (data && data.items && data.items[0] && data.items[0].url) {
-					// Let's be extra-special careful...
-					if (/https:\/\/youtu\.be\/[\w_-]+$/.test(data.items[0].url)) {
-						var a = document.createElement('a');
-						a.setAttribute('href', data.items[0].url);
-						a.setAttribute('target', '_blank');
-						a.appendChild(document.createTextNode('Video'));
-						p.appendChild(document.createElement('br'));
-						p.appendChild(a);
-					} else {
-						console.log('Whoa! Got a funky video URL: ' + data.items[0].url);
-					}
-				}
-
-				routes.getArtistsAndContributorsFromTracks([track], function (err, contributors) {
-					error(err);
-					var contributor;
-					var notSeen = valuesNotIn(contributors, seenIndividuals);
-					if (notSeen.length > 0) {
-						contributor = random(notSeen);
-						seenIndividuals.push(contributor);
-					} else {
-						contributor = random(contributors);
-					}
-					routes.getArtistDetails(contributor, function (err, details) {
-						error(err);
-						var name = details.name || 'WHOOPS, FREEBASE DOES NOT HAVE AN ENGLISH NAME FOR THIS PERSON';
-						var p = document.createElement('p');
-						p.appendChild(document.createTextNode('...with ' + name + '...'));
-						resultsElem.appendChild(p);
-						sourceIndividual = contributor;
-						done();
+				if (data && data.items && data.items[0] && data.items[0].videoId) {
+					videos.embed(data.items[0].videoId, function (err, data) {
+						if (data && data.items && data.items[0] && data.items[0].embedHtml) {
+							var div = document.createElement('div');
+							// Yes, we're trusting YouTube's API not to p0wn us.
+							div.innerHTML = data.items[0].embedHtml;
+							resultsElem.appendChild(div);
+							embedShown = true;
+							done();
+						} else {
+							commonLink();
+						}
 					});
-				});
+				} else {
+					commonLink();
+				}
 			});			
 		});
 	};
@@ -5796,14 +5831,13 @@ form.addEventListener('submit', function (evt) {
 			return;
 		}
 		seenIndividuals.push(sourceIndividual);
-		var times = 0;
-		async.whilst(
+		embedShown = false;
+		async.until(
 			function () { 
-				return times < 5; 
+				return embedShown;
 			},
 			function (next) {
 				generatePlaylist(sourceIndividual, next);
-				times = times + 1;
 			},
 			error
 		);

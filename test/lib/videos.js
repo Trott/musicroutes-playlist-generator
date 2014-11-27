@@ -76,7 +76,7 @@ describe('exports', function () {
 
 			var callback = function (err, data) {
 				expect(err).to.be.null();
-				expect(data).to.deep.equal({items: [{url: 'https://youtu.be/F-QR4dY1jbQ'}]});
+				expect(data).to.deep.equal({items: [{videoId: 'F-QR4dY1jbQ'}]});
 				done();
 			};
 
