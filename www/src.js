@@ -7,6 +7,8 @@ var resultsElem = document.getElementById('results');
 var form = document.getElementById('startPlaylist');
 var submit = document.getElementById('startPointSubmit');
 var input = document.getElementById('startPoint');
+var continueButton = document.getElementById('continue');
+var startOverButton = document.getElementById('startOver');
 
 var sourceIndividual;
 var seenIndividuals = [];
@@ -32,6 +34,8 @@ var valuesNotIn = function (values, notIn) {
 	});
 };
 
+var embedShown = false;
+
 var generatePlaylist = function (individual, done) {
 	var callback = 	function (err, tracks) {
 		error(err);
@@ -49,6 +53,7 @@ var generatePlaylist = function (individual, done) {
 			next[nextIndex]();
 			return;
 		}
+
 		routes.getTrackDetails(track, function (err, details) {
 			error(err);
 
@@ -76,43 +81,44 @@ var generatePlaylist = function (individual, done) {
 
 			resultsElem.appendChild(p);
 
+			var commonLink = routes.getArtistsAndContributorsFromTracks.bind(undefined, [track], function (err, contributors) {
+				error(err);
+				var contributor;
+				var notSeen = valuesNotIn(contributors, seenIndividuals);
+				if (notSeen.length > 0) {
+					contributor = random(notSeen);
+					seenIndividuals.push(contributor);
+				} else {
+					contributor = random(contributors);
+				}
+				routes.getArtistDetails(contributor, function (err, details) {
+					error(err);
+					var name = details.name || 'WHOOPS, FREEBASE DOES NOT HAVE AN ENGLISH NAME FOR THIS PERSON';
+					var p = document.createElement('p');
+					p.appendChild(document.createTextNode('...with ' + name + '...'));
+					resultsElem.appendChild(p);
+					sourceIndividual = contributor;
+					done();
+				});
+			});
+
 			var q = '"' + name + '" "' + artist + '" "' + release + '"';
 			
 			videos.search(q, function (err, data) {
-				if (data && data.items && data.items[0] && data.items[0].url) {
-					// Let's be extra-special careful...
-					if (/https:\/\/youtu\.be\/[\w_-]+$/.test(data.items[0].url)) {
-						var a = document.createElement('a');
-						a.setAttribute('href', data.items[0].url);
-						a.setAttribute('target', '_blank');
-						a.appendChild(document.createTextNode('Video'));
-						p.appendChild(document.createElement('br'));
-						p.appendChild(a);
-					} else {
-						console.log('Whoa! Got a funky video URL: ' + data.items[0].url);
-					}
-				}
-
-				routes.getArtistsAndContributorsFromTracks([track], function (err, contributors) {
-					error(err);
-					var contributor;
-					var notSeen = valuesNotIn(contributors, seenIndividuals);
-					if (notSeen.length > 0) {
-						contributor = random(notSeen);
-						seenIndividuals.push(contributor);
-					} else {
-						contributor = random(contributors);
-					}
-					routes.getArtistDetails(contributor, function (err, details) {
-						error(err);
-						var name = details.name || 'WHOOPS, FREEBASE DOES NOT HAVE AN ENGLISH NAME FOR THIS PERSON';
-						var p = document.createElement('p');
-						p.appendChild(document.createTextNode('...with ' + name + '...'));
-						resultsElem.appendChild(p);
-						sourceIndividual = contributor;
-						done();
+				if (data && data.items && data.items[0] && data.items[0].videoId) {
+					videos.embed(data.items[0].videoId, function (err, data) {
+						if (data && data.items && data.items[0] && data.items[0].embedHtml) {
+							var div = document.createElement('div');
+							// Yes, we're trusting YouTube's API not to p0wn us.
+							div.innerHTML = data.items[0].embedHtml;
+							resultsElem.appendChild(div);
+							embedShown = true;
+						}
+						commonLink();
 					});
-				});
+				} else {
+					commonLink();
+				}
 			});			
 		});
 	};
@@ -150,6 +156,40 @@ var generatePlaylist = function (individual, done) {
 	next[nextIndex]();
 };
 
+var go = function () {
+	continueButton.setAttribute('disabled', 'disabled');
+	startOverButton.setAttribute('disabled', 'disabled');
+	embedShown = false;
+	async.until(
+		function () { 
+			return embedShown;
+		},
+		function (next) {
+			generatePlaylist(sourceIndividual, next);
+		},
+		function (err) {
+			error(err);
+			continueButton.removeAttribute('disabled');
+			startOverButton.removeAttribute('disabled');
+		}
+	);
+};
+
+continueButton.addEventListener('click', function () {
+	go();	
+});
+
+startOverButton.addEventListener('click', function () {
+	seenIndividuals = [];
+	seenTracks = [];
+	seenArtists = [];
+	resultsElem.innerHTML = '';
+	submit.removeAttribute('disabled');
+	input.removeAttribute('disabled');
+	input.value = '';
+	input.focus();
+});
+
 form.addEventListener('submit', function (evt) {
 	evt.preventDefault();
 	submit.setAttribute('disabled', 'disabled');
@@ -163,16 +203,6 @@ form.addEventListener('submit', function (evt) {
 			return;
 		}
 		seenIndividuals.push(sourceIndividual);
-		var times = 0;
-		async.whilst(
-			function () { 
-				return times < 5; 
-			},
-			function (next) {
-				generatePlaylist(sourceIndividual, next);
-				times = times + 1;
-			},
-			error
-		);
+		go();
 	});
 });
