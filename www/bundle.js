@@ -5745,7 +5745,6 @@ var generatePlaylist = function (individual, done) {
 			resultsElem.appendChild(p);
 
 			var commonLink = routes.getArtistsAndContributorsFromTracks.bind(undefined, [track], function (err, contributors) {
-				console.log('getting a common link');
 				error(err);
 				var contributor;
 				var notSeen = valuesNotIn(contributors, seenIndividuals);
@@ -5843,15 +5842,19 @@ continueButton.addEventListener('click', function () {
 	go();	
 });
 
+var resetForm = function () {
+	submit.removeAttribute('disabled');
+	input.removeAttribute('disabled');
+	input.value = '';
+	input.focus();
+};
+
 startOverButton.addEventListener('click', function () {
 	seenIndividuals = [];
 	seenTracks = [];
 	seenArtists = [];
 	resultsElem.innerHTML = '';
-	submit.removeAttribute('disabled');
-	input.removeAttribute('disabled');
-	input.value = '';
-	input.focus();
+	resetForm();
 });
 
 form.addEventListener('submit', function (evt) {
@@ -5864,6 +5867,7 @@ form.addEventListener('submit', function (evt) {
 		sourceIndividual = mids[0];
 		if (! sourceIndividual) {
 			resultsElem.textContent = 'Could not find an artist named ' + startingPoint;
+			resetForm();
 			return;
 		}
 		seenIndividuals.push(sourceIndividual);
