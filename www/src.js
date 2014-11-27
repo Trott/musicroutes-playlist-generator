@@ -179,15 +179,19 @@ continueButton.addEventListener('click', function () {
 	go();	
 });
 
+var resetForm = function () {
+	submit.removeAttribute('disabled');
+	input.removeAttribute('disabled');
+	input.value = '';
+	input.focus();
+};
+
 startOverButton.addEventListener('click', function () {
 	seenIndividuals = [];
 	seenTracks = [];
 	seenArtists = [];
 	resultsElem.innerHTML = '';
-	submit.removeAttribute('disabled');
-	input.removeAttribute('disabled');
-	input.value = '';
-	input.focus();
+	resetForm();
 });
 
 form.addEventListener('submit', function (evt) {
@@ -200,6 +204,7 @@ form.addEventListener('submit', function (evt) {
 		sourceIndividual = mids[0];
 		if (! sourceIndividual) {
 			resultsElem.textContent = 'Could not find an artist named ' + startingPoint;
+			resetForm();
 			return;
 		}
 		seenIndividuals.push(sourceIndividual);
