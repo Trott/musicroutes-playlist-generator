@@ -82,7 +82,6 @@ var generatePlaylist = function (individual, done) {
 			resultsElem.appendChild(p);
 
 			var commonLink = routes.getArtistsAndContributorsFromTracks.bind(undefined, [track], function (err, contributors) {
-				console.log('getting a common link');
 				error(err);
 				var contributor;
 				var notSeen = valuesNotIn(contributors, seenIndividuals);
@@ -178,6 +177,17 @@ var go = function () {
 
 continueButton.addEventListener('click', function () {
 	go();	
+});
+
+startOverButton.addEventListener('click', function () {
+	seenIndividuals = [];
+	seenTracks = [];
+	seenArtists = [];
+	resultsElem.innerHTML = '';
+	submit.removeAttribute('disabled');
+	input.removeAttribute('disabled');
+	input.value = '';
+	input.focus();
 });
 
 form.addEventListener('submit', function (evt) {

@@ -5822,7 +5822,7 @@ var generatePlaylist = function (individual, done) {
 
 var go = function () {
 	continueButton.setAttribute('disabled', 'disabled');
-	startOver.setAttribute('disabled', 'disabled');
+	startOverButton.setAttribute('disabled', 'disabled');
 	embedShown = false;
 	async.until(
 		function () { 
@@ -5834,13 +5834,24 @@ var go = function () {
 		function (err) {
 			error(err);
 			continueButton.removeAttribute('disabled');
-			startOver.removeAttribute('disabled');
+			startOverButton.removeAttribute('disabled');
 		}
 	);
 };
 
 continueButton.addEventListener('click', function () {
 	go();	
+});
+
+startOverButton.addEventListener('click', function () {
+	seenIndividuals = [];
+	seenTracks = [];
+	seenArtists = [];
+	resultsElem.innerHTML = '';
+	submit.removeAttribute('disabled');
+	input.removeAttribute('disabled');
+	input.value = '';
+	input.focus();
 });
 
 form.addEventListener('submit', function (evt) {
