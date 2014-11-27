@@ -180,6 +180,8 @@ continueButton.addEventListener('click', function () {
 });
 
 var resetForm = function () {
+	continueButton.setAttribute('disabled', 'disabled');
+	startOverButton.setAttribute('disabled', 'disabled');
 	submit.removeAttribute('disabled');
 	input.removeAttribute('disabled');
 	input.value = '';
