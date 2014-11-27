@@ -22,6 +22,51 @@ describe('exports', function () {
 		done();
 	});
 
+	describe('embed()', function () {
+		it('should retrieve embed code', function (done) {
+			nock('https://www.googleapis.com')
+				.filteringPath(/\?.*/, '')
+				.get('/youtube/v3/videos')
+				.reply(200, JSON.stringify({items: [{player: {embedHtml: '<iframe>Embedded!</iframe>'}}]}));
+
+			var callback = function (err, data) {
+				expect(err).to.be.null();
+				expect(data).to.deep.equal({items: [{embedHtml: '<iframe>Embedded!</iframe>'}]});
+				done();
+			};
+
+			videos.embed('JLpTCwOoa4M', callback);
+		});
+
+
+		it('should report an error if there was an error', function (done) {
+			nock.disableNetConnect();
+			var callback = function (err, data) {
+				expect(err).to.be.not.null();
+				expect(data).to.be.undefined();
+				done();
+			};
+
+			videos.embed('fhqwhagads', callback);
+		});
+
+		it('should return an empty items array if no items were found', function (done) {
+			nock('https://www.googleapis.com')
+			  .filteringPath(/\?.*$/, '')
+				.get('/youtube/v3/videos')
+				.reply(200, JSON.stringify({items:[]}));
+			
+			var callback = function (err, data) {
+				expect(err).to.be.null();
+				expect(data.items).to.be.empty();
+				done();
+			};
+
+			videos.embed('asdkfhaskdjfhakdjhfkajsdfh', callback);
+		});
+
+	});
+
 	describe('search()', function () {
 		it('should retrieve information for a video', function (done) {
 			nock('https://www.googleapis.com')
@@ -30,7 +75,6 @@ describe('exports', function () {
 				.reply(200, JSON.stringify({ items: [{ id: { videoId: 'F-QR4dY1jbQ' }}]}));
 
 			var callback = function (err, data) {
-				console.log(err);
 				expect(err).to.be.null();
 				expect(data).to.deep.equal({items: [{url: 'https://youtu.be/F-QR4dY1jbQ'}]});
 				done();
