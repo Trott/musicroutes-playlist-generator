@@ -63,11 +63,11 @@ var generatePlaylist = function (individual, done) {
 
 			var theseArtistMids = details.artists.map(function (value) { return value.mid; });
 			seenArtists = seenArtists.concat(valuesNotIn(theseArtistMids, seenArtists));
-			var name = details.name || 'WHOOPS, FREEBASE DOES NOT APPEAR TO HAVE AN ENGLISH NAME FOR THIS TRACK';
+			var name = details.name || 'FREEBASE DOES NOT HAVE AN ENGLISH NAME FOR THIS TRACK';
 			var artist = details.artists.map(function (value) { 
-				return value.name || 'WHOOPS, FREEBASE DOES NOT APPEAR TO HAVE AN ENGLISH NAME FOR THIS ARTIST'; 
+				return value.name || 'FREEBASE DOES NOT HAVE AN ENGLISH NAME FOR THIS ARTIST'; 
 			}).join(' & ');
-			var release = random(details.releases).name || 'WHOOPS, FREEBASE DOES NOT APPEAR TO HAVE AN ENGLISH NAME FOR THIS RELEASE';
+			var release = random(details.releases).name || 'FREEBASE DOES NOT HAVE AN ENGLISH NAME FOR THIS RELEASE';
 
 			var p = document.createElement('p');
 
@@ -93,7 +93,7 @@ var generatePlaylist = function (individual, done) {
 				}
 				routes.getArtistDetails(contributor, function (err, details) {
 					error(err);
-					var name = details.name || 'WHOOPS, FREEBASE DOES NOT HAVE AN ENGLISH NAME FOR THIS PERSON';
+					var name = details.name || 'FREEBASE DOES NOT HAVE AN ENGLISH NAME FOR THIS PERSON';
 					var p = document.createElement('p');
 					p.appendChild(document.createTextNode('...with ' + name + '...'));
 					resultsElem.appendChild(p);
