@@ -198,6 +198,7 @@ form.addEventListener('submit', function (evt) {
 	evt.preventDefault();
 	submit.setAttribute('disabled', 'disabled');
 	input.setAttribute('disabled', 'disabled');
+	resultsElem.innerHTML = '';
 	var startingPoint = input.value;
 	routes.getMids(startingPoint, '/music/artist', function (err, mids) {
 		error(err);
