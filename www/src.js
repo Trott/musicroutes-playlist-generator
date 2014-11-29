@@ -95,7 +95,7 @@ var generatePlaylist = function (individual, done) {
 					error(err);
 					var name = details.name || 'FREEBASE DOES NOT HAVE AN ENGLISH NAME FOR THIS PERSON';
 					var p = document.createElement('p');
-					p.appendChild(document.createTextNode('...with ' + name + '...'));
+					p.appendChild(document.createTextNode('…with ' + name + '…'));
 					resultsElem.appendChild(p);
 					sourceIndividual = contributor;
 					done();
