@@ -6,6 +6,8 @@
     <meta name="description" content="Create a playlist of songs with common musicians, like Six Degrees of Kevin Bacon but for music rather than movies.">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Music Routes Playlist Generator</title>
+    <script src="bower_components/webcomponentsjs/webcomponents.min.js"></script>
+    <link rel="import" href="bower_components/paper-input/paper-input-decorator.html">
     <link rel="stylesheet" href="styles/main.css">
 </head>
 <body>
@@ -15,10 +17,13 @@
       </div>
     </header>
     <main>
-<form id="startPlaylist">
-<label for="startPoint">Start Point</label>: <input id="startPoint" placeholder="Bob Dylan" autofocus>
-<button type="submit" id="startPointSubmit" class="button--primary">Create Playlist</button>
-</form>
+			<form id="startPlaylist">
+				<paper-input-decorator floatingLabel label="Start Point" id="paperStartPoint">
+					<input is="core-input" id="startPoint" autofocus>
+				</paper-input-decorator>
+
+				<button type="submit" id="startPointSubmit" class="button--primary">Create Playlist</button>
+			</form>
 <hr>
 <div id="results">
 </div>

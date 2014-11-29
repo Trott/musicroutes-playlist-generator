@@ -5626,6 +5626,7 @@ var resultsElem = document.getElementById('results');
 var form = document.getElementById('startPlaylist');
 var submit = document.getElementById('startPointSubmit');
 var input = document.getElementById('startPoint');
+var paperInput = document.getElementById('paperStartPoint')
 var continueButton = document.getElementById('continue');
 var startOverButton = document.getElementById('startOver');
 
@@ -5801,6 +5802,7 @@ var resetForm = function () {
 	startOverButton.setAttribute('disabled', 'disabled');
 	submit.removeAttribute('disabled');
 	input.removeAttribute('disabled');
+	paperInput.removeAttribute('disabled');
 	input.value = '';
 	input.focus();
 };
@@ -5817,6 +5819,7 @@ form.addEventListener('submit', function (evt) {
 	evt.preventDefault();
 	submit.setAttribute('disabled', 'disabled');
 	input.setAttribute('disabled', 'disabled');
+	paperInput.setAttribute('disabled', 'disabled');
 	resultsElem.innerHTML = '';
 	var startingPoint = input.value;
 	routes.getMids(startingPoint, '/music/artist', function (err, mids) {
