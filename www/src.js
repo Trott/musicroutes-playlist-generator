@@ -63,11 +63,11 @@ var generatePlaylist = function (individual, done) {
 
 			var theseArtistMids = details.artists.map(function (value) { return value.mid; });
 			seenArtists = seenArtists.concat(valuesNotIn(theseArtistMids, seenArtists));
-			var name = details.name || 'WHOOPS, FREEBASE DOES NOT APPEAR TO HAVE AN ENGLISH NAME FOR THIS TRACK';
+			var name = details.name || 'FREEBASE DOES NOT HAVE AN ENGLISH NAME FOR THIS TRACK';
 			var artist = details.artists.map(function (value) { 
-				return value.name || 'WHOOPS, FREEBASE DOES NOT APPEAR TO HAVE AN ENGLISH NAME FOR THIS ARTIST'; 
+				return value.name || 'FREEBASE DOES NOT HAVE AN ENGLISH NAME FOR THIS ARTIST'; 
 			}).join(' & ');
-			var release = random(details.releases).name || 'WHOOPS, FREEBASE DOES NOT APPEAR TO HAVE AN ENGLISH NAME FOR THIS RELEASE';
+			var release = random(details.releases).name || 'FREEBASE DOES NOT HAVE AN ENGLISH NAME FOR THIS RELEASE';
 
 			var p = document.createElement('p');
 
@@ -84,7 +84,7 @@ var generatePlaylist = function (individual, done) {
 			var commonLink = routes.getArtistsAndContributorsFromTracks.bind(undefined, [track], function (err, contributors) {
 				error(err);
 				var contributor;
-				var notSeen = valuesNotIn(contributors, seenIndividuals);
+				var notSeen = valuesNotIn(contributors, seenIndividuals);				
 				if (notSeen.length > 0) {
 					contributor = random(notSeen);
 					seenIndividuals.push(contributor);
@@ -93,9 +93,9 @@ var generatePlaylist = function (individual, done) {
 				}
 				routes.getArtistDetails(contributor, function (err, details) {
 					error(err);
-					var name = details.name || 'WHOOPS, FREEBASE DOES NOT HAVE AN ENGLISH NAME FOR THIS PERSON';
+					var name = details.name || 'FREEBASE DOES NOT HAVE AN ENGLISH NAME FOR THIS PERSON';
 					var p = document.createElement('p');
-					p.appendChild(document.createTextNode('...with ' + name + '...'));
+					p.appendChild(document.createTextNode('…with ' + name + '…'));
 					resultsElem.appendChild(p);
 					sourceIndividual = contributor;
 					done();
@@ -133,7 +133,6 @@ var generatePlaylist = function (individual, done) {
 	// next[nextIndex] = what function to invoke if the current one doesn't find a track
 	var nextIndex = 0;
 	var next = [
-		// Find a track by an artist we haven't seen yet.
 		function () {
 			if (seenArtists.length === 0) {
 				// If this is the first track, get one by this artist if we can.
@@ -143,7 +142,6 @@ var generatePlaylist = function (individual, done) {
 				routes.getTracksWithContributors([individual], options, callback);
 			}
 		},
-		routes.getTracksWithContributors.bind(undefined, [individual], options, callback),
 		// Look for any track with this contributor credited as a contributor regardless if we've seen the artist already.
 		routes.getTracksWithContributors.bind(undefined, [individual], {}, callback),
 		// Look for any tracks actually credited to this contributor as the main artist. We are desperate!
@@ -179,27 +177,35 @@ continueButton.addEventListener('click', function () {
 	go();	
 });
 
+var resetForm = function () {
+	continueButton.setAttribute('disabled', 'disabled');
+	startOverButton.setAttribute('disabled', 'disabled');
+	submit.removeAttribute('disabled');
+	input.removeAttribute('disabled');
+	input.value = '';
+	input.focus();
+};
+
 startOverButton.addEventListener('click', function () {
 	seenIndividuals = [];
 	seenTracks = [];
 	seenArtists = [];
 	resultsElem.innerHTML = '';
-	submit.removeAttribute('disabled');
-	input.removeAttribute('disabled');
-	input.value = '';
-	input.focus();
+	resetForm();
 });
 
 form.addEventListener('submit', function (evt) {
 	evt.preventDefault();
 	submit.setAttribute('disabled', 'disabled');
 	input.setAttribute('disabled', 'disabled');
+	resultsElem.innerHTML = '';
 	var startingPoint = input.value;
 	routes.getMids(startingPoint, '/music/artist', function (err, mids) {
 		error(err);
 		sourceIndividual = mids[0];
 		if (! sourceIndividual) {
 			resultsElem.textContent = 'Could not find an artist named ' + startingPoint;
+			resetForm();
 			return;
 		}
 		seenIndividuals.push(sourceIndividual);

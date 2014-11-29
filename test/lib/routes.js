@@ -175,6 +175,18 @@ describe('exports', function () {
 			routes.getArtistsAndContributorsFromTracks(['/m/0f2c414'], callback);
 		});
 
+		it('should retrieve Beatles, Brian Jones, and Todd Rundgren for "You Know My Name" and "Afraid"', function (done) {
+			var callback = function (err, data) {
+				expect(err).to.be.null();
+				expect(data).to.contain('/m/07c0j');
+				expect(data).to.contain('/m/01p95y0');
+				expect(data).to.contain('/m/095x_');
+				done();
+			};
+
+			routes.getArtistsAndContributorsFromTracks(['/m/0fqv51t', '/m/0f2c414'], callback);
+		});
+
 		it('should return an error if there is a network error', function (done) {
 			nock.disableNetConnect();
 			var callback = function (err) {
