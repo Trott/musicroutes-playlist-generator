@@ -157,7 +157,7 @@ button:hover {
 
 button[disabled] {
   background: #ffffff;
-  color: #3372df;
+  color: #e6e6e6;
   border: 1px solid #e6e6e6;
 }
 
