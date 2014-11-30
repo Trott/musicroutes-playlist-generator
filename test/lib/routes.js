@@ -20,6 +20,7 @@ describe('exports', function () {
 	var PaulMcCartney = '/m/03j24kf';
 	var GeorgeHarrison = '/m/03bnv';
 	var Something = '/m/0mlx6x';
+	var YouKnowMyName = '/m/0fqv51t';
 	var revert;
 
 	beforeEach(function (done) {
@@ -27,6 +28,7 @@ describe('exports', function () {
 			revert();
 			revert = null;
 		}
+		nock.cleanAll();
 		nock.enableNetConnect();
 		done();
 	});
@@ -148,46 +150,56 @@ describe('exports', function () {
 
 	describe('getArtistsAndContributorsFromTracks()', function () {
 		it('should retrieve Beatles and Brian Jones from "You Know My Name (Look Up The Number)"', function (done) {
-			var callback = function (err, data) {
-				expect(err).to.be.null();
+			var success = function (data) {
 				expect(data).to.contain('/m/07c0j');
 				expect(data).to.contain('/m/01p95y0');
 				done();
 			};
 
-			routes.getArtistsAndContributorsFromTracks(['/m/0fqv51t'], callback);
+			routes.getArtistsAndContributorsFromTracks([YouKnowMyName]).then(success);
 		});
 
 		it('should retrieve Todd Rundgren for "Afraid"', function (done) {
-			var callback = function (err, data) {
-				expect(err).to.be.null();
+			var success = function (data) {
 				expect(data).to.contain('/m/095x_');
 				done();
 			};
 
-			routes.getArtistsAndContributorsFromTracks(['/m/0f2c414'], callback);
+			routes.getArtistsAndContributorsFromTracks(['/m/0f2c414']).then(success);
 		});
 
 		it('should retrieve Beatles, Brian Jones, and Todd Rundgren for "You Know My Name" and "Afraid"', function (done) {
-			var callback = function (err, data) {
-				expect(err).to.be.null();
+			var success = function (data) {
 				expect(data).to.contain('/m/07c0j');
 				expect(data).to.contain('/m/01p95y0');
 				expect(data).to.contain('/m/095x_');
 				done();
 			};
 
-			routes.getArtistsAndContributorsFromTracks(['/m/0fqv51t', '/m/0f2c414'], callback);
+			routes.getArtistsAndContributorsFromTracks([YouKnowMyName, '/m/0f2c414']).then(success);
 		});
 
 		it('should return an error if there is a network error', function (done) {
 			nock.disableNetConnect();
-			var callback = function (err) {
+			var failure = function (err) {
 				expect(err instanceof Error).to.be.true();
 				done();
 			};
 
-			routes.getArtistsAndContributorsFromTracks(['/m/0fqv51t'], callback);
+			routes.getArtistsAndContributorsFromTracks([YouKnowMyName]).catch(failure);
+		});
+
+		it('should handle unexpected but valid JSON gracefully', function (done) {
+			nock('https://www.googleapis.com')
+				.filteringPath(/.*/, '/')
+				.get('/')
+				.reply(200, '{"result": [false]}');
+			var success = function (data) {
+				expect(data).to.deep.equal([]);
+				done();
+			};
+
+			routes.getArtistsAndContributorsFromTracks([YouKnowMyName]).then(success);
 		});
 	});
 
