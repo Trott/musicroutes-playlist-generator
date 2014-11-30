@@ -1,3 +1,4 @@
 node_modules
 examples/node_modules
 www/bundle.js
+www/bower_components
