@@ -66,11 +66,13 @@ var generatePlaylist = function (individual, done) {
 			var q = '"' + name + '" "' + artist + '" "' + release + '"';
 			console.log(output);
 
-			videos.search(q, function (err, data) {
-				if (data && data.items && data.items[0] && data.items[0].url) {
+			var writeVideoUrl = function (data) {
+				if (data.items[0] && data.items[0].url) {
 					console.log(data.items[0].url);
-				}
+				}				
+			};
 
+			var nextinator = function () {
 				routes.getArtistsAndContributorsFromTracks([track], function (err, contributors) {
 					error(err);
 					var contributor;
@@ -89,7 +91,11 @@ var generatePlaylist = function (individual, done) {
 						done();
 					});
 				});
-			});			
+			};
+
+			videos.search(q)
+			.then(writeVideoUrl)
+			.then(nextinator);			
 		});
 	};
 
