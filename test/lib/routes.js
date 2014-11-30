@@ -73,24 +73,23 @@ describe('exports', function () {
 
 	describe('getTracksWithContributors()', function () {
 		it('should retrieve tracks with any of the supplied contributors', function (done) {
-			var callback = function (err, data) {
-				expect(err).to.be.null();
+			var success = function (data) {
 				expect(data).to.be.array();
 				expect(data).to.contain(Something);
 				done();
 			};
 
-			routes.getTracksWithContributors([PaulMcCartney], {}, callback);
+			routes.getTracksWithContributors([PaulMcCartney], {}).then(success);
 		});
 
 		it('should return an error if there is a network error', function (done) {
 			nock.disableNetConnect();
-			var callback = function (err) {
+			var failure = function (err) {
 				expect(err instanceof Error).to.be.true();
 				done();
 			};
 
-			routes.getTracksWithContributors([PaulMcCartney], {}, callback);
+			routes.getTracksWithContributors([PaulMcCartney], {}).catch(failure);
 		});
 
 		it('should return undefined for track_contributions for which there is no track', function (done) {
@@ -101,18 +100,16 @@ describe('exports', function () {
 				callback(null, { result: [ { track_contributions: [{}], type: '/music/artist' } ] });
 			}}});
 
-			var callback = function (err, data) {
-				expect(err).to.be.null();
+			var success = function (data) {
 				expect(data).to.deep.equal([undefined]);
 				done();
 			};
 
-			routes.getTracksWithContributors([PaulMcCartney], {}, callback);
+			routes.getTracksWithContributors([PaulMcCartney], {}).then(success);
 		});
 
 		it('should run subquery to omit artists specified in options', function (done) {
-			var callback = function (err, data) {
-				expect(err).to.be.null();
+			var success = function (data) {
 				expect(data).to.not.contain(Something);
 				done();
 			};
@@ -124,7 +121,7 @@ describe('exports', function () {
 				}]
 			};
 
-			routes.getTracksWithContributors([PaulMcCartney], {subquery: omitTheBeatles}, callback);
+			routes.getTracksWithContributors([PaulMcCartney], {subquery: omitTheBeatles}).then(success);
 		});
 	});
 
