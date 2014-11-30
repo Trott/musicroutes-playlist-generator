@@ -106,6 +106,14 @@ paper-button {
   color: #ffffff;
 }
 
+paper-fab {
+  background: #ff9800;
+}
+
+paper-fab[disabled] {
+  background: #eaeaea;
+}
+
 .results {
   min-height: 1em;
 }

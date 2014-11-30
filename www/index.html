@@ -8,6 +8,7 @@
     <title>Music Routes Playlist Generator</title>
     <script src="bower_components/webcomponentsjs/webcomponents.min.js"></script>
     <link rel="import" href="bower_components/paper-input/paper-input-decorator.html">
+    <link rel="import" href="bower_components/paper-fab/paper-fab.html">
     <link rel="import" href="bower_components/paper-button/paper-button.html">
     <link rel="stylesheet" href="styles/main.css">
 </head>
@@ -23,7 +24,7 @@
 					<input is="core-input" id="startPoint" autofocus>
 				</paper-input-decorator>
 
-				<paper-button id="startPointSubmit" raised>Create Playlist</paper-button>
+				<paper-fab id="startPointSubmit" icon="arrow-forward">Start</paper-fab>
 			</form>
 
 			<div id="results" class="results"></div>
