@@ -10,6 +10,7 @@
     <link rel="import" href="bower_components/paper-input/paper-input-decorator.html">
     <link rel="import" href="bower_components/paper-fab/paper-fab.html">
     <link rel="import" href="bower_components/paper-button/paper-button.html">
+    <link rel="import" href="bower_components/paper-spinner/paper-spinner.html">
     <link rel="stylesheet" href="styles/main.css">
 </head>
 <body>
@@ -28,7 +29,10 @@
 			</form>
 
 			<div id="results" class="results"></div>
-
+			<div>
+				<paper-spinner id="progress"></paper-spinner>
+			</div>
+			
 			<paper-button id="continue" raised disabled>Continue</paper-button>
 			<paper-button id="startOver" raised disabled>Start Over</paper-button>
     </main>
