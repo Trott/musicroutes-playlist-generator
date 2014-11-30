@@ -39,8 +39,7 @@ var valuesNotIn = function (values, notIn) {
 var embedShown = false;
 
 var generatePlaylist = function (individual, done) {
-	var callback = 	function (err, tracks) {
-		error(err);
+	var processTracks = 	function (tracks) {
 		var track;
 
 		var notSeenTracks = valuesNotIn(tracks, seenTracks);
@@ -148,16 +147,20 @@ var generatePlaylist = function (individual, done) {
 		function () {
 			if (seenArtists.length === 0) {
 				// If this is the first track, get one by this artist if we can.
-				routes.getTracksByArtists([individual], {}, callback);
+				routes.getTracksByArtists([individual]).then(processTracks, error);
 			} else {
 				// Otherwise, get one by an artist we haven't seen yet
-				routes.getTracksWithContributors([individual], options, callback);
+				routes.getTracksWithContributors([individual], options).then(processTracks, error);
 			}
 		},
 		// Look for any track with this contributor credited as a contributor regardless if we've seen the artist already.
-		routes.getTracksWithContributors.bind(undefined, [individual], {}, callback),
+		function () {
+			routes.getTracksWithContributors([individual], {}).then(processTracks, error);
+		},
 		// Look for any tracks actually credited to this contributor as the main artist. We are desperate!
-		routes.getTracksByArtists.bind(undefined, [individual], {}, callback),
+		function () {
+			routes.getTracksByArtists([individual]).then(processTracks, error);
+		},
 		// Give up
 		error.bind(undefined, new Error('Could not find any tracks for contributor ' + individual))
 	];

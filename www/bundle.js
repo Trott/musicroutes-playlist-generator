@@ -47,7 +47,7 @@ exports.getMids = function (name, type) {
   });
 };
 
-exports.getTracksWithContributors = function (mids, opts, callback) {
+exports.getTracksWithContributors = function (mids, opts) {
   var query = [{
     'mid|=': mids,
     type: '/music/artist',
@@ -68,22 +68,27 @@ exports.getTracksWithContributors = function (mids, opts, callback) {
 
   query = JSON.stringify(query);
 
-  var cleanup = function (err, data) {
-    var rv = [];
-    each(data, 'result',
-      function (value) {
-        each(value, 'track_contributions', function (value) { 
-          rv.push(grabMid(value, 'track')); 
-        });
+  return new Promise(function (fulfill, reject) {
+    var cleanup = function (err, data) {
+      if (err) {
+        return reject(err);
       }
-    );
-    callback(err, rv);
-  };
+      var rv = [];
+      each(data, 'result',
+        function (value) {
+          each(value, 'track_contributions', function (value) { 
+            rv.push(grabMid(value, 'track')); 
+          });
+        }
+      );
+      fulfill(rv);
+    };
 
-  freebase.mqlread(query, options, cleanup);
+    freebase.mqlread(query, options, cleanup);
+  });
 };
 
-exports.getTracksByArtists = function (mids, opts, callback) {
+exports.getTracksByArtists = function (mids) {
   var query = JSON.stringify([{
     'mid|=': mids,
     type: '/music/artist',
@@ -93,19 +98,24 @@ exports.getTracksByArtists = function (mids, opts, callback) {
     }]
   }]);
 
-  var cleanup = function (err, data) {
-    var rv = [];
-    each(data, 'result', 
-      function (value) {
-        each(value, 'track', function (value) {
-          rv.push(grabMid(value));
-        });
+  return new Promise(function (fulfill, reject) {
+    var cleanup = function (err, data) {
+      if (err) {
+        return reject(err);
       }
-    );
-    callback(err, rv);
-  };
+      var rv = [];
+      each(data, 'result', 
+        function (value) {
+          each(value, 'track', function (value) {
+            rv.push(grabMid(value));
+          });
+        }
+      );
+      fulfill(rv);
+    };
 
-  freebase.mqlread(query, options, cleanup);
+    freebase.mqlread(query, options, cleanup);
+  });
 };
 
 exports.getArtistsAndContributorsFromTracks = function (mids, callback) {
@@ -6082,8 +6092,7 @@ var valuesNotIn = function (values, notIn) {
 var embedShown = false;
 
 var generatePlaylist = function (individual, done) {
-	var callback = 	function (err, tracks) {
-		error(err);
+	var processTracks = 	function (tracks) {
 		var track;
 
 		var notSeenTracks = valuesNotIn(tracks, seenTracks);
@@ -6191,16 +6200,20 @@ var generatePlaylist = function (individual, done) {
 		function () {
 			if (seenArtists.length === 0) {
 				// If this is the first track, get one by this artist if we can.
-				routes.getTracksByArtists([individual], {}, callback);
+				routes.getTracksByArtists([individual]).then(processTracks, error);
 			} else {
 				// Otherwise, get one by an artist we haven't seen yet
-				routes.getTracksWithContributors([individual], options, callback);
+				routes.getTracksWithContributors([individual], options).then(processTracks, error);
 			}
 		},
 		// Look for any track with this contributor credited as a contributor regardless if we've seen the artist already.
-		routes.getTracksWithContributors.bind(undefined, [individual], {}, callback),
+		function () {
+			routes.getTracksWithContributors([individual], {}).then(processTracks, error);
+		},
 		// Look for any tracks actually credited to this contributor as the main artist. We are desperate!
-		routes.getTracksByArtists.bind(undefined, [individual], {}, callback),
+		function () {
+			routes.getTracksByArtists([individual]).then(processTracks, error);
+		},
 		// Give up
 		error.bind(undefined, new Error('Could not find any tracks for contributor ' + individual))
 	];
