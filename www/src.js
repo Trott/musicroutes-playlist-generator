@@ -82,26 +82,43 @@ var generatePlaylist = function (individual, done) {
 
 			resultsElem.appendChild(p);
 
-			var commonLink = routes.getArtistsAndContributorsFromTracks.bind(undefined, [track], function (err, contributors) {
-				error(err);
-				var contributor;
-				var notSeen = valuesNotIn(contributors, seenIndividuals);				
-				if (notSeen.length > 0) {
-					contributor = random(notSeen);
-					seenIndividuals.push(contributor);
-				} else {
-					contributor = random(contributors);
-				}
-				routes.getArtistDetails(contributor, function (err, details) {
-					error(err);
-					var name = details.name || 'FREEBASE DOES NOT HAVE AN ENGLISH NAME FOR THIS PERSON';
-					var p = document.createElement('p');
-					p.appendChild(document.createTextNode('…with ' + name + '…'));
-					resultsElem.appendChild(p);
-					sourceIndividual = contributor;
-					done();
+			var removeMeWhenPromisified = function(contributor) {
+				return new Promise(function (fulfill, reject) {
+					routes.getArtistDetails(contributor, function (err, details) {
+						if (err) {
+							return reject(err);
+						}
+						var name = details.name || 'FREEBASE DOES NOT HAVE AN ENGLISH NAME FOR THIS PERSON';
+						var p = document.createElement('p');
+						p.appendChild(document.createTextNode('…with ' + name + '…'));
+						resultsElem.appendChild(p);
+						sourceIndividual = contributor;
+						fulfill();
+					});
 				});
-			});
+			};
+
+			var pickContributor = function (contributors) {
+				return new Promise(function (fulfill, reject) {
+					var contributor;
+					var notSeen = valuesNotIn(contributors, seenIndividuals);				
+					if (notSeen.length > 0) {
+						contributor = random(notSeen);
+						seenIndividuals.push(contributor);
+					} else {
+						contributor = random(contributors);
+					}
+
+					return contributor ? fulfill(contributor) : reject(Error('No contributors for track'));
+				});
+			};
+
+			var commonLink = function () {
+				routes.getArtistsAndContributorsFromTracks([track])
+				.then(pickContributor, error)
+				.then(removeMeWhenPromisified, error)
+				.then(done, error);
+			};
 
 			var q = '"' + name + '" "' + artist + '" "' + release + '"';
 
