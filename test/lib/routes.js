@@ -33,44 +33,41 @@ describe('exports', function () {
 
 	describe('getMids()', function () {
 		it('should retrieve MIDs for all artists with the supplied name when artists specified', function (done) {
-			var callback = function (err, data) {
-				expect(err).to.be.null();
+			var success = function (data) {
 				expect(data).to.contain('/m/0160yj');
 				done();
 			};
 
-			routes.getMids('Magma', '/music/artist', callback);
+			routes.getMids('Magma', '/music/artist').then(success);
 		});
 
 		it('should retrieve MIDs for all tracks with the supplied name when tracks specified', function (done) {
-			var callback = function (err, data) {
-				expect(err).to.be.null();
+			var success = function (data) {
 				expect(data).to.contain('/m/0lgj3t');
 				done();
 			};
 
-			routes.getMids('Penny Lane', '/music/track', callback);
+			routes.getMids('Penny Lane', '/music/track').then(success);
 		});
 
 		it('should retrieve only the MIDs for specified type', function (done) {
-			var callback = function (err, data) {
-				expect(err).to.be.null();
+			var success = function (data) {
 				expect(data).to.contain('/m/01czx');
 				expect(data).to.not.contain('/m/0f2hrtz');
 				done();
 			};
 
-			routes.getMids('Black Sabbath', '/music/artist', callback);
+			routes.getMids('Black Sabbath', '/music/artist').then(success);
 		});
 
 		it('should return an error if there is a network error', function (done) {
 			nock.disableNetConnect();
-			var callback = function (err) {
+			var failure = function (err) {
 				expect(err instanceof Error).to.be.true();
 				done();
 			};
 
-			routes.getMids('Black Sabbath', '/music/artist', callback);
+			routes.getMids('Black Sabbath', '/music/artist').catch(failure);
 		});
 	});
 
