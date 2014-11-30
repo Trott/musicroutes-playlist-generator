@@ -1,8 +1,10 @@
 #!/usr/bin/env node
+/* global -Promise */
 
 var routes = require('../lib/routes.js');
 var videos = require('../lib/videos.js');
 var async = require('async');
+var Promise = require('promise');
 
 var sourceIndividual;
 var seenIndividuals = [];
@@ -71,9 +73,8 @@ var generatePlaylist = function (individual, done) {
 				}				
 			};
 
-			var nextinator = function () {
-				routes.getArtistsAndContributorsFromTracks([track], function (err, contributors) {
-					error(err);
+			var pickContributor = function (contributors) {
+				return new Promise(function (fulfill, reject) {
 					var contributor;
 					var notSeen = valuesNotIn(contributors, seenIndividuals);
 					if (notSeen.length > 0) {
@@ -82,14 +83,33 @@ var generatePlaylist = function (individual, done) {
 					} else {
 						contributor = random(contributors);
 					}
+
+					if (contributor) {
+						fulfill(contributor);
+					} else {
+						reject(Error('No contributor found for track'));
+					}
+				});
+			};
+
+			var removeMeAfterPromisifyingGetArtistDetails = function (contributor) {
+				return new Promise(function (fulfill, reject) {
 					routes.getArtistDetails(contributor, function (err, details) {
-						error(err);
+						if (err) {
+							return reject(err);
+						}
 						var name = details.name || 'WHOOPS, FREEBASE DOES NOT HAVE AN ENGLISH NAME FOR THIS PERSON';
 						console.log('\n ... with ' + name + ' ... \n');
 						sourceIndividual = contributor;
 						done();
 					});
 				});
+			};
+
+			var nextinator = function () {
+				routes.getArtistsAndContributorsFromTracks([track])
+					.then(pickContributor, error)
+					.then(removeMeAfterPromisifyingGetArtistDetails, error);
 			};
 
 			videos.search(q)
