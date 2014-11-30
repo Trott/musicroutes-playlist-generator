@@ -67,8 +67,8 @@ var generatePlaylist = function (individual, done) {
 			console.log(output);
 
 			var writeVideoUrl = function (data) {
-				if (data.items[0] && data.items[0].url) {
-					console.log(data.items[0].url);
+				if (data.items[0] && data.items[0].videoId) {
+					console.log('http://youtu.be/' + data.items[0].videoId);
 				}				
 			};
 
@@ -133,8 +133,8 @@ var generatePlaylist = function (individual, done) {
 };
 
 var startingPoint = process.argv[2] || 'Todd Rundgren';
-routes.getMids(startingPoint, '/music/artist', function (err, mids) {
-	error(err);
+
+var kickOff = function(mids) {
 	sourceIndividual = mids[0];
 	if (! sourceIndividual) {
 		console.log('Could not find an artist named ' + process.argv[2]);
@@ -147,4 +147,7 @@ routes.getMids(startingPoint, '/music/artist', function (err, mids) {
 		},
 		error
 	);
-});
+};
+
+routes.getMids(startingPoint, '/music/artist')
+.then(kickOff, error);
