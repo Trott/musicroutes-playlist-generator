@@ -5629,6 +5629,7 @@ var input = document.getElementById('startPoint');
 var paperInput = document.getElementById('paperStartPoint');
 var continueButton = document.getElementById('continue');
 var startOverButton = document.getElementById('startOver');
+var progress = document.getElementById('progress');
 
 var sourceIndividual;
 var seenIndividuals = [];
@@ -5777,6 +5778,7 @@ var generatePlaylist = function (individual, done) {
 var go = function () {
 	continueButton.setAttribute('disabled', 'disabled');
 	startOverButton.setAttribute('disabled', 'disabled');
+	progress.setAttribute('active', 'active');
 	embedShown = false;
 	async.until(
 		function () { 
@@ -5789,6 +5791,7 @@ var go = function () {
 			error(err);
 			continueButton.removeAttribute('disabled');
 			startOverButton.removeAttribute('disabled');
+			progress.removeAttribute('active');
 		}
 	);
 };
