@@ -105,23 +105,33 @@ var generatePlaylist = function (individual, done) {
 			});
 
 			var q = '"' + name + '" "' + artist + '" "' + release + '"';
+
+			var extractVideoId = function (data) {
+				return new Promise(function (fulfill, reject) {
+					if (data.items[0] && data.items[0].videoId) {
+						fulfill(data.items[0].videoId);
+					} else {
+						reject(Error('No videoId to extract'));
+					}
+				});
+			};
 			
-			videos.search(q, function (err, data) {
-				if (data && data.items && data.items[0] && data.items[0].videoId) {
-					videos.embed(data.items[0].videoId, function (err, data) {
-						if (data && data.items && data.items[0] && data.items[0].embedHtml) {
-							var div = document.createElement('div');
-							// Yes, we're trusting YouTube's API not to p0wn us.
-							div.innerHTML = data.items[0].embedHtml;
-							resultsElem.appendChild(div);
-							embedShown = true;
-						}
-						commonLink();
-					});
-				} else {
-					commonLink();
+			var embedInDom = function (data) {
+				if (data.items[0] && data.items[0].embedHtml) {
+					var div = document.createElement('div');
+					// Yes, we're trusting YouTube's API not to p0wn us.
+					div.innerHTML = data.items[0].embedHtml;
+					resultsElem.appendChild(div);
+					embedShown = true;
 				}
-			});			
+			};
+
+			videos.search(q)
+			.then(extractVideoId)
+			.then(videos.embed)
+			.then(embedInDom)
+			.then(commonLink, commonLink);
+			
 		});
 	};
 
