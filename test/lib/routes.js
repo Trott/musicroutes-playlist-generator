@@ -127,23 +127,22 @@ describe('exports', function () {
 
 	describe('getTracksByArtists()', function () {
 		it('should retrieve tracks by any of the supplied artists', function (done) {
-			var callback = function (err, data) {
-				expect(err).to.be.null();
+			var success = function (data) {
 				expect(data).to.contain('/m/0155j9k');
 				done();
 			};
 
-			routes.getTracksByArtists([PaulMcCartney], {}, callback);
+			routes.getTracksByArtists([PaulMcCartney]).then(success);
 		});
 
 		it('should return an error if there is a network error', {}, function (done) {
 			nock.disableNetConnect();
-			var callback = function (err) {
+			var failure = function (err) {
 				expect(err instanceof Error).to.be.true();
 				done();
 			};
 
-			routes.getTracksByArtists([PaulMcCartney], {}, callback);
+			routes.getTracksByArtists([PaulMcCartney]).catch(failure);
 		});
 	});
 
