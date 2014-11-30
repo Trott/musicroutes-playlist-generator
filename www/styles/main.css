@@ -1,5 +1,6 @@
+/*** uncss> filename: http://localhost:8000/www/styles/main.css ***/
+
 html,
-button,
 input {
   color: #222;
 }
@@ -24,27 +25,10 @@ main {
   display: block;
 }
 
-hr {
-  box-sizing: content-box;
-  height: 0;
-}
-
-button,
 input {
   color: inherit;
   font: inherit;
   margin: 0;
-}
-
-button {
-  overflow: visible;
-  text-transform: none;
-  -webkit-appearance: button;
-  cursor: pointer;
-}
-
-button[disabled] {
-  cursor: default;
 }
 
 button::-moz-focus-inner,
@@ -64,8 +48,7 @@ input {
 }
 
 html,
-body,
-button {
+body {
   -moz-osx-font-smoothing: antialiased;
   -webkit-font-smoothing: antialiased;
   font-smoothing: antialiased;
@@ -128,37 +111,6 @@ h1 {
     padding-top: 0.3824em;
     padding-bottom: 0;
   }
-}
-
-button {
-  display: inline-block;
-  padding: 12px 32px;
-  margin-bottom: 13px;
-  margin-top: 13px;
-  min-height: 26px;
-  text-align: center;
-  font-family: 'Roboto Condensed', Helvetica, sans-serif;
-  font-weight: 600;
-  text-decoration: none;
-  outline: 0;
-  -webkit-transition: none;
-  transition: none;
-  background: #4285f4;
-  color: #ffffff;
-  border: 1px solid #1266f1;
-}
-
-button:hover {
-  background: #4d4d4d;
-  color: #ffffff;
-  border: 1px solid #4d4d4d;
-  text-decoration: none;
-}
-
-button[disabled] {
-  background: #ffffff;
-  color: #e6e6e6;
-  border: 1px solid #e6e6e6;
 }
 
 html,
