@@ -5626,7 +5626,7 @@ var resultsElem = document.getElementById('results');
 var form = document.getElementById('startPlaylist');
 var submit = document.getElementById('startPointSubmit');
 var input = document.getElementById('startPoint');
-var paperInput = document.getElementById('paperStartPoint')
+var paperInput = document.getElementById('paperStartPoint');
 var continueButton = document.getElementById('continue');
 var startOverButton = document.getElementById('startOver');
 
@@ -5815,7 +5815,7 @@ startOverButton.addEventListener('click', function () {
 	resetForm();
 });
 
-form.addEventListener('submit', function (evt) {
+var formHandler = function (evt) {
 	evt.preventDefault();
 	submit.setAttribute('disabled', 'disabled');
 	input.setAttribute('disabled', 'disabled');
@@ -5833,7 +5833,10 @@ form.addEventListener('submit', function (evt) {
 		seenIndividuals.push(sourceIndividual);
 		go();
 	});
-});
+};
+
+form.addEventListener('submit', formHandler);
+submit.addEventListener('click', formHandler);
 
 },{"../lib/routes.js":2,"../lib/videos.js":3,"async":4}],31:[function(require,module,exports){
 

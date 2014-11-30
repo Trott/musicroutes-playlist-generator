@@ -196,7 +196,7 @@ startOverButton.addEventListener('click', function () {
 	resetForm();
 });
 
-form.addEventListener('submit', function (evt) {
+var formHandler = function (evt) {
 	evt.preventDefault();
 	submit.setAttribute('disabled', 'disabled');
 	input.setAttribute('disabled', 'disabled');
@@ -214,4 +214,7 @@ form.addEventListener('submit', function (evt) {
 		seenIndividuals.push(sourceIndividual);
 		go();
 	});
-});
+};
+
+form.addEventListener('submit', formHandler);
+submit.addEventListener('click', formHandler);
