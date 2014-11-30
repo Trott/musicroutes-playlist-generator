@@ -71,24 +71,23 @@ describe('exports', function () {
 				.get('/youtube/v3/search')
 				.reply(200, JSON.stringify({ items: [{ id: { videoId: 'F-QR4dY1jbQ' }}]}));
 
-			var callback = function (err, data) {
-				expect(err).to.be.null();
+			var success = function (data) {
 				expect(data).to.deep.equal({items: [{videoId: 'F-QR4dY1jbQ'}]});
 				done();
 			};
 
-			videos.search('"The Beatles" "Strawberry Fields Forever" "Magical Mystery Tour"', callback);
+			videos.search('"The Beatles" "Strawberry Fields Forever" "Magical Mystery Tour"')
+				.then(success);
 		});
 
 		it('should report an error if there was an error', function (done) {
 			nock.disableNetConnect();
-			var callback = function (err, data) {
+			var failure = function (err) {
 				expect(err).to.be.not.null();
-				expect(data).to.be.undefined();
 				done();
 			};
 
-			videos.search('fhqwhagads', callback);
+			videos.search('fhqwhagads').catch(failure);
 		});
 
 		it('should return an empty items array if no items were found', function (done) {
@@ -97,13 +96,12 @@ describe('exports', function () {
 				.get('/youtube/v3/search')
 				.reply(200, JSON.stringify({items:[]}));
 			
-			var callback = function (err, data) {
-				expect(err).to.be.null();
-				expect(data.items).to.be.empty();
+			var success = function (data) {
+				expect(data.items).to.deep.equal([]);
 				done();
 			};
 
-			videos.search('asdkfhaskdjfhakdjhfkajsdfh', callback);
+			videos.search('asdkfhaskdjfhakdjhfkajsdfh').then(success);
 		});
 
 		it('should return an error if HTTP response code is not 200', function (done) {
@@ -112,13 +110,12 @@ describe('exports', function () {
 				.get('/youtube/v3/search')
 				.reply(404, JSON.stringify({}));
 
-			var callback = function (err, data) {
+			var failure = function (err) {
 				expect(err).to.be.not.null();
-				expect(data).to.be.undefined();
 				done();
 			};
 
-			videos.search('fhqwhagads', callback);
+			videos.search('fhqwhagads').catch(failure);
 		});
 
 		it('should return an error if body cannot be parsed as JSON', function (done) {
@@ -127,13 +124,12 @@ describe('exports', function () {
 				.get('/youtube/v3/search')
 				.reply(200, 'invalid JSON!');
 
-			var callback = function (err, data) {
+			var failure = function (err) {
 				expect(err).to.be.not.null();
-				expect(data).to.be.undefined();
 				done();
 			};
 
-			videos.search('fhqwhagads', callback);
+			videos.search('fhqwhagads').catch(failure);
 		});
 	});
 });
