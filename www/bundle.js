@@ -2,7 +2,9 @@
 exports.key = "AIzaSyB3yM4RkyAqYVPAr6lQLfzp8H6yQrmmHCs";
 
 },{}],2:[function(require,module,exports){
+/* global -Promise */
 var freebase = require('mqlread');
+var Promise = require('promise');
 var apikey = require('../.apikey');
 var options = {
   html_escape: false,
@@ -24,23 +26,25 @@ var each = function (obj, prop, callback) {
   }
 };
 
-exports.getMids = function (name, type, callback) {
-  var cleanup = function (err, data) {
-    var rv = [];
-    each(data, 'result', function (value) {
-      rv.push(grabMid(value));
-    });
-
-    callback(err, rv);
-  };
-
+exports.getMids = function (name, type) {
   var query = JSON.stringify([{
     mid: null,
     name: name,
     type: type
   }]);
 
-  freebase.mqlread(query, options, cleanup);
+  return new Promise(function (fulfill, reject) {
+    freebase.mqlread(query, options, function (err, data) {
+      if (err) {
+        return reject(err);
+      }
+      var rv = [];
+      each(data, 'result', function (value) {
+        rv.push(grabMid(value));
+      });
+      fulfill(rv);
+    });
+  });
 };
 
 exports.getTracksWithContributors = function (mids, opts, callback) {
@@ -188,7 +192,7 @@ exports.getTrackDetails = function (mid, callback) {
 
   freebase.mqlread(query, options, cleanup);
 };
-},{"../.apikey":1,"mqlread":28}],3:[function(require,module,exports){
+},{"../.apikey":1,"mqlread":28,"promise":29}],3:[function(require,module,exports){
 /* global -Promise */
 var hyperquest = require('hyperquest');
 var querystring = require('querystring');
@@ -6255,8 +6259,7 @@ var formHandler = function (evt) {
 	paperInput.setAttribute('disabled', 'disabled');
 	resultsElem.innerHTML = '';
 	var startingPoint = input.value;
-	routes.getMids(startingPoint, '/music/artist', function (err, mids) {
-		error(err);
+	var kickoff = function(mids) {
 		sourceIndividual = mids[0];
 		if (! sourceIndividual) {
 			resultsElem.textContent = 'Could not find an artist named ' + startingPoint;
@@ -6265,7 +6268,9 @@ var formHandler = function (evt) {
 		}
 		seenIndividuals.push(sourceIndividual);
 		go();
-	});
+	};
+
+	routes.getMids(startingPoint, '/music/artist').then(kickoff, error);
 };
 
 form.addEventListener('submit', formHandler);

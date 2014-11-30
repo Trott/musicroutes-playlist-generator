@@ -216,8 +216,7 @@ var formHandler = function (evt) {
 	paperInput.setAttribute('disabled', 'disabled');
 	resultsElem.innerHTML = '';
 	var startingPoint = input.value;
-	routes.getMids(startingPoint, '/music/artist', function (err, mids) {
-		error(err);
+	var kickoff = function(mids) {
 		sourceIndividual = mids[0];
 		if (! sourceIndividual) {
 			resultsElem.textContent = 'Could not find an artist named ' + startingPoint;
@@ -226,7 +225,9 @@ var formHandler = function (evt) {
 		}
 		seenIndividuals.push(sourceIndividual);
 		go();
-	});
+	};
+
+	routes.getMids(startingPoint, '/music/artist').then(kickoff, error);
 };
 
 form.addEventListener('submit', formHandler);
