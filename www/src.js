@@ -1,7 +1,9 @@
 /*global document*/
+/*global -Promise*/
 var routes = require('../lib/routes.js');
 var videos = require('../lib/videos.js');
 var async = require('async');
+var Promise = require('promise');
 
 var resultsElem = document.getElementById('results');
 var form = document.getElementById('startPlaylist');
@@ -82,20 +84,11 @@ var generatePlaylist = function (individual, done) {
 
 			resultsElem.appendChild(p);
 
-			var removeMeWhenPromisified = function(contributor) {
-				return new Promise(function (fulfill, reject) {
-					routes.getArtistDetails(contributor, function (err, details) {
-						if (err) {
-							return reject(err);
-						}
-						var name = details.name || 'FREEBASE DOES NOT HAVE AN ENGLISH NAME FOR THIS PERSON';
-						var p = document.createElement('p');
-						p.appendChild(document.createTextNode('…with ' + name + '…'));
-						resultsElem.appendChild(p);
-						sourceIndividual = contributor;
-						fulfill();
-					});
-				});
+			var renderConnector = function (details) {
+				var name = details.name || 'FREEBASE DOES NOT HAVE AN ENGLISH NAME FOR THIS PERSON';
+				var p = document.createElement('p');
+				p.appendChild(document.createTextNode('…with ' + name + '…'));
+				resultsElem.appendChild(p);
 			};
 
 			var pickContributor = function (contributors) {
@@ -109,15 +102,21 @@ var generatePlaylist = function (individual, done) {
 						contributor = random(contributors);
 					}
 
+					sourceIndividual = contributor;
 					return contributor ? fulfill(contributor) : reject(Error('No contributors for track'));
 				});
 			};
 
+			var finished = function () {
+				done(null);
+			};
+
 			var commonLink = function () {
 				routes.getArtistsAndContributorsFromTracks([track])
-				.then(pickContributor, error)
-				.then(removeMeWhenPromisified, error)
-				.then(done, error);
+				.then(pickContributor)
+				.then(routes.getArtistDetails)
+				.then(renderConnector)
+				.then(finished, error);
 			};
 
 			var q = '"' + name + '" "' + artist + '" "' + release + '"';

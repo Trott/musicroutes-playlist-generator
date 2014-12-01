@@ -160,19 +160,24 @@ exports.getArtistsAndContributorsFromTracks = function (mids) {
   });
 };
 
-exports.getArtistDetails = function (mid, callback) {
+exports.getArtistDetails = function (mid) {
   var query = JSON.stringify({
     mid: mid,
     name: null,
     type: '/music/artist'
   });
 
-  var cleanup = function (err, data) {
-    data = data && data.result;
-    callback(err, data);
-  };
+  return new Promise(function (fulfill, reject) {
+    var cleanup = function (err, data) {
+      if (err) {
+        return reject(err);
+      }
+      data = data && data.result;
+      fulfill(data);
+    };
 
-  freebase.mqlread(query, options, cleanup);
+    freebase.mqlread(query, options, cleanup);
+  });
 };
 
 exports.getTrackDetails = function (mid, callback) {
@@ -6056,10 +6061,11 @@ function extend() {
 }
 
 },{}],36:[function(require,module,exports){
-/*global document*/
+/*global document -Promise*/
 var routes = require('../lib/routes.js');
 var videos = require('../lib/videos.js');
 var async = require('async');
+var Promise = require('promise');
 
 var resultsElem = document.getElementById('results');
 var form = document.getElementById('startPlaylist');
@@ -6140,20 +6146,11 @@ var generatePlaylist = function (individual, done) {
 
 			resultsElem.appendChild(p);
 
-			var removeMeWhenPromisified = function(contributor) {
-				return new Promise(function (fulfill, reject) {
-					routes.getArtistDetails(contributor, function (err, details) {
-						if (err) {
-							return reject(err);
-						}
-						var name = details.name || 'FREEBASE DOES NOT HAVE AN ENGLISH NAME FOR THIS PERSON';
-						var p = document.createElement('p');
-						p.appendChild(document.createTextNode('…with ' + name + '…'));
-						resultsElem.appendChild(p);
-						sourceIndividual = contributor;
-						fulfill();
-					});
-				});
+			var renderConnector = function (details) {
+				var name = details.name || 'FREEBASE DOES NOT HAVE AN ENGLISH NAME FOR THIS PERSON';
+				var p = document.createElement('p');
+				p.appendChild(document.createTextNode('…with ' + name + '…'));
+				resultsElem.appendChild(p);
 			};
 
 			var pickContributor = function (contributors) {
@@ -6167,15 +6164,21 @@ var generatePlaylist = function (individual, done) {
 						contributor = random(contributors);
 					}
 
+					sourceIndividual = contributor;
 					return contributor ? fulfill(contributor) : reject(Error('No contributors for track'));
 				});
 			};
 
+			var finished = function () {
+				done(null);
+			};
+
 			var commonLink = function () {
 				routes.getArtistsAndContributorsFromTracks([track])
-				.then(pickContributor, error)
-				.then(removeMeWhenPromisified, error)
-				.then(done, error);
+				.then(pickContributor)
+				.then(routes.getArtistDetails)
+				.then(renderConnector)
+				.then(finished, error);
 			};
 
 			var q = '"' + name + '" "' + artist + '" "' + release + '"';
@@ -6311,7 +6314,7 @@ var formHandler = function (evt) {
 form.addEventListener('submit', formHandler);
 submit.addEventListener('click', formHandler);
 
-},{"../lib/routes.js":2,"../lib/videos.js":3,"async":4}],37:[function(require,module,exports){
+},{"../lib/routes.js":2,"../lib/videos.js":3,"async":4,"promise":29}],37:[function(require,module,exports){
 
 },{}],38:[function(require,module,exports){
 /*!
