@@ -2,7 +2,9 @@
 exports.key = "AIzaSyB3yM4RkyAqYVPAr6lQLfzp8H6yQrmmHCs";
 
 },{}],2:[function(require,module,exports){
+/* global -Promise */
 var freebase = require('mqlread');
+var Promise = require('promise');
 var apikey = require('../.apikey');
 var options = {
   html_escape: false,
@@ -24,26 +26,28 @@ var each = function (obj, prop, callback) {
   }
 };
 
-exports.getMids = function (name, type, callback) {
-  var cleanup = function (err, data) {
-    var rv = [];
-    each(data, 'result', function (value) {
-      rv.push(grabMid(value));
-    });
-
-    callback(err, rv);
-  };
-
+exports.getMids = function (name, type) {
   var query = JSON.stringify([{
     mid: null,
     name: name,
     type: type
   }]);
 
-  freebase.mqlread(query, options, cleanup);
+  return new Promise(function (fulfill, reject) {
+    freebase.mqlread(query, options, function (err, data) {
+      if (err) {
+        return reject(err);
+      }
+      var rv = [];
+      each(data, 'result', function (value) {
+        rv.push(grabMid(value));
+      });
+      fulfill(rv);
+    });
+  });
 };
 
-exports.getTracksWithContributors = function (mids, opts, callback) {
+exports.getTracksWithContributors = function (mids, opts) {
   var query = [{
     'mid|=': mids,
     type: '/music/artist',
@@ -64,22 +68,27 @@ exports.getTracksWithContributors = function (mids, opts, callback) {
 
   query = JSON.stringify(query);
 
-  var cleanup = function (err, data) {
-    var rv = [];
-    each(data, 'result',
-      function (value) {
-        each(value, 'track_contributions', function (value) { 
-          rv.push(grabMid(value, 'track')); 
-        });
+  return new Promise(function (fulfill, reject) {
+    var cleanup = function (err, data) {
+      if (err) {
+        return reject(err);
       }
-    );
-    callback(err, rv);
-  };
+      var rv = [];
+      each(data, 'result',
+        function (value) {
+          each(value, 'track_contributions', function (value) { 
+            rv.push(grabMid(value, 'track')); 
+          });
+        }
+      );
+      fulfill(rv);
+    };
 
-  freebase.mqlread(query, options, cleanup);
+    freebase.mqlread(query, options, cleanup);
+  });
 };
 
-exports.getTracksByArtists = function (mids, opts, callback) {
+exports.getTracksByArtists = function (mids) {
   var query = JSON.stringify([{
     'mid|=': mids,
     type: '/music/artist',
@@ -89,22 +98,27 @@ exports.getTracksByArtists = function (mids, opts, callback) {
     }]
   }]);
 
-  var cleanup = function (err, data) {
-    var rv = [];
-    each(data, 'result', 
-      function (value) {
-        each(value, 'track', function (value) {
-          rv.push(grabMid(value));
-        });
+  return new Promise(function (fulfill, reject) {
+    var cleanup = function (err, data) {
+      if (err) {
+        return reject(err);
       }
-    );
-    callback(err, rv);
-  };
+      var rv = [];
+      each(data, 'result', 
+        function (value) {
+          each(value, 'track', function (value) {
+            rv.push(grabMid(value));
+          });
+        }
+      );
+      fulfill(rv);
+    };
 
-  freebase.mqlread(query, options, cleanup);
+    freebase.mqlread(query, options, cleanup);
+  });
 };
 
-exports.getArtistsAndContributorsFromTracks = function (mids, callback) {
+exports.getArtistsAndContributorsFromTracks = function (mids) {
   var query = JSON.stringify([{
     'mid|=': mids,
     type: '/music/track',
@@ -122,41 +136,51 @@ exports.getArtistsAndContributorsFromTracks = function (mids, callback) {
     }]
   }]);
 
-  var cleanup = function (err, data) {
-    var rv = [];
-    each(data, 'result', function (value) {
-      each(value, 'artist', function (value) {
-        rv.push(grabMid(value));
-      });
-      each(value, 'contributions', function (value) {
-        each(value, 'contributor', function (value) {
+  return new Promise(function (fulfill, reject) {
+    var cleanup = function (err, data) {
+      if (err) {
+        return reject(err);
+      }
+      var rv = [];
+      each(data, 'result', function (value) {
+        each(value, 'artist', function (value) {
           rv.push(grabMid(value));
         });
+        each(value, 'contributions', function (value) {
+          each(value, 'contributor', function (value) {
+            rv.push(grabMid(value));
+          });
+        });
       });
-    });
 
-    callback(err, rv);
-  };
+      fulfill(rv);
+    };
 
-  freebase.mqlread(query, options, cleanup);
+    freebase.mqlread(query, options, cleanup);
+  });
 };
 
-exports.getArtistDetails = function (mid, callback) {
+exports.getArtistDetails = function (mid) {
   var query = JSON.stringify({
     mid: mid,
     name: null,
     type: '/music/artist'
   });
 
-  var cleanup = function (err, data) {
-    data = data && data.result;
-    callback(err, data);
-  };
+  return new Promise(function (fulfill, reject) {
+    var cleanup = function (err, data) {
+      if (err) {
+        return reject(err);
+      }
+      data = data && data.result;
+      fulfill(data);
+    };
 
-  freebase.mqlread(query, options, cleanup);
+    freebase.mqlread(query, options, cleanup);
+  });
 };
 
-exports.getTrackDetails = function (mid, callback) {
+exports.getTrackDetails = function (mid) {
   var query = JSON.stringify({
     mid: mid,
     type: '/music/track',
@@ -172,99 +196,106 @@ exports.getTrackDetails = function (mid, callback) {
     }]
   });
 
-  var cleanup = function (err, data) {
-    var rv;
-    if (data && data.result) {
-      rv = {};
-      rv.name = data.result.name;
-      rv.artists = data.result.artist;
-      rv.releases = [];
-      each(data.result, 'tracks', function (value) {
-        rv.releases.push(value.release);
-      });
-    }
-    callback(err, rv);
-  };
+  return new Promise(function (fulfill, reject) {
+    var cleanup = function (err, data) {
+      if (err) {
+        return reject(err);
+      }
+      var rv = null;
+      if (data && data.result) {
+        rv = {};
+        rv.name = data.result.name;
+        rv.artists = data.result.artist;
+        rv.releases = [];
+        each(data.result, 'tracks', function (value) {
+          rv.releases.push(value.release);
+        });
+      }
+      fulfill(rv);
+    };
 
-  freebase.mqlread(query, options, cleanup);
+    freebase.mqlread(query, options, cleanup);
+  });
 };
-},{"../.apikey":1,"mqlread":28}],3:[function(require,module,exports){
+},{"../.apikey":1,"mqlread":28,"promise":29}],3:[function(require,module,exports){
+/* global -Promise */
 var hyperquest = require('hyperquest');
 var querystring = require('querystring');
 var extend = require('xtend');
 var flatten = require('flat');
+var Promise = require('promise');
 var apikey = require('../.apikey');
 var options = {
 	key: apikey.key
 };
 
-var run = function (url, callback) {
-  hyperquest(url, {}, function (err, res) {
-    if (err) {
-      callback(err);
-      return;
-    }
-    var body = '';
-    if (res.statusCode !== 200) {
-      err = new Error('Received status code ' + res.statusCode);
-      callback(err);
-      return;
-    }
-    res.on('data', function (chunk) {
-      body +=chunk;
-    });
-
-    res.on('end', function () {
-      var data;
-      try {
-        data = JSON.parse(body);
-      } catch (e) {
-        callback(new Error('Error in received JSON:' + e.message));
+var run = function (url) {
+  return new Promise(function (fulfill, reject) {
+    hyperquest(url, {}, function (err, res) {
+      if (err) {
+        reject(err);
         return;
       }
-      callback(err, data);
+
+      if (res.statusCode !== 200) {
+        reject(Error('Received status code ' + res.statusCode));
+        return;
+      }
+
+      var body = '';
+      res.on('data', function (chunk) {
+        body +=chunk;
+      });
+
+      res.on('end', function () {
+        var data;
+        try {
+          data = JSON.parse(body);
+        } catch (e) {
+          reject(Error('Error in received JSON:' + e.message));
+          return;
+        }
+        fulfill(data);
+      });
     });
   });
 };
 
-exports.embed = function (id, callback) {
+exports.embed = function (id) {
   var myOptions = extend(options, {part: 'player', id: id});
   var myUrl = 'https://www.googleapis.com/youtube/v3/videos?' + querystring.stringify(myOptions);
 
-  var myCallback = function (err, data) {
-    var rv;
-    if (data) {
-      rv = {items: []};
+  return new Promise(function (fulfill, reject) {
+    var success = function (data) {
+      var rv = {items: []};
       data = flatten({data: data});
       if (data['data.items.0.player.embedHtml']) {
         rv.items.push({embedHtml: data['data.items.0.player.embedHtml']});
       }
-    }
-    callback(err, rv);
-  };
-
-  run(myUrl, myCallback);
+      fulfill(rv);
+    };
+    run(myUrl).then(success, reject);
+  });
 };
 
-exports.search = function (q, callback) {
+exports.search = function (q) {
 	var myOptions = extend(options, {part: 'id', maxResults: '1', type: 'video', videoEmbeddable: 'true', q: q});
 	var myUrl = 'https://www.googleapis.com/youtube/v3/search?' + querystring.stringify(myOptions);
 	
-  var myCallback = function (err, data) {
-    var rv;
-    if (data) {
-      rv = {items: []};
+  return new Promise(function (fulfill, reject) {
+    var success = function (data) {
+      var rv = {items: []};
       data = flatten({data: data});
       if (data['data.items.0.id.videoId']) {
         rv.items.push({videoId: data['data.items.0.id.videoId']});
       }
-    }
-    callback(err, rv);
-  };
+      fulfill(rv);
+    };
 
-  run(myUrl, myCallback);
+    run(myUrl).then(success, reject);
+  });
 };
-},{"../.apikey":1,"flat":5,"hyperquest":6,"querystring":48,"xtend":29}],4:[function(require,module,exports){
+},{"../.apikey":1,"flat":5,"hyperquest":6,"promise":29,"querystring":54,"xtend":35}],4:[function(require,module,exports){
 (function (process){
 /*!
  * async
@@ -1391,7 +1422,7 @@ exports.search = function (q, callback) {
 }());
 
 }).call(this,require('_process'))
-},{"_process":44}],5:[function(require,module,exports){
+},{"_process":50}],5:[function(require,module,exports){
 var flat = module.exports = flatten
 flatten.flatten = flatten
 flatten.unflatten = unflatten
@@ -1633,7 +1664,7 @@ Req.prototype.setLocation = function (uri) {
 };
 
 }).call(this,require('_process'),require("buffer").Buffer)
-},{"_process":44,"buffer":32,"duplexer2":7,"http":37,"https":41,"through2":27,"url":62}],7:[function(require,module,exports){
+},{"_process":50,"buffer":38,"duplexer2":7,"http":43,"https":47,"through2":27,"url":68}],7:[function(require,module,exports){
 var stream = require("readable-stream");
 
 var duplex2 = module.exports = function duplex2(options, writable, readable) {
@@ -1790,7 +1821,7 @@ function forEach (xs, f) {
 }
 
 }).call(this,require('_process'))
-},{"./_stream_readable":10,"./_stream_writable":12,"_process":44,"core-util-is":13,"inherits":14}],9:[function(require,module,exports){
+},{"./_stream_readable":10,"./_stream_writable":12,"_process":50,"core-util-is":13,"inherits":14}],9:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -2793,7 +2824,7 @@ function indexOf (xs, x) {
 }
 
 }).call(this,require('_process'))
-},{"./_stream_duplex":8,"_process":44,"buffer":32,"core-util-is":13,"events":36,"inherits":14,"isarray":15,"stream":60,"string_decoder/":16,"util":31}],11:[function(require,module,exports){
+},{"./_stream_duplex":8,"_process":50,"buffer":38,"core-util-is":13,"events":42,"inherits":14,"isarray":15,"stream":66,"string_decoder/":16,"util":37}],11:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -3485,7 +3516,7 @@ function endWritable(stream, state, cb) {
 }
 
 }).call(this,require('_process'))
-},{"./_stream_duplex":8,"_process":44,"buffer":32,"core-util-is":13,"inherits":14,"stream":60}],13:[function(require,module,exports){
+},{"./_stream_duplex":8,"_process":50,"buffer":38,"core-util-is":13,"inherits":14,"stream":66}],13:[function(require,module,exports){
 (function (Buffer){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -3595,7 +3626,7 @@ function objectToString(o) {
   return Object.prototype.toString.call(o);
 }
 }).call(this,require("buffer").Buffer)
-},{"buffer":32}],14:[function(require,module,exports){
+},{"buffer":38}],14:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -3848,7 +3879,7 @@ function base64DetectIncompleteChar(buffer) {
   this.charLength = this.charReceived ? 3 : 0;
 }
 
-},{"buffer":32}],17:[function(require,module,exports){
+},{"buffer":38}],17:[function(require,module,exports){
 exports = module.exports = require('./lib/_stream_readable.js');
 exports.Stream = require('stream');
 exports.Readable = exports;
@@ -3857,9 +3888,9 @@ exports.Duplex = require('./lib/_stream_duplex.js');
 exports.Transform = require('./lib/_stream_transform.js');
 exports.PassThrough = require('./lib/_stream_passthrough.js');
 
-},{"./lib/_stream_duplex.js":8,"./lib/_stream_passthrough.js":9,"./lib/_stream_readable.js":10,"./lib/_stream_transform.js":11,"./lib/_stream_writable.js":12,"stream":60}],18:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":8,"./lib/_stream_passthrough.js":9,"./lib/_stream_readable.js":10,"./lib/_stream_transform.js":11,"./lib/_stream_writable.js":12,"stream":66}],18:[function(require,module,exports){
 arguments[4][8][0].apply(exports,arguments)
-},{"./_stream_readable":19,"./_stream_writable":21,"/Users/richtrott/musicroutes-freebase-demo/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/lib/_stream_duplex.js":8,"_process":44,"core-util-is":22,"inherits":23}],19:[function(require,module,exports){
+},{"./_stream_readable":19,"./_stream_writable":21,"/Users/richtrott/musicroutes-freebase-demo/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/lib/_stream_duplex.js":8,"_process":50,"core-util-is":22,"inherits":23}],19:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -4845,7 +4876,7 @@ function indexOf (xs, x) {
 }
 
 }).call(this,require('_process'))
-},{"_process":44,"buffer":32,"core-util-is":22,"events":36,"inherits":23,"isarray":24,"stream":60,"string_decoder/":25}],20:[function(require,module,exports){
+},{"_process":50,"buffer":38,"core-util-is":22,"events":42,"inherits":23,"isarray":24,"stream":66,"string_decoder/":25}],20:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -5447,15 +5478,15 @@ function endWritable(stream, state, cb) {
 }
 
 }).call(this,require('_process'))
-},{"./_stream_duplex":18,"_process":44,"buffer":32,"core-util-is":22,"inherits":23,"stream":60}],22:[function(require,module,exports){
+},{"./_stream_duplex":18,"_process":50,"buffer":38,"core-util-is":22,"inherits":23,"stream":66}],22:[function(require,module,exports){
 module.exports=require(13)
-},{"/Users/richtrott/musicroutes-freebase-demo/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/node_modules/core-util-is/lib/util.js":13,"buffer":32}],23:[function(require,module,exports){
+},{"/Users/richtrott/musicroutes-freebase-demo/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/node_modules/core-util-is/lib/util.js":13,"buffer":38}],23:[function(require,module,exports){
 module.exports=require(14)
 },{"/Users/richtrott/musicroutes-freebase-demo/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/node_modules/inherits/inherits_browser.js":14}],24:[function(require,module,exports){
 module.exports=require(15)
 },{"/Users/richtrott/musicroutes-freebase-demo/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/node_modules/isarray/index.js":15}],25:[function(require,module,exports){
 module.exports=require(16)
-},{"/Users/richtrott/musicroutes-freebase-demo/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/node_modules/string_decoder/index.js":16,"buffer":32}],26:[function(require,module,exports){
+},{"/Users/richtrott/musicroutes-freebase-demo/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/node_modules/string_decoder/index.js":16,"buffer":38}],26:[function(require,module,exports){
 module.exports = require("./lib/_stream_transform.js")
 
 },{"./lib/_stream_transform.js":20}],27:[function(require,module,exports){
@@ -5558,7 +5589,7 @@ module.exports.obj = through2(function (options, transform, flush) {
 })
 
 }).call(this,require('_process'))
-},{"_process":44,"readable-stream/transform":26,"util":64,"xtend":29}],28:[function(require,module,exports){
+},{"_process":50,"readable-stream/transform":26,"util":70,"xtend":35}],28:[function(require,module,exports){
 var hyperquest = require('hyperquest');
 var querystring = require('querystring');
 
@@ -5597,7 +5628,425 @@ exports.mqlread = function(query, options, callback) {
     });
   });
 };
-},{"hyperquest":6,"querystring":48}],29:[function(require,module,exports){
+},{"hyperquest":6,"querystring":54}],29:[function(require,module,exports){
+'use strict';
+
+module.exports = require('./lib/core.js')
+require('./lib/done.js')
+require('./lib/es6-extensions.js')
+require('./lib/node-extensions.js')
+},{"./lib/core.js":30,"./lib/done.js":31,"./lib/es6-extensions.js":32,"./lib/node-extensions.js":33}],30:[function(require,module,exports){
+'use strict';
+
+var asap = require('asap')
+
+module.exports = Promise;
+function Promise(fn) {
+  if (typeof this !== 'object') throw new TypeError('Promises must be constructed via new')
+  if (typeof fn !== 'function') throw new TypeError('not a function')
+  var state = null
+  var value = null
+  var deferreds = []
+  var self = this
+
+  this.then = function(onFulfilled, onRejected) {
+    return new self.constructor(function(resolve, reject) {
+      handle(new Handler(onFulfilled, onRejected, resolve, reject))
+    })
+  }
+
+  function handle(deferred) {
+    if (state === null) {
+      deferreds.push(deferred)
+      return
+    }
+    asap(function() {
+      var cb = state ? deferred.onFulfilled : deferred.onRejected
+      if (cb === null) {
+        (state ? deferred.resolve : deferred.reject)(value)
+        return
+      }
+      var ret
+      try {
+        ret = cb(value)
+      }
+      catch (e) {
+        deferred.reject(e)
+        return
+      }
+      deferred.resolve(ret)
+    })
+  }
+
+  function resolve(newValue) {
+    try { //Promise Resolution Procedure: https://github.com/promises-aplus/promises-spec#the-promise-resolution-procedure
+      if (newValue === self) throw new TypeError('A promise cannot be resolved with itself.')
+      if (newValue && (typeof newValue === 'object' || typeof newValue === 'function')) {
+        var then = newValue.then
+        if (typeof then === 'function') {
+          doResolve(then.bind(newValue), resolve, reject)
+          return
+        }
+      }
+      state = true
+      value = newValue
+      finale()
+    } catch (e) { reject(e) }
+  }
+
+  function reject(newValue) {
+    state = false
+    value = newValue
+    finale()
+  }
+
+  function finale() {
+    for (var i = 0, len = deferreds.length; i < len; i++)
+      handle(deferreds[i])
+    deferreds = null
+  }
+
+  doResolve(fn, resolve, reject)
+}
+
+
+function Handler(onFulfilled, onRejected, resolve, reject){
+  this.onFulfilled = typeof onFulfilled === 'function' ? onFulfilled : null
+  this.onRejected = typeof onRejected === 'function' ? onRejected : null
+  this.resolve = resolve
+  this.reject = reject
+}
+
+/**
+ * Take a potentially misbehaving resolver function and make sure
+ * onFulfilled and onRejected are only called once.
+ *
+ * Makes no guarantees about asynchrony.
+ */
+function doResolve(fn, onFulfilled, onRejected) {
+  var done = false;
+  try {
+    fn(function (value) {
+      if (done) return
+      done = true
+      onFulfilled(value)
+    }, function (reason) {
+      if (done) return
+      done = true
+      onRejected(reason)
+    })
+  } catch (ex) {
+    if (done) return
+    done = true
+    onRejected(ex)
+  }
+}
+
+},{"asap":34}],31:[function(require,module,exports){
+'use strict';
+
+var Promise = require('./core.js')
+var asap = require('asap')
+
+module.exports = Promise
+Promise.prototype.done = function (onFulfilled, onRejected) {
+  var self = arguments.length ? this.then.apply(this, arguments) : this
+  self.then(null, function (err) {
+    asap(function () {
+      throw err
+    })
+  })
+}
+},{"./core.js":30,"asap":34}],32:[function(require,module,exports){
+'use strict';
+
+//This file contains the ES6 extensions to the core Promises/A+ API
+
+var Promise = require('./core.js')
+var asap = require('asap')
+
+module.exports = Promise
+
+/* Static Functions */
+
+function ValuePromise(value) {
+  this.then = function (onFulfilled) {
+    if (typeof onFulfilled !== 'function') return this
+    return new Promise(function (resolve, reject) {
+      asap(function () {
+        try {
+          resolve(onFulfilled(value))
+        } catch (ex) {
+          reject(ex);
+        }
+      })
+    })
+  }
+}
+ValuePromise.prototype = Promise.prototype
+
+var TRUE = new ValuePromise(true)
+var FALSE = new ValuePromise(false)
+var NULL = new ValuePromise(null)
+var UNDEFINED = new ValuePromise(undefined)
+var ZERO = new ValuePromise(0)
+var EMPTYSTRING = new ValuePromise('')
+
+Promise.resolve = function (value) {
+  if (value instanceof Promise) return value
+
+  if (value === null) return NULL
+  if (value === undefined) return UNDEFINED
+  if (value === true) return TRUE
+  if (value === false) return FALSE
+  if (value === 0) return ZERO
+  if (value === '') return EMPTYSTRING
+
+  if (typeof value === 'object' || typeof value === 'function') {
+    try {
+      var then = value.then
+      if (typeof then === 'function') {
+        return new Promise(then.bind(value))
+      }
+    } catch (ex) {
+      return new Promise(function (resolve, reject) {
+        reject(ex)
+      })
+    }
+  }
+
+  return new ValuePromise(value)
+}
+
+Promise.all = function (arr) {
+  var args = Array.prototype.slice.call(arr)
+
+  return new Promise(function (resolve, reject) {
+    if (args.length === 0) return resolve([])
+    var remaining = args.length
+    function res(i, val) {
+      try {
+        if (val && (typeof val === 'object' || typeof val === 'function')) {
+          var then = val.then
+          if (typeof then === 'function') {
+            then.call(val, function (val) { res(i, val) }, reject)
+            return
+          }
+        }
+        args[i] = val
+        if (--remaining === 0) {
+          resolve(args);
+        }
+      } catch (ex) {
+        reject(ex)
+      }
+    }
+    for (var i = 0; i < args.length; i++) {
+      res(i, args[i])
+    }
+  })
+}
+
+Promise.reject = function (value) {
+  return new Promise(function (resolve, reject) { 
+    reject(value);
+  });
+}
+
+Promise.race = function (values) {
+  return new Promise(function (resolve, reject) { 
+    values.forEach(function(value){
+      Promise.resolve(value).then(resolve, reject);
+    })
+  });
+}
+
+/* Prototype Methods */
+
+Promise.prototype['catch'] = function (onRejected) {
+  return this.then(null, onRejected);
+}
+
+},{"./core.js":30,"asap":34}],33:[function(require,module,exports){
+'use strict';
+
+//This file contains then/promise specific extensions that are only useful for node.js interop
+
+var Promise = require('./core.js')
+var asap = require('asap')
+
+module.exports = Promise
+
+/* Static Functions */
+
+Promise.denodeify = function (fn, argumentCount) {
+  argumentCount = argumentCount || Infinity
+  return function () {
+    var self = this
+    var args = Array.prototype.slice.call(arguments)
+    return new Promise(function (resolve, reject) {
+      while (args.length && args.length > argumentCount) {
+        args.pop()
+      }
+      args.push(function (err, res) {
+        if (err) reject(err)
+        else resolve(res)
+      })
+      fn.apply(self, args)
+    })
+  }
+}
+Promise.nodeify = function (fn) {
+  return function () {
+    var args = Array.prototype.slice.call(arguments)
+    var callback = typeof args[args.length - 1] === 'function' ? args.pop() : null
+    var ctx = this
+    try {
+      return fn.apply(this, arguments).nodeify(callback, ctx)
+    } catch (ex) {
+      if (callback === null || typeof callback == 'undefined') {
+        return new Promise(function (resolve, reject) { reject(ex) })
+      } else {
+        asap(function () {
+          callback.call(ctx, ex)
+        })
+      }
+    }
+  }
+}
+
+Promise.prototype.nodeify = function (callback, ctx) {
+  if (typeof callback != 'function') return this
+
+  this.then(function (value) {
+    asap(function () {
+      callback.call(ctx, null, value)
+    })
+  }, function (err) {
+    asap(function () {
+      callback.call(ctx, err)
+    })
+  })
+}
+
+},{"./core.js":30,"asap":34}],34:[function(require,module,exports){
+(function (process){
+
+// Use the fastest possible means to execute a task in a future turn
+// of the event loop.
+
+// linked list of tasks (single, with head node)
+var head = {task: void 0, next: null};
+var tail = head;
+var flushing = false;
+var requestFlush = void 0;
+var isNodeJS = false;
+
+function flush() {
+    /* jshint loopfunc: true */
+
+    while (head.next) {
+        head = head.next;
+        var task = head.task;
+        head.task = void 0;
+        var domain = head.domain;
+
+        if (domain) {
+            head.domain = void 0;
+            domain.enter();
+        }
+
+        try {
+            task();
+
+        } catch (e) {
+            if (isNodeJS) {
+                // In node, uncaught exceptions are considered fatal errors.
+                // Re-throw them synchronously to interrupt flushing!
+
+                // Ensure continuation if the uncaught exception is suppressed
+                // listening "uncaughtException" events (as domains does).
+                // Continue in next event to avoid tick recursion.
+                if (domain) {
+                    domain.exit();
+                }
+                setTimeout(flush, 0);
+                if (domain) {
+                    domain.enter();
+                }
+
+                throw e;
+
+            } else {
+                // In browsers, uncaught exceptions are not fatal.
+                // Re-throw them asynchronously to avoid slow-downs.
+                setTimeout(function() {
+                   throw e;
+                }, 0);
+            }
+        }
+
+        if (domain) {
+            domain.exit();
+        }
+    }
+
+    flushing = false;
+}
+
+if (typeof process !== "undefined" && process.nextTick) {
+    // Node.js before 0.9. Note that some fake-Node environments, like the
+    // Mocha test runner, introduce a `process` global without a `nextTick`.
+    isNodeJS = true;
+
+    requestFlush = function () {
+        process.nextTick(flush);
+    };
+
+} else if (typeof setImmediate === "function") {
+    // In IE10, Node.js 0.9+, or https://github.com/NobleJS/setImmediate
+    if (typeof window !== "undefined") {
+        requestFlush = setImmediate.bind(window, flush);
+    } else {
+        requestFlush = function () {
+            setImmediate(flush);
+        };
+    }
+
+} else if (typeof MessageChannel !== "undefined") {
+    // modern browsers
+    // http://www.nonblocking.io/2011/06/windownexttick.html
+    var channel = new MessageChannel();
+    channel.port1.onmessage = flush;
+    requestFlush = function () {
+        channel.port2.postMessage(0);
+    };
+
+} else {
+    // old browsers
+    requestFlush = function () {
+        setTimeout(flush, 0);
+    };
+}
+
+function asap(task) {
+    tail = tail.next = {
+        task: task,
+        domain: isNodeJS && process.domain,
+        next: null
+    };
+
+    if (!flushing) {
+        flushing = true;
+        requestFlush();
+    }
+};
+
+module.exports = asap;
+
+
+}).call(this,require('_process'))
+},{"_process":50}],35:[function(require,module,exports){
 module.exports = extend
 
 function extend() {
@@ -5616,11 +6065,13 @@ function extend() {
     return target
 }
 
-},{}],30:[function(require,module,exports){
+},{}],36:[function(require,module,exports){
 /*global document*/
+/*global -Promise*/
 var routes = require('../lib/routes.js');
 var videos = require('../lib/videos.js');
 var async = require('async');
+var Promise = require('promise');
 
 var resultsElem = document.getElementById('results');
 var form = document.getElementById('startPlaylist');
@@ -5658,9 +6109,9 @@ var valuesNotIn = function (values, notIn) {
 var embedShown = false;
 
 var generatePlaylist = function (individual, done) {
-	var callback = 	function (err, tracks) {
-		error(err);
+	var processTracks = 	function (tracks) {
 		var track;
+		var trackDetails;
 
 		var notSeenTracks = valuesNotIn(tracks, seenTracks);
 		if (notSeenTracks.length > 0) {
@@ -5675,35 +6126,75 @@ var generatePlaylist = function (individual, done) {
 			return;
 		}
 
-		routes.getTrackDetails(track, function (err, details) {
-			error(err);
+		var addToSeenArtists = function () {
+			return new Promise(function (fulfill, reject) {
+				if (!trackDetails) {
+					return reject(Error('No details for ' + track));
+				}
+			
+				var theseArtistMids = trackDetails.artists.map(function (value) { return value.mid; });
+				seenArtists = seenArtists.concat(valuesNotIn(theseArtistMids, seenArtists));
 
-			if (!details) {
-				error(new Error('No details for ' + track));
-			}
-
-			var theseArtistMids = details.artists.map(function (value) { return value.mid; });
-			seenArtists = seenArtists.concat(valuesNotIn(theseArtistMids, seenArtists));
-			var name = details.name || 'FREEBASE DOES NOT HAVE AN ENGLISH NAME FOR THIS TRACK';
-			var artist = details.artists.map(function (value) { 
+				fulfill();
+			});
+		};
+			
+		var formatTrackDetails = function () {
+			trackDetails.formatted = {};
+			trackDetails.formatted.name = trackDetails.name || 'FREEBASE DOES NOT HAVE AN ENGLISH NAME FOR THIS TRACK';
+			trackDetails.formatted.artist = trackDetails.artists.map(function (value) { 
 				return value.name || 'FREEBASE DOES NOT HAVE AN ENGLISH NAME FOR THIS ARTIST'; 
 			}).join(' & ');
-			var release = random(details.releases).name || 'FREEBASE DOES NOT HAVE AN ENGLISH NAME FOR THIS RELEASE';
+			trackDetails.formatted.release = random(trackDetails.releases).name || 'FREEBASE DOES NOT HAVE AN ENGLISH NAME FOR THIS RELEASE';
+		};
 
+		var renderTrackDetails = function () {
 			var p = document.createElement('p');
 
-			p.appendChild(document.createTextNode('"' + name + '"'));
+			p.appendChild(document.createTextNode('"' + trackDetails.formatted.name + '"'));
 			p.appendChild(document.createElement('br'));
-			p.appendChild(document.createTextNode(artist));
+			p.appendChild(document.createTextNode(trackDetails.formatted.artist));
 			p.appendChild(document.createElement('br'));
 			var i = document.createElement('i');
-			i.appendChild(document.createTextNode(release));
+			i.appendChild(document.createTextNode(trackDetails.formatted.release));
 			p.appendChild(i);
 
 			resultsElem.appendChild(p);
+		};
 
-			var commonLink = routes.getArtistsAndContributorsFromTracks.bind(undefined, [track], function (err, contributors) {
-				error(err);
+		var searchForVideoId = function () {
+			var q = '"' + trackDetails.formatted.name + 
+				'" "' + trackDetails.formatted.artist + 
+				'" "' + trackDetails.formatted.release + '"';
+
+			return videos.search(q);
+		}
+
+		var extractVideoId = function (data) {
+			return data.items[0] && data.items[0].videoId;
+		};
+
+		var getVideoEmbedCode = function (videoId) {
+			return videoId && videos.embed(videoId)
+		};
+
+		var embedVideoInDom = function (data) {
+			if (data && data.items && data.items[0] && data.items[0].embedHtml) {
+				var div = document.createElement('div');
+				// Yes, we're trusting YouTube's API not to p0wn us.
+				div.innerHTML = data.items[0].embedHtml;
+				resultsElem.appendChild(div);
+				embedShown = true;
+			}
+		};
+
+		var getCommonContributors = function () {
+			return routes.getArtistsAndContributorsFromTracks([track]);
+		};
+
+
+		var pickContributor = function (contributors) {
+			return new Promise(function (fulfill, reject) {
 				var contributor;
 				var notSeen = valuesNotIn(contributors, seenIndividuals);				
 				if (notSeen.length > 0) {
@@ -5712,36 +6203,38 @@ var generatePlaylist = function (individual, done) {
 				} else {
 					contributor = random(contributors);
 				}
-				routes.getArtistDetails(contributor, function (err, details) {
-					error(err);
-					var name = details.name || 'FREEBASE DOES NOT HAVE AN ENGLISH NAME FOR THIS PERSON';
-					var p = document.createElement('p');
-					p.appendChild(document.createTextNode('…with ' + name + '…'));
-					resultsElem.appendChild(p);
-					sourceIndividual = contributor;
-					done();
-				});
-			});
 
-			var q = '"' + name + '" "' + artist + '" "' + release + '"';
-			
-			videos.search(q, function (err, data) {
-				if (data && data.items && data.items[0] && data.items[0].videoId) {
-					videos.embed(data.items[0].videoId, function (err, data) {
-						if (data && data.items && data.items[0] && data.items[0].embedHtml) {
-							var div = document.createElement('div');
-							// Yes, we're trusting YouTube's API not to p0wn us.
-							div.innerHTML = data.items[0].embedHtml;
-							resultsElem.appendChild(div);
-							embedShown = true;
-						}
-						commonLink();
-					});
-				} else {
-					commonLink();
-				}
-			});			
-		});
+				sourceIndividual = contributor;
+				return contributor ? fulfill(contributor) : reject(Error('No contributors for track'));
+			});
+		};
+
+		var renderConnector = function (details) {
+			var name = details.name || 'FREEBASE DOES NOT HAVE AN ENGLISH NAME FOR THIS PERSON';
+			var p = document.createElement('p');
+			p.appendChild(document.createTextNode('…with ' + name + '…'));
+			resultsElem.appendChild(p);
+		};
+
+
+		var finished = function () {
+			done(null);
+		};
+
+		routes.getTrackDetails(track)
+		.then(function (details) { trackDetails = details; })
+		.then(addToSeenArtists)
+		.then(formatTrackDetails)
+		.then(renderTrackDetails)
+		.then(searchForVideoId)
+		.then(extractVideoId)
+		.then(getVideoEmbedCode)
+		.then(embedVideoInDom, error)
+		.then(getCommonContributors)
+		.then(pickContributor)
+		.then(routes.getArtistDetails)
+		.then(renderConnector)
+		.then(finished, error);
 	};
 
 	var options = {subquery: {
@@ -5757,16 +6250,20 @@ var generatePlaylist = function (individual, done) {
 		function () {
 			if (seenArtists.length === 0) {
 				// If this is the first track, get one by this artist if we can.
-				routes.getTracksByArtists([individual], {}, callback);
+				routes.getTracksByArtists([individual]).then(processTracks, error);
 			} else {
 				// Otherwise, get one by an artist we haven't seen yet
-				routes.getTracksWithContributors([individual], options, callback);
+				routes.getTracksWithContributors([individual], options).then(processTracks, error);
 			}
 		},
 		// Look for any track with this contributor credited as a contributor regardless if we've seen the artist already.
-		routes.getTracksWithContributors.bind(undefined, [individual], {}, callback),
+		function () {
+			routes.getTracksWithContributors([individual], {}).then(processTracks, error);
+		},
 		// Look for any tracks actually credited to this contributor as the main artist. We are desperate!
-		routes.getTracksByArtists.bind(undefined, [individual], {}, callback),
+		function () {
+			routes.getTracksByArtists([individual]).then(processTracks, error);
+		},
 		// Give up
 		error.bind(undefined, new Error('Could not find any tracks for contributor ' + individual))
 	];
@@ -5825,8 +6322,7 @@ var formHandler = function (evt) {
 	paperInput.setAttribute('disabled', 'disabled');
 	resultsElem.innerHTML = '';
 	var startingPoint = input.value;
-	routes.getMids(startingPoint, '/music/artist', function (err, mids) {
-		error(err);
+	var kickoff = function(mids) {
 		sourceIndividual = mids[0];
 		if (! sourceIndividual) {
 			resultsElem.textContent = 'Could not find an artist named ' + startingPoint;
@@ -5835,15 +6331,17 @@ var formHandler = function (evt) {
 		}
 		seenIndividuals.push(sourceIndividual);
 		go();
-	});
+	};
+
+	routes.getMids(startingPoint, '/music/artist').then(kickoff, error);
 };
 
 form.addEventListener('submit', formHandler);
 submit.addEventListener('click', formHandler);
 
-},{"../lib/routes.js":2,"../lib/videos.js":3,"async":4}],31:[function(require,module,exports){
+},{"../lib/routes.js":2,"../lib/videos.js":3,"async":4,"promise":29}],37:[function(require,module,exports){
 
-},{}],32:[function(require,module,exports){
+},{}],38:[function(require,module,exports){
 /*!
  * The buffer module from node.js, for the browser.
  *
@@ -6895,7 +7393,7 @@ function decodeUtf8Char (str) {
   }
 }
 
-},{"base64-js":33,"ieee754":34,"is-array":35}],33:[function(require,module,exports){
+},{"base64-js":39,"ieee754":40,"is-array":41}],39:[function(require,module,exports){
 var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 
 ;(function (exports) {
@@ -7017,7 +7515,7 @@ var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 	exports.fromByteArray = uint8ToBase64
 }(typeof exports === 'undefined' ? (this.base64js = {}) : exports))
 
-},{}],34:[function(require,module,exports){
+},{}],40:[function(require,module,exports){
 exports.read = function(buffer, offset, isLE, mLen, nBytes) {
   var e, m,
       eLen = nBytes * 8 - mLen - 1,
@@ -7103,7 +7601,7 @@ exports.write = function(buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128;
 };
 
-},{}],35:[function(require,module,exports){
+},{}],41:[function(require,module,exports){
 
 /**
  * isArray
@@ -7138,7 +7636,7 @@ module.exports = isArray || function (val) {
   return !! val && '[object Array]' == str.call(val);
 };
 
-},{}],36:[function(require,module,exports){
+},{}],42:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -7441,7 +7939,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],37:[function(require,module,exports){
+},{}],43:[function(require,module,exports){
 var http = module.exports;
 var EventEmitter = require('events').EventEmitter;
 var Request = require('./lib/request');
@@ -7587,7 +8085,7 @@ http.STATUS_CODES = {
     510 : 'Not Extended',               // RFC 2774
     511 : 'Network Authentication Required' // RFC 6585
 };
-},{"./lib/request":38,"events":36,"url":62}],38:[function(require,module,exports){
+},{"./lib/request":44,"events":42,"url":68}],44:[function(require,module,exports){
 var Stream = require('stream');
 var Response = require('./response');
 var Base64 = require('Base64');
@@ -7798,7 +8296,7 @@ var isXHR2Compatible = function (obj) {
     if (typeof FormData !== 'undefined' && obj instanceof FormData) return true;
 };
 
-},{"./response":39,"Base64":40,"inherits":42,"stream":60}],39:[function(require,module,exports){
+},{"./response":45,"Base64":46,"inherits":48,"stream":66}],45:[function(require,module,exports){
 var Stream = require('stream');
 var util = require('util');
 
@@ -7920,7 +8418,7 @@ var isArray = Array.isArray || function (xs) {
     return Object.prototype.toString.call(xs) === '[object Array]';
 };
 
-},{"stream":60,"util":64}],40:[function(require,module,exports){
+},{"stream":66,"util":70}],46:[function(require,module,exports){
 ;(function () {
 
   var object = typeof exports != 'undefined' ? exports : this; // #8: web workers
@@ -7982,7 +8480,7 @@ var isArray = Array.isArray || function (xs) {
 
 }());
 
-},{}],41:[function(require,module,exports){
+},{}],47:[function(require,module,exports){
 var http = require('http');
 
 var https = module.exports;
@@ -7997,11 +8495,11 @@ https.request = function (params, cb) {
     return http.request.call(this, params, cb);
 }
 
-},{"http":37}],42:[function(require,module,exports){
+},{"http":43}],48:[function(require,module,exports){
 module.exports=require(14)
-},{"/Users/richtrott/musicroutes-freebase-demo/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/node_modules/inherits/inherits_browser.js":14}],43:[function(require,module,exports){
+},{"/Users/richtrott/musicroutes-freebase-demo/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/node_modules/inherits/inherits_browser.js":14}],49:[function(require,module,exports){
 module.exports=require(15)
-},{"/Users/richtrott/musicroutes-freebase-demo/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/node_modules/isarray/index.js":15}],44:[function(require,module,exports){
+},{"/Users/richtrott/musicroutes-freebase-demo/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/node_modules/isarray/index.js":15}],50:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -8089,7 +8587,7 @@ process.chdir = function (dir) {
     throw new Error('process.chdir is not supported');
 };
 
-},{}],45:[function(require,module,exports){
+},{}],51:[function(require,module,exports){
 (function (global){
 /*! http://mths.be/punycode v1.2.4 by @mathias */
 ;(function(root) {
@@ -8600,7 +9098,7 @@ process.chdir = function (dir) {
 }(this));
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],46:[function(require,module,exports){
+},{}],52:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -8686,7 +9184,7 @@ var isArray = Array.isArray || function (xs) {
   return Object.prototype.toString.call(xs) === '[object Array]';
 };
 
-},{}],47:[function(require,module,exports){
+},{}],53:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -8773,31 +9271,31 @@ var objectKeys = Object.keys || function (obj) {
   return res;
 };
 
-},{}],48:[function(require,module,exports){
+},{}],54:[function(require,module,exports){
 'use strict';
 
 exports.decode = exports.parse = require('./decode');
 exports.encode = exports.stringify = require('./encode');
 
-},{"./decode":46,"./encode":47}],49:[function(require,module,exports){
+},{"./decode":52,"./encode":53}],55:[function(require,module,exports){
 module.exports = require("./lib/_stream_duplex.js")
 
-},{"./lib/_stream_duplex.js":50}],50:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":56}],56:[function(require,module,exports){
 arguments[4][8][0].apply(exports,arguments)
-},{"./_stream_readable":52,"./_stream_writable":54,"/Users/richtrott/musicroutes-freebase-demo/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/lib/_stream_duplex.js":8,"_process":44,"core-util-is":55,"inherits":42}],51:[function(require,module,exports){
+},{"./_stream_readable":58,"./_stream_writable":60,"/Users/richtrott/musicroutes-freebase-demo/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/lib/_stream_duplex.js":8,"_process":50,"core-util-is":61,"inherits":48}],57:[function(require,module,exports){
 arguments[4][9][0].apply(exports,arguments)
-},{"./_stream_transform":53,"/Users/richtrott/musicroutes-freebase-demo/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/lib/_stream_passthrough.js":9,"core-util-is":55,"inherits":42}],52:[function(require,module,exports){
+},{"./_stream_transform":59,"/Users/richtrott/musicroutes-freebase-demo/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/lib/_stream_passthrough.js":9,"core-util-is":61,"inherits":48}],58:[function(require,module,exports){
 module.exports=require(19)
-},{"/Users/richtrott/musicroutes-freebase-demo/node_modules/hyperquest/node_modules/through2/node_modules/readable-stream/lib/_stream_readable.js":19,"_process":44,"buffer":32,"core-util-is":55,"events":36,"inherits":42,"isarray":43,"stream":60,"string_decoder/":61}],53:[function(require,module,exports){
+},{"/Users/richtrott/musicroutes-freebase-demo/node_modules/hyperquest/node_modules/through2/node_modules/readable-stream/lib/_stream_readable.js":19,"_process":50,"buffer":38,"core-util-is":61,"events":42,"inherits":48,"isarray":49,"stream":66,"string_decoder/":67}],59:[function(require,module,exports){
 module.exports=require(20)
-},{"./_stream_duplex":50,"/Users/richtrott/musicroutes-freebase-demo/node_modules/hyperquest/node_modules/through2/node_modules/readable-stream/lib/_stream_transform.js":20,"core-util-is":55,"inherits":42}],54:[function(require,module,exports){
+},{"./_stream_duplex":56,"/Users/richtrott/musicroutes-freebase-demo/node_modules/hyperquest/node_modules/through2/node_modules/readable-stream/lib/_stream_transform.js":20,"core-util-is":61,"inherits":48}],60:[function(require,module,exports){
 module.exports=require(21)
-},{"./_stream_duplex":50,"/Users/richtrott/musicroutes-freebase-demo/node_modules/hyperquest/node_modules/through2/node_modules/readable-stream/lib/_stream_writable.js":21,"_process":44,"buffer":32,"core-util-is":55,"inherits":42,"stream":60}],55:[function(require,module,exports){
+},{"./_stream_duplex":56,"/Users/richtrott/musicroutes-freebase-demo/node_modules/hyperquest/node_modules/through2/node_modules/readable-stream/lib/_stream_writable.js":21,"_process":50,"buffer":38,"core-util-is":61,"inherits":48,"stream":66}],61:[function(require,module,exports){
 module.exports=require(13)
-},{"/Users/richtrott/musicroutes-freebase-demo/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/node_modules/core-util-is/lib/util.js":13,"buffer":32}],56:[function(require,module,exports){
+},{"/Users/richtrott/musicroutes-freebase-demo/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/node_modules/core-util-is/lib/util.js":13,"buffer":38}],62:[function(require,module,exports){
 module.exports = require("./lib/_stream_passthrough.js")
 
-},{"./lib/_stream_passthrough.js":51}],57:[function(require,module,exports){
+},{"./lib/_stream_passthrough.js":57}],63:[function(require,module,exports){
 exports = module.exports = require('./lib/_stream_readable.js');
 exports.Readable = exports;
 exports.Writable = require('./lib/_stream_writable.js');
@@ -8805,12 +9303,12 @@ exports.Duplex = require('./lib/_stream_duplex.js');
 exports.Transform = require('./lib/_stream_transform.js');
 exports.PassThrough = require('./lib/_stream_passthrough.js');
 
-},{"./lib/_stream_duplex.js":50,"./lib/_stream_passthrough.js":51,"./lib/_stream_readable.js":52,"./lib/_stream_transform.js":53,"./lib/_stream_writable.js":54}],58:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":56,"./lib/_stream_passthrough.js":57,"./lib/_stream_readable.js":58,"./lib/_stream_transform.js":59,"./lib/_stream_writable.js":60}],64:[function(require,module,exports){
 module.exports=require(26)
-},{"./lib/_stream_transform.js":53,"/Users/richtrott/musicroutes-freebase-demo/node_modules/hyperquest/node_modules/through2/node_modules/readable-stream/transform.js":26}],59:[function(require,module,exports){
+},{"./lib/_stream_transform.js":59,"/Users/richtrott/musicroutes-freebase-demo/node_modules/hyperquest/node_modules/through2/node_modules/readable-stream/transform.js":26}],65:[function(require,module,exports){
 module.exports = require("./lib/_stream_writable.js")
 
-},{"./lib/_stream_writable.js":54}],60:[function(require,module,exports){
+},{"./lib/_stream_writable.js":60}],66:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -8939,9 +9437,9 @@ Stream.prototype.pipe = function(dest, options) {
   return dest;
 };
 
-},{"events":36,"inherits":42,"readable-stream/duplex.js":49,"readable-stream/passthrough.js":56,"readable-stream/readable.js":57,"readable-stream/transform.js":58,"readable-stream/writable.js":59}],61:[function(require,module,exports){
+},{"events":42,"inherits":48,"readable-stream/duplex.js":55,"readable-stream/passthrough.js":62,"readable-stream/readable.js":63,"readable-stream/transform.js":64,"readable-stream/writable.js":65}],67:[function(require,module,exports){
 module.exports=require(16)
-},{"/Users/richtrott/musicroutes-freebase-demo/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/node_modules/string_decoder/index.js":16,"buffer":32}],62:[function(require,module,exports){
+},{"/Users/richtrott/musicroutes-freebase-demo/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/node_modules/string_decoder/index.js":16,"buffer":38}],68:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -9650,14 +10148,14 @@ function isNullOrUndefined(arg) {
   return  arg == null;
 }
 
-},{"punycode":45,"querystring":48}],63:[function(require,module,exports){
+},{"punycode":51,"querystring":54}],69:[function(require,module,exports){
 module.exports = function isBuffer(arg) {
   return arg && typeof arg === 'object'
     && typeof arg.copy === 'function'
     && typeof arg.fill === 'function'
     && typeof arg.readUInt8 === 'function';
 }
-},{}],64:[function(require,module,exports){
+},{}],70:[function(require,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -10247,4 +10745,4 @@ function hasOwnProperty(obj, prop) {
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./support/isBuffer":63,"_process":44,"inherits":42}]},{},[30]);
+},{"./support/isBuffer":69,"_process":50,"inherits":48}]},{},[36]);
