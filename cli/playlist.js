@@ -30,7 +30,7 @@ var valuesNotIn = function (values, notIn) {
 };
 
 var generatePlaylist = function (individual, done) {	
-	var fulfill = 	function (tracks) {
+	var fulfill = function (tracks) {
 		var track;
 
 		var notSeenTracks = valuesNotIn(tracks, seenTracks);
@@ -45,9 +45,8 @@ var generatePlaylist = function (individual, done) {
 			next[nextIndex]();
 			return;
 		}
-		routes.getTrackDetails(track, function (err, details) {
-			error(err);
 
+		var renderTrackDetails = function (details) {
 			if (!details) {
 				error(new Error('No details for ' + track));
 			}
@@ -119,7 +118,10 @@ var generatePlaylist = function (individual, done) {
 			.then(routes.getArtistDetails)
 			.then(printConnectorDetails)
 			.then(finished, error);
-		});
+		};
+
+		routes.getTrackDetails(track)
+		.then(renderTrackDetails, error);
 	};
 
 	var options = {subquery: {
