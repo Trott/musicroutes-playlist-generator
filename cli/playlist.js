@@ -63,8 +63,9 @@ var generatePlaylist = function (individual, done) {
 			output += '\n' + artist;
 			output += '\n_' + release + '_';
 
-			var q = '"' + name + '" "' + artist + '" "' + release + '"';
 			console.log(output);
+
+			var q = '"' + name + '" "' + artist + '" "' + release + '"';
 
 			var writeVideoUrl = function (data) {
 				if (data.items[0] && data.items[0].videoId) {
