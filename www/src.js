@@ -1,7 +1,9 @@
 /*global document*/
+/*global -Promise*/
 var routes = require('../lib/routes.js');
 var videos = require('../lib/videos.js');
 var async = require('async');
+var Promise = require('promise');
 
 var resultsElem = document.getElementById('results');
 var form = document.getElementById('startPlaylist');
@@ -39,8 +41,7 @@ var valuesNotIn = function (values, notIn) {
 var embedShown = false;
 
 var generatePlaylist = function (individual, done) {
-	var callback = 	function (err, tracks) {
-		error(err);
+	var processTracks = 	function (tracks) {
 		var track;
 
 		var notSeenTracks = valuesNotIn(tracks, seenTracks);
@@ -83,45 +84,69 @@ var generatePlaylist = function (individual, done) {
 
 			resultsElem.appendChild(p);
 
-			var commonLink = routes.getArtistsAndContributorsFromTracks.bind(undefined, [track], function (err, contributors) {
-				error(err);
-				var contributor;
-				var notSeen = valuesNotIn(contributors, seenIndividuals);				
-				if (notSeen.length > 0) {
-					contributor = random(notSeen);
-					seenIndividuals.push(contributor);
-				} else {
-					contributor = random(contributors);
-				}
-				routes.getArtistDetails(contributor, function (err, details) {
-					error(err);
-					var name = details.name || 'FREEBASE DOES NOT HAVE AN ENGLISH NAME FOR THIS PERSON';
-					var p = document.createElement('p');
-					p.appendChild(document.createTextNode('…with ' + name + '…'));
-					resultsElem.appendChild(p);
+			var renderConnector = function (details) {
+				var name = details.name || 'FREEBASE DOES NOT HAVE AN ENGLISH NAME FOR THIS PERSON';
+				var p = document.createElement('p');
+				p.appendChild(document.createTextNode('…with ' + name + '…'));
+				resultsElem.appendChild(p);
+			};
+
+			var pickContributor = function (contributors) {
+				return new Promise(function (fulfill, reject) {
+					var contributor;
+					var notSeen = valuesNotIn(contributors, seenIndividuals);				
+					if (notSeen.length > 0) {
+						contributor = random(notSeen);
+						seenIndividuals.push(contributor);
+					} else {
+						contributor = random(contributors);
+					}
+
 					sourceIndividual = contributor;
-					done();
+					return contributor ? fulfill(contributor) : reject(Error('No contributors for track'));
 				});
-			});
+			};
+
+			var finished = function () {
+				done(null);
+			};
+
+			var commonLink = function () {
+				routes.getArtistsAndContributorsFromTracks([track])
+				.then(pickContributor)
+				.then(routes.getArtistDetails)
+				.then(renderConnector)
+				.then(finished, error);
+			};
 
 			var q = '"' + name + '" "' + artist + '" "' + release + '"';
+
+			var extractVideoId = function (data) {
+				return new Promise(function (fulfill, reject) {
+					if (data.items[0] && data.items[0].videoId) {
+						fulfill(data.items[0].videoId);
+					} else {
+						reject(Error('No videoId to extract'));
+					}
+				});
+			};
 			
-			videos.search(q, function (err, data) {
-				if (data && data.items && data.items[0] && data.items[0].videoId) {
-					videos.embed(data.items[0].videoId, function (err, data) {
-						if (data && data.items && data.items[0] && data.items[0].embedHtml) {
-							var div = document.createElement('div');
-							// Yes, we're trusting YouTube's API not to p0wn us.
-							div.innerHTML = data.items[0].embedHtml;
-							resultsElem.appendChild(div);
-							embedShown = true;
-						}
-						commonLink();
-					});
-				} else {
-					commonLink();
+			var embedInDom = function (data) {
+				if (data.items[0] && data.items[0].embedHtml) {
+					var div = document.createElement('div');
+					// Yes, we're trusting YouTube's API not to p0wn us.
+					div.innerHTML = data.items[0].embedHtml;
+					resultsElem.appendChild(div);
+					embedShown = true;
 				}
-			});			
+			};
+
+			videos.search(q)
+			.then(extractVideoId)
+			.then(videos.embed)
+			.then(embedInDom)
+			.then(commonLink, commonLink);
+			
 		});
 	};
 
@@ -138,16 +163,20 @@ var generatePlaylist = function (individual, done) {
 		function () {
 			if (seenArtists.length === 0) {
 				// If this is the first track, get one by this artist if we can.
-				routes.getTracksByArtists([individual], {}, callback);
+				routes.getTracksByArtists([individual]).then(processTracks, error);
 			} else {
 				// Otherwise, get one by an artist we haven't seen yet
-				routes.getTracksWithContributors([individual], options, callback);
+				routes.getTracksWithContributors([individual], options).then(processTracks, error);
 			}
 		},
 		// Look for any track with this contributor credited as a contributor regardless if we've seen the artist already.
-		routes.getTracksWithContributors.bind(undefined, [individual], {}, callback),
+		function () {
+			routes.getTracksWithContributors([individual], {}).then(processTracks, error);
+		},
 		// Look for any tracks actually credited to this contributor as the main artist. We are desperate!
-		routes.getTracksByArtists.bind(undefined, [individual], {}, callback),
+		function () {
+			routes.getTracksByArtists([individual]).then(processTracks, error);
+		},
 		// Give up
 		error.bind(undefined, new Error('Could not find any tracks for contributor ' + individual))
 	];
@@ -206,8 +235,7 @@ var formHandler = function (evt) {
 	paperInput.setAttribute('disabled', 'disabled');
 	resultsElem.innerHTML = '';
 	var startingPoint = input.value;
-	routes.getMids(startingPoint, '/music/artist', function (err, mids) {
-		error(err);
+	var kickoff = function(mids) {
 		sourceIndividual = mids[0];
 		if (! sourceIndividual) {
 			resultsElem.textContent = 'Could not find an artist named ' + startingPoint;
@@ -216,7 +244,9 @@ var formHandler = function (evt) {
 		}
 		seenIndividuals.push(sourceIndividual);
 		go();
-	});
+	};
+
+	routes.getMids(startingPoint, '/music/artist').then(kickoff, error);
 };
 
 form.addEventListener('submit', formHandler);
