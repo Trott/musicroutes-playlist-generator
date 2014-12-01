@@ -22,6 +22,7 @@ describe('exports', function () {
 	var Something = '/m/0mlx6x';
 	var YouKnowMyName = '/m/0fqv51t';
 	var BobDylan = '/m/01vrncs';
+	var OriginalFaubusFables = '/m/0q69hv';
 	var revert;
 
 	beforeEach(function (done) {
@@ -241,26 +242,38 @@ describe('exports', function () {
 
 	describe('getTrackDetails()', function () {
 		it('should return the track name, artist, and release title', function (done) {
-			var callback = function (err, data) {
-				expect(err).to.be.null();
+			var success = function (data) {
 				expect(data.name).to.equal('Original Faubus Fables');
 				expect(data.artists).to.deep.equal([{name: 'Charles Mingus', mid: '/m/024zq'}]);
 				expect(data.releases).to.deep.contain({name: 'Charles Mingus Presents Charles Mingus'});
 				done();
 			};
 
-			routes.getTrackDetails('/m/0q69hv', callback);
+			routes.getTrackDetails('/m/0q69hv').then(success);
 		});
 
 		it('should return an error if there is a network error', function (done) {
 			nock.disableNetConnect();
-			var callback = function (err, data) {
+			var failure = function (err) {
 				expect(err instanceof Error).to.be.true();
-				expect(data).to.be.undefined();
 				done();
 			};
 
-			routes.getTrackDetails('/m/0q69hv', callback);
+			routes.getTrackDetails(OriginalFaubusFables).catch(failure);
+		});
+
+		it('should return null if data from MQL query is, somehow, null', function (done) {
+			// Should never happen, but you know, defensive programming and all that.
+			revert = routes.__set__({freebase: {mqlread: function (query, options, callback) {
+				callback(null, null);
+			}}});
+
+			var success = function (data) {
+				expect(data).to.be.null();
+				done();
+			};
+
+			routes.getTrackDetails(OriginalFaubusFables).then(success);
 		});
 	});
 });
