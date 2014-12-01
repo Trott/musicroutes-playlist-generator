@@ -180,7 +180,7 @@ exports.getArtistDetails = function (mid) {
   });
 };
 
-exports.getTrackDetails = function (mid, callback) {
+exports.getTrackDetails = function (mid) {
   var query = JSON.stringify({
     mid: mid,
     type: '/music/track',
@@ -196,21 +196,26 @@ exports.getTrackDetails = function (mid, callback) {
     }]
   });
 
-  var cleanup = function (err, data) {
-    var rv;
-    if (data && data.result) {
-      rv = {};
-      rv.name = data.result.name;
-      rv.artists = data.result.artist;
-      rv.releases = [];
-      each(data.result, 'tracks', function (value) {
-        rv.releases.push(value.release);
-      });
-    }
-    callback(err, rv);
-  };
+  return new Promise(function (fulfill, reject) {
+    var cleanup = function (err, data) {
+      if (err) {
+        return reject(err);
+      }
+      var rv = null;
+      if (data && data.result) {
+        rv = {};
+        rv.name = data.result.name;
+        rv.artists = data.result.artist;
+        rv.releases = [];
+        each(data.result, 'tracks', function (value) {
+          rv.releases.push(value.release);
+        });
+      }
+      fulfill(rv);
+    };
 
-  freebase.mqlread(query, options, cleanup);
+    freebase.mqlread(query, options, cleanup);
+  });
 };
 },{"../.apikey":1,"mqlread":28,"promise":29}],3:[function(require,module,exports){
 /* global -Promise */
@@ -6061,7 +6066,8 @@ function extend() {
 }
 
 },{}],36:[function(require,module,exports){
-/*global document -Promise*/
+/*global document*/
+/*global -Promise*/
 var routes = require('../lib/routes.js');
 var videos = require('../lib/videos.js');
 var async = require('async');
@@ -6105,6 +6111,7 @@ var embedShown = false;
 var generatePlaylist = function (individual, done) {
 	var processTracks = 	function (tracks) {
 		var track;
+		var trackDetails;
 
 		var notSeenTracks = valuesNotIn(tracks, seenTracks);
 		if (notSeenTracks.length > 0) {
@@ -6119,97 +6126,115 @@ var generatePlaylist = function (individual, done) {
 			return;
 		}
 
-		routes.getTrackDetails(track, function (err, details) {
-			error(err);
+		var addToSeenArtists = function () {
+			return new Promise(function (fulfill, reject) {
+				if (!trackDetails) {
+					return reject(Error('No details for ' + track));
+				}
+			
+				var theseArtistMids = trackDetails.artists.map(function (value) { return value.mid; });
+				seenArtists = seenArtists.concat(valuesNotIn(theseArtistMids, seenArtists));
 
-			if (!details) {
-				error(new Error('No details for ' + track));
-			}
-
-			var theseArtistMids = details.artists.map(function (value) { return value.mid; });
-			seenArtists = seenArtists.concat(valuesNotIn(theseArtistMids, seenArtists));
-			var name = details.name || 'FREEBASE DOES NOT HAVE AN ENGLISH NAME FOR THIS TRACK';
-			var artist = details.artists.map(function (value) { 
+				fulfill();
+			});
+		};
+			
+		var formatTrackDetails = function () {
+			trackDetails.formatted = {};
+			trackDetails.formatted.name = trackDetails.name || 'FREEBASE DOES NOT HAVE AN ENGLISH NAME FOR THIS TRACK';
+			trackDetails.formatted.artist = trackDetails.artists.map(function (value) { 
 				return value.name || 'FREEBASE DOES NOT HAVE AN ENGLISH NAME FOR THIS ARTIST'; 
 			}).join(' & ');
-			var release = random(details.releases).name || 'FREEBASE DOES NOT HAVE AN ENGLISH NAME FOR THIS RELEASE';
+			trackDetails.formatted.release = random(trackDetails.releases).name || 'FREEBASE DOES NOT HAVE AN ENGLISH NAME FOR THIS RELEASE';
+		};
 
+		var renderTrackDetails = function () {
 			var p = document.createElement('p');
 
-			p.appendChild(document.createTextNode('"' + name + '"'));
+			p.appendChild(document.createTextNode('"' + trackDetails.formatted.name + '"'));
 			p.appendChild(document.createElement('br'));
-			p.appendChild(document.createTextNode(artist));
+			p.appendChild(document.createTextNode(trackDetails.formatted.artist));
 			p.appendChild(document.createElement('br'));
 			var i = document.createElement('i');
-			i.appendChild(document.createTextNode(release));
+			i.appendChild(document.createTextNode(trackDetails.formatted.release));
 			p.appendChild(i);
 
 			resultsElem.appendChild(p);
+		};
 
-			var renderConnector = function (details) {
-				var name = details.name || 'FREEBASE DOES NOT HAVE AN ENGLISH NAME FOR THIS PERSON';
-				var p = document.createElement('p');
-				p.appendChild(document.createTextNode('…with ' + name + '…'));
-				resultsElem.appendChild(p);
-			};
+		var searchForVideoId = function () {
+			var q = '"' + trackDetails.formatted.name + 
+				'" "' + trackDetails.formatted.artist + 
+				'" "' + trackDetails.formatted.release + '"';
 
-			var pickContributor = function (contributors) {
-				return new Promise(function (fulfill, reject) {
-					var contributor;
-					var notSeen = valuesNotIn(contributors, seenIndividuals);				
-					if (notSeen.length > 0) {
-						contributor = random(notSeen);
-						seenIndividuals.push(contributor);
-					} else {
-						contributor = random(contributors);
-					}
+			return videos.search(q);
+		}
 
-					sourceIndividual = contributor;
-					return contributor ? fulfill(contributor) : reject(Error('No contributors for track'));
-				});
-			};
+		var extractVideoId = function (data) {
+			return data.items[0] && data.items[0].videoId;
+		};
 
-			var finished = function () {
-				done(null);
-			};
+		var getVideoEmbedCode = function (videoId) {
+			return videoId && videos.embed(videoId)
+		};
 
-			var commonLink = function () {
-				routes.getArtistsAndContributorsFromTracks([track])
-				.then(pickContributor)
-				.then(routes.getArtistDetails)
-				.then(renderConnector)
-				.then(finished, error);
-			};
+		var embedVideoInDom = function (data) {
+			if (data && data.items && data.items[0] && data.items[0].embedHtml) {
+				var div = document.createElement('div');
+				// Yes, we're trusting YouTube's API not to p0wn us.
+				div.innerHTML = data.items[0].embedHtml;
+				resultsElem.appendChild(div);
+				embedShown = true;
+			}
+		};
 
-			var q = '"' + name + '" "' + artist + '" "' + release + '"';
+		var getCommonContributors = function () {
+			return routes.getArtistsAndContributorsFromTracks([track]);
+		};
 
-			var extractVideoId = function (data) {
-				return new Promise(function (fulfill, reject) {
-					if (data.items[0] && data.items[0].videoId) {
-						fulfill(data.items[0].videoId);
-					} else {
-						reject(Error('No videoId to extract'));
-					}
-				});
-			};
-			
-			var embedInDom = function (data) {
-				if (data.items[0] && data.items[0].embedHtml) {
-					var div = document.createElement('div');
-					// Yes, we're trusting YouTube's API not to p0wn us.
-					div.innerHTML = data.items[0].embedHtml;
-					resultsElem.appendChild(div);
-					embedShown = true;
+
+		var pickContributor = function (contributors) {
+			return new Promise(function (fulfill, reject) {
+				var contributor;
+				var notSeen = valuesNotIn(contributors, seenIndividuals);				
+				if (notSeen.length > 0) {
+					contributor = random(notSeen);
+					seenIndividuals.push(contributor);
+				} else {
+					contributor = random(contributors);
 				}
-			};
 
-			videos.search(q)
-			.then(extractVideoId)
-			.then(videos.embed)
-			.then(embedInDom)
-			.then(commonLink, commonLink);
-			
-		});
+				sourceIndividual = contributor;
+				return contributor ? fulfill(contributor) : reject(Error('No contributors for track'));
+			});
+		};
+
+		var renderConnector = function (details) {
+			var name = details.name || 'FREEBASE DOES NOT HAVE AN ENGLISH NAME FOR THIS PERSON';
+			var p = document.createElement('p');
+			p.appendChild(document.createTextNode('…with ' + name + '…'));
+			resultsElem.appendChild(p);
+		};
+
+
+		var finished = function () {
+			done(null);
+		};
+
+		routes.getTrackDetails(track)
+		.then(function (details) { trackDetails = details; })
+		.then(addToSeenArtists)
+		.then(formatTrackDetails)
+		.then(renderTrackDetails)
+		.then(searchForVideoId)
+		.then(extractVideoId)
+		.then(getVideoEmbedCode)
+		.then(embedVideoInDom, error)
+		.then(getCommonContributors)
+		.then(pickContributor)
+		.then(routes.getArtistDetails)
+		.then(renderConnector)
+		.then(finished, error);
 	};
 
 	var options = {subquery: {
