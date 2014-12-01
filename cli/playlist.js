@@ -29,7 +29,7 @@ var valuesNotIn = function (values, notIn) {
 	});
 };
 
-var generatePlaylist = function (individual, done) {
+var generatePlaylist = function (individual, done) {	
 	var fulfill = 	function (tracks) {
 		var track;
 
@@ -92,29 +92,33 @@ var generatePlaylist = function (individual, done) {
 				});
 			};
 
-			var removeMeAfterPromisifyingGetArtistDetails = function (contributor) {
+			var printConnectorDetails = function (details) {
 				return new Promise(function (fulfill, reject) {
-					routes.getArtistDetails(contributor, function (err, details) {
-						if (err) {
-							return reject(err);
-						}
-						var name = details.name || 'WHOOPS, FREEBASE DOES NOT HAVE AN ENGLISH NAME FOR THIS PERSON';
-						console.log('\n ... with ' + name + ' ... \n');
-						sourceIndividual = contributor;
-						done();
-					});
+					if (!details || !details.mid) {
+						reject(Error('No mid for contributor. Something is wrong.'));
+					}
+					var name = details.name || 'WHOOPS, FREEBASE DOES NOT HAVE AN ENGLISH NAME FOR THIS PERSON';
+					console.log('\n ... with ' + name + ' ... \n');
+					sourceIndividual = details.mid;
+					fulfill();
 				});
 			};
 
-			var nextinator = function () {
-				routes.getArtistsAndContributorsFromTracks([track])
-					.then(pickContributor, error)
-					.then(removeMeAfterPromisifyingGetArtistDetails, error);
+			var getConnectedTracks = function () {
+				return routes.getArtistsAndContributorsFromTracks([track]);
+			};
+
+			var finished = function () {
+				done(null);
 			};
 
 			videos.search(q)
 			.then(writeVideoUrl)
-			.then(nextinator);			
+			.then(getConnectedTracks)
+			.then(pickContributor)
+			.then(routes.getArtistDetails)
+			.then(printConnectorDetails)
+			.then(finished, error);
 		});
 	};
 
