@@ -15342,9 +15342,9 @@ var generatePlaylist = function (individual, done) {
 
 		var renderTrackDetails = function () {
 			var p = $('<p>')
-				.append('"' + trackDetails.formatted.name + '"')
+				.append(document.createTextNode('"' + trackDetails.formatted.name + '"'))
 				.append($('<br>'))
-				.append(trackDetails.formatted.artist)
+				.append(document.createTextNode(trackDetails.formatted.artist))
 				.append($('<br>'))
 				.append($('<i>').text(trackDetails.formatted.release));
 
@@ -15401,7 +15401,7 @@ var generatePlaylist = function (individual, done) {
 		var renderConnector = function (details) {
 			var name = details.name || 'FREEBASE DOES NOT HAVE AN ENGLISH NAME FOR THIS PERSON';
 			var p = $('<p>');
-			p.append('…with ' + name + '…');
+			p.text('…with ' + name + '…');
 			resultsElem.append(p);
 		};
 
