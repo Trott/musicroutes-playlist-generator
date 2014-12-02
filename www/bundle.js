@@ -15346,7 +15346,7 @@ var generatePlaylist = function (individual, done) {
 				.append($('<br>'))
 				.append(trackDetails.formatted.artist)
 				.append($('<br>'))
-				.append($('<i>').text(trackDetails.formatted.release))
+				.append($('<i>').text(trackDetails.formatted.release));
 
 			resultsElem.append(p);
 		};
@@ -15462,8 +15462,8 @@ var generatePlaylist = function (individual, done) {
 };
 
 var go = function () {
-	continueButtons.attr('disabled', 'disabled'); 
-	startOverButtons.attr('disabled', 'disabled');
+	continueButtons.css('visibility', 'hidden'); 
+	startOverButtons.css('visibility', 'hidden');
 	progress.attr('active', 'active');
 	embedShown = false;
 	async.until(
@@ -15475,8 +15475,8 @@ var go = function () {
 		},
 		function (err) {
 			error(err);
-			continueButtons.removeAttr('disabled');
-			startOverButtons.removeAttr('disabled');
+			continueButtons.css('visibility', 'visible');
+			startOverButtons.css('visibility', 'visible');
 			progress.removeAttr('active');
 		}
 	);
@@ -15485,8 +15485,8 @@ var go = function () {
 continueButtons.on('click', go);
 
 var resetForm = function () {
-	continueButtons.attr('disabled', 'disabled');
-	startOverButtons.attr('disabled', 'disabled');
+	continueButtons.css('visibility', 'hidden');
+	startOverButtons.css('visibility', 'hidden');
 	submit.removeAttr('disabled');
 	input.removeAttr('disabled');
 	paperInput.removeAttr('disabled');

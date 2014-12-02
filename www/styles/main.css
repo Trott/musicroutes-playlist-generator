@@ -116,6 +116,14 @@ paper-fab[disabled] {
   min-height: 1em;
 }
 
+.hidden {
+  visibility: hidden;
+}
+
+.right {
+  float: right;
+}
+
 @media only screen and (min-width: 800px) {
   h1 {
     font-family: 'Roboto Condensed', Helvetica, sans-serif;
