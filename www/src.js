@@ -4,15 +4,16 @@ var routes = require('../lib/routes.js');
 var videos = require('../lib/videos.js');
 var async = require('async');
 var Promise = require('promise');
+var $ = require('jquery');
 
-var resultsElem = document.getElementById('results');
-var form = document.getElementById('startPlaylist');
-var submit = document.getElementById('startPointSubmit');
-var input = document.getElementById('startPoint');
-var paperInput = document.getElementById('paperStartPoint');
-var continueButton = document.getElementById('continue');
-var startOverButton = document.getElementById('startOver');
-var progress = document.getElementById('progress');
+var resultsElem = $('#results');
+var form = $('#startPlaylist');
+var submit = $('#startPointSubmit');
+var input = $('#startPoint');
+var paperInput = $('#paperStartPoint');
+var continueButtons = $('.continue');
+var startOverButtons = $('.startOver');
+var progress = $('#progress');
 
 var sourceIndividual;
 var seenIndividuals = [];
@@ -81,17 +82,14 @@ var generatePlaylist = function (individual, done) {
 		};
 
 		var renderTrackDetails = function () {
-			var p = document.createElement('p');
+			var p = $('<p>')
+				.append(document.createTextNode('"' + trackDetails.formatted.name + '"'))
+				.append($('<br>'))
+				.append(document.createTextNode(trackDetails.formatted.artist))
+				.append($('<br>'))
+				.append($('<i>').text(trackDetails.formatted.release));
 
-			p.appendChild(document.createTextNode('"' + trackDetails.formatted.name + '"'));
-			p.appendChild(document.createElement('br'));
-			p.appendChild(document.createTextNode(trackDetails.formatted.artist));
-			p.appendChild(document.createElement('br'));
-			var i = document.createElement('i');
-			i.appendChild(document.createTextNode(trackDetails.formatted.release));
-			p.appendChild(i);
-
-			resultsElem.appendChild(p);
+			resultsElem.append(p);
 		};
 
 		var searchForVideoId = function () {
@@ -112,10 +110,10 @@ var generatePlaylist = function (individual, done) {
 
 		var embedVideoInDom = function (data) {
 			if (data && data.items && data.items[0] && data.items[0].embedHtml) {
-				var div = document.createElement('div');
+				var div = $('<div>');
 				// Yes, we're trusting YouTube's API not to p0wn us.
-				div.innerHTML = data.items[0].embedHtml;
-				resultsElem.appendChild(div);
+				div.html(data.items[0].embedHtml);
+				resultsElem.append(div);
 				embedShown = true;
 			}
 		};
@@ -143,9 +141,9 @@ var generatePlaylist = function (individual, done) {
 
 		var renderConnector = function (details) {
 			var name = details.name || 'FREEBASE DOES NOT HAVE AN ENGLISH NAME FOR THIS PERSON';
-			var p = document.createElement('p');
-			p.appendChild(document.createTextNode('…with ' + name + '…'));
-			resultsElem.appendChild(p);
+			var p = $('<p>');
+			p.text('…with ' + name + '…');
+			resultsElem.append(p);
 		};
 
 
@@ -205,9 +203,9 @@ var generatePlaylist = function (individual, done) {
 };
 
 var go = function () {
-	continueButton.setAttribute('disabled', 'disabled');
-	startOverButton.setAttribute('disabled', 'disabled');
-	progress.setAttribute('active', 'active');
+	continueButtons.css('visibility', 'hidden'); 
+	startOverButtons.css('visibility', 'hidden');
+	progress.attr('active', 'active');
 	embedShown = false;
 	async.until(
 		function () { 
@@ -218,46 +216,44 @@ var go = function () {
 		},
 		function (err) {
 			error(err);
-			continueButton.removeAttribute('disabled');
-			startOverButton.removeAttribute('disabled');
-			progress.removeAttribute('active');
+			continueButtons.css('visibility', 'visible');
+			startOverButtons.css('visibility', 'visible');
+			progress.removeAttr('active');
 		}
 	);
 };
 
-continueButton.addEventListener('click', function () {
-	go();	
-});
+continueButtons.on('click', go);
 
 var resetForm = function () {
-	continueButton.setAttribute('disabled', 'disabled');
-	startOverButton.setAttribute('disabled', 'disabled');
-	submit.removeAttribute('disabled');
-	input.removeAttribute('disabled');
-	paperInput.removeAttribute('disabled');
-	input.value = '';
+	continueButtons.css('visibility', 'hidden');
+	startOverButtons.css('visibility', 'hidden');
+	submit.removeAttr('disabled');
+	input.removeAttr('disabled');
+	paperInput.removeAttr('disabled');
+	input.val('');
 	input.focus();
 };
 
-startOverButton.addEventListener('click', function () {
+startOverButtons.on('click', function () {
 	seenIndividuals = [];
 	seenTracks = [];
 	seenArtists = [];
-	resultsElem.innerHTML = '';
+	resultsElem.empty();
 	resetForm();
 });
 
 var formHandler = function (evt) {
 	evt.preventDefault();
-	submit.setAttribute('disabled', 'disabled');
-	input.setAttribute('disabled', 'disabled');
-	paperInput.setAttribute('disabled', 'disabled');
-	resultsElem.innerHTML = '';
-	var startingPoint = input.value;
+	submit.attr('disabled', 'disabled');
+	input.attr('disabled', 'disabled');
+	paperInput.attr('disabled', 'disabled');
+	resultsElem.empty();
+	var startingPoint = input.val();
 	var kickoff = function(mids) {
 		sourceIndividual = mids[0];
 		if (! sourceIndividual) {
-			resultsElem.textContent = 'Could not find an artist named ' + startingPoint;
+			resultsElem.text('Could not find an artist named ' + startingPoint);
 			resetForm();
 			return;
 		}
@@ -268,5 +264,5 @@ var formHandler = function (evt) {
 	routes.getMids(startingPoint, '/music/artist').then(kickoff, error);
 };
 
-form.addEventListener('submit', formHandler);
-submit.addEventListener('click', formHandler);
+form.on('submit', formHandler);
+submit.on('click', formHandler);
