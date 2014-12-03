@@ -47,17 +47,14 @@ var generatePlaylist = function (individual, done) {
 		var trackDetails;
 
 		var notSeenTracks = valuesNotIn(tracks, seenTracks);
-		if (notSeenTracks.length > 0) {
-			track = random(notSeenTracks);
-			seenTracks.push(track);
-		} else {
-			track = random(tracks);
-		}
-		if (! track) {
+		if (notSeenTracks.length === 0) {
 			nextIndex = nextIndex +1;
 			next[nextIndex]();
 			return;
 		}
+
+		track = random(notSeenTracks);
+		seenTracks.push(track);
 
 		var addToSeenArtists = function () {
 			return new Promise(function (fulfill, reject) {
@@ -118,7 +115,7 @@ var generatePlaylist = function (individual, done) {
 			}
 		};
 
-		var getCommonContributors = function () {
+		var getContributors = function () {
 			return routes.getArtistsAndContributorsFromTracks([track]);
 		};
 
@@ -160,17 +157,17 @@ var generatePlaylist = function (individual, done) {
 		.then(extractVideoId)
 		.then(getVideoEmbedCode)
 		.then(embedVideoInDom, error)
-		.then(getCommonContributors)
+		.then(getContributors)
 		.then(pickContributor)
 		.then(routes.getArtistDetails)
 		.then(renderConnector)
 		.then(finished, error);
 	};
 
-	var options = {subquery: {
+	var optionsNewArtistsOnly = {subquery: {
 		artist: [{
-					'mid|=': seenArtists,
-					optional: 'forbidden'
+			'mid|=': seenArtists,
+			optional: 'forbidden'
 		}]
 	}};
 
@@ -183,7 +180,7 @@ var generatePlaylist = function (individual, done) {
 				routes.getTracksByArtists([individual]).then(processTracks, error);
 			} else {
 				// Otherwise, get one by an artist we haven't seen yet
-				routes.getTracksWithContributors([individual], options).then(processTracks, error);
+				routes.getTracksWithContributors([individual], optionsNewArtistsOnly).then(processTracks, error);
 			}
 		},
 		// Look for any track with this contributor credited as a contributor regardless if we've seen the artist already.
