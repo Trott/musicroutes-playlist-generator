@@ -203,15 +203,21 @@ var generatePlaylist = function (individual, done) {
 };
 
 var go = function () {
+	// If lookupUserInput() didn't find an individual, don't do anything.
+	if (seenIndividuals.length === 0) {
+		return;
+	}
 	continueButtons.css('visibility', 'hidden'); 
 	startOverButtons.css('visibility', 'hidden');
 	progress.attr('active', 'active');
 	embedShown = false;
+	var loopCount = 0;
 	async.until(
 		function () { 
-			return embedShown;
+			return embedShown || loopCount > 4;
 		},
 		function (next) {
+			loopCount = loopCount + 1;
 			generatePlaylist(sourceIndividual, next);
 		},
 		function (err) {
@@ -255,7 +261,7 @@ var formHandler = function (evt) {
 	input.attr('disabled', 'disabled');
 	paperInput.attr('disabled', 'disabled');
 	resultsElem.empty();
-	var kickoff = function(mids) {
+	var lookupUserInput = function(mids) {
 		sourceIndividual = mids[0];
 		if (! sourceIndividual) {
 			resultsElem.text('Could not find an artist named ' + startingPoint);
@@ -263,10 +269,9 @@ var formHandler = function (evt) {
 			return;
 		}
 		seenIndividuals.push(sourceIndividual);
-		go();
 	};
 
-	routes.getMids(startingPoint, '/music/artist').then(kickoff, error);
+	routes.getMids(startingPoint, '/music/artist').then(lookupUserInput).then(go).catch(error);
 };
 
 form.on('submit', formHandler);
