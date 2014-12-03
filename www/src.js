@@ -23,7 +23,7 @@ var seenArtists = [];
 var error = function (err) {
 	if (err) {
 		console.log('Error: ', err.message);
-		console.dir(err.stack);
+		console.log(err.stack);
 		throw(err);
 	}
 };
@@ -45,15 +45,9 @@ var generatePlaylist = function (individual, done) {
 	var processTracks = 	function (tracks) {
 		var track;
 		var trackDetails;
-
 		var notSeenTracks = valuesNotIn(tracks, seenTracks);
-		if (notSeenTracks.length > 0) {
-			track = random(notSeenTracks);
-			seenTracks.push(track);
-		} else {
-			track = random(tracks);
-		}
-		if (! track) {
+
+		if (notSeenTracks.length === 0) {
 			nextIndex = nextIndex +1;
 			next[nextIndex]();
 			return;
@@ -118,7 +112,7 @@ var generatePlaylist = function (individual, done) {
 			}
 		};
 
-		var getCommonContributors = function () {
+		var getContributors = function () {
 			return routes.getArtistsAndContributorsFromTracks([track]);
 		};
 
@@ -146,12 +140,52 @@ var generatePlaylist = function (individual, done) {
 			resultsElem.append(p);
 		};
 
-
 		var finished = function () {
 			done(null);
 		};
 
-		routes.getTrackDetails(track)
+		var foundSomeoneElse;
+		var deadEnd;
+
+		var pickATrack = function () {
+			return new Promise(function (fulfill, reject) {
+				async.until(
+					function () {
+						return foundSomeoneElse || deadEnd;
+					},
+					function (next) {
+						if (notSeenTracks.length === 0) {
+							deadEnd = true;
+							reject(Error('Could not find a track that was not a dead end. Bummer.'));
+							return next();
+						}
+						track = random(notSeenTracks);
+						seenTracks.push(track);
+						notSeenTracks = valuesNotIn(notSeenTracks, [track]);
+						routes.getArtistsAndContributorsFromTracks([track])
+						.then(function (folks) {
+							var contributorPool = valuesNotIn(folks, [individual]);
+							foundSomeoneElse = (contributorPool.length > 0);
+							if (foundSomeoneElse) {
+								fulfill(track);
+							}
+							next();
+						}, error);
+					},
+					function (err) {
+						if (err) {
+							error(err);
+							continueButtons.css('visibility', 'visible');
+							startOverButtons.css('visibility', 'visible');
+							progress.removeAttr('active');
+						}
+					}
+				);
+			});
+		};
+
+		pickATrack()
+		.then(routes.getTrackDetails)
 		.then(function (details) { trackDetails = details; })
 		.then(addToSeenArtists)
 		.then(formatTrackDetails)
@@ -160,17 +194,17 @@ var generatePlaylist = function (individual, done) {
 		.then(extractVideoId)
 		.then(getVideoEmbedCode)
 		.then(embedVideoInDom, error)
-		.then(getCommonContributors)
+		.then(getContributors)
 		.then(pickContributor)
 		.then(routes.getArtistDetails)
 		.then(renderConnector)
 		.then(finished, error);
 	};
 
-	var options = {subquery: {
+	var optionsNewArtistsOnly = {subquery: {
 		artist: [{
-					'mid|=': seenArtists,
-					optional: 'forbidden'
+			'mid|=': seenArtists,
+			optional: 'forbidden'
 		}]
 	}};
 
@@ -183,7 +217,7 @@ var generatePlaylist = function (individual, done) {
 				routes.getTracksByArtists([individual]).then(processTracks, error);
 			} else {
 				// Otherwise, get one by an artist we haven't seen yet
-				routes.getTracksWithContributors([individual], options).then(processTracks, error);
+				routes.getTracksWithContributors([individual], optionsNewArtistsOnly).then(processTracks, error);
 			}
 		},
 		// Look for any track with this contributor credited as a contributor regardless if we've seen the artist already.
