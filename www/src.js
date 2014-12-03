@@ -245,11 +245,16 @@ startOverButtons.on('click', function () {
 
 var formHandler = function (evt) {
 	evt.preventDefault();
+	
+	var startingPoint = input.val().trim();
+	if (! startingPoint) {
+		return;
+	}
+
 	submit.attr('disabled', 'disabled');
 	input.attr('disabled', 'disabled');
 	paperInput.attr('disabled', 'disabled');
 	resultsElem.empty();
-	var startingPoint = input.val();
 	var kickoff = function(mids) {
 		sourceIndividual = mids[0];
 		if (! sourceIndividual) {
