@@ -15283,7 +15283,7 @@ var seenArtists = [];
 var error = function (err) {
 	if (err) {
 		console.log('Error: ', err.message);
-		console.dir(err.stack);
+		console.log(err.stack);
 		throw(err);
 	}
 };
@@ -15305,16 +15305,13 @@ var generatePlaylist = function (individual, done) {
 	var processTracks = 	function (tracks) {
 		var track;
 		var trackDetails;
-
 		var notSeenTracks = valuesNotIn(tracks, seenTracks);
+
 		if (notSeenTracks.length === 0) {
 			nextIndex = nextIndex +1;
 			next[nextIndex]();
 			return;
 		}
-
-		track = random(notSeenTracks);
-		seenTracks.push(track);
 
 		var addToSeenArtists = function () {
 			return new Promise(function (fulfill, reject) {
@@ -15403,12 +15400,52 @@ var generatePlaylist = function (individual, done) {
 			resultsElem.append(p);
 		};
 
-
 		var finished = function () {
 			done(null);
 		};
 
-		routes.getTrackDetails(track)
+		var foundSomeoneElse;
+		var deadEnd;
+
+		var pickATrack = function () {
+			return new Promise(function (fulfill, reject) {
+				async.until(
+					function () {
+						return foundSomeoneElse || deadEnd;
+					},
+					function (next) {
+						if (notSeenTracks.length === 0) {
+							deadEnd = true;
+							reject(Error('Could not find a track that was not a dead end. Bummer.'));
+							return next();
+						}
+						track = random(notSeenTracks);
+						seenTracks.push(track);
+						notSeenTracks = valuesNotIn(notSeenTracks, [track]);
+						routes.getArtistsAndContributorsFromTracks([track])
+						.then(function (folks) {
+							var contributorPool = valuesNotIn(folks, [individual]);
+							foundSomeoneElse = (contributorPool.length > 0);
+							if (foundSomeoneElse) {
+								fulfill(track);
+							}
+							next();
+						}, error);
+					},
+					function (err) {
+						if (err) {
+							error(err);
+							continueButtons.css('visibility', 'visible');
+							startOverButtons.css('visibility', 'visible');
+							progress.removeAttr('active');
+						}
+					}
+				);
+			});
+		};
+
+		pickATrack()
+		.then(routes.getTrackDetails)
 		.then(function (details) { trackDetails = details; })
 		.then(addToSeenArtists)
 		.then(formatTrackDetails)
