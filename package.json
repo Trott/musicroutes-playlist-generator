@@ -4,7 +4,7 @@
   "description": "musicroutes-playlist-generator",
   "scripts": {
     "test": "node_modules/lab/bin/lab -t 100 _test",
-    "build": "node_modules/.bin/browserify src.js -o bundle.js"
+    "build": "node_modules/.bin/browserify src.js -o bundle.js && node_modules/.bin/vulcanize -o index.html src.html"
   },
   "repository": {
     "type": "git",
@@ -32,6 +32,7 @@
     "lab": "^5.0.2",
     "nock": "^0.50.0",
     "precommit-hook": "^1.0.7",
-    "rewire": "^2.1.3"
+    "rewire": "^2.1.3",
+    "vulcanize": "^0.7.1"
   }
 }
