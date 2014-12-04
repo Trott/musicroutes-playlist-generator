@@ -1,6 +1,6 @@
 /*jshint expr: true*/
 
-var videos = require('../../lib/videos.js');
+var videos = require('../../_lib/videos.js');
 
 var Code = require('code');
 var expect = Code.expect;
