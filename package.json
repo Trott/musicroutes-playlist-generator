@@ -1,7 +1,7 @@
 {
-  "name": "musicroutes-freebase-demo",
+  "name": "musicroutes-playlist-generator",
   "version": "1.0.0",
-  "description": "musicroutes-freebase-demo",
+  "description": "musicroutes-playlist-generator",
   "scripts": {
     "test": "node_modules/lab/bin/lab -t 100"
   },
@@ -12,9 +12,9 @@
   "author": "Rich Trott <rtrott@gmail.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/Trott/musicroutes-freebase-demo/issues"
+    "url": "https://github.com/Trott/musicroutes-playlist-generator/issues"
   },
-  "homepage": "https://github.com/Trott/musicroutes-freebase-demo",
+  "homepage": "https://github.com/Trott/musicroutes-playlist-generator",
   "dependencies": {
     "async": "^0.9.0",
     "flat": "^1.3.0",
