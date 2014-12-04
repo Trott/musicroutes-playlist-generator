@@ -1,7 +1,7 @@
 /*global document*/
 /*global -Promise*/
-var routes = require('../lib/routes.js');
-var videos = require('../lib/videos.js');
+var routes = require('./_lib/routes.js');
+var videos = require('./_lib/videos.js');
 var async = require('async');
 var Promise = require('promise');
 var $ = require('jquery');

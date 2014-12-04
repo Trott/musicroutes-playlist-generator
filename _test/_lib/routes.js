@@ -1,7 +1,7 @@
 /*jshint expr: true*/
 
 var rewire = require('rewire');
-var routes = rewire('../../lib/routes.js');
+var routes = rewire('../../_lib/routes.js');
 
 var Code = require('code');
 var expect = Code.expect;

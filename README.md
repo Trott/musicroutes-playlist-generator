@@ -1,7 +1,16 @@
 musicroutes-freebase-demo
 =========================
 
-Stuff I'm using:
+## Quick Start
+
+* `npm install`
+* Use your favorite web server software to serve the repo.
+
+After making any code modifications to `src.js`, run `npm run-script build` to
+regenerate `bundle.js`.
+
+
+### Stuff used in this project
 
 * Freebase API
 * YouTube Data API
@@ -9,3 +18,4 @@ Stuff I'm using:
 * Polymer
 * Browserify
 * then/promise
+* hapijs/lab
