@@ -22,9 +22,11 @@ var seenArtists = [];
 
 var error = function (err) {
 	if (err) {
-		console.log('Error: ', err.message);
+		resultsElem.append($('<p>').append(document.createTextNode('Error: ' + err.message)));
 		console.log(err.stack);
-		throw(err);
+		progress.removeAttr('active');
+		startOverButtons.css('visibility', 'visible');
+		continueButtons.css('visibility', 'visible');
 	}
 };
 
@@ -193,7 +195,7 @@ var generatePlaylist = function (individual, done) {
 		.then(searchForVideoId)
 		.then(extractVideoId)
 		.then(getVideoEmbedCode)
-		.then(embedVideoInDom, error)
+		.then(embedVideoInDom)
 		.then(getContributors)
 		.then(pickContributor)
 		.then(routes.getArtistDetails)
@@ -229,7 +231,7 @@ var generatePlaylist = function (individual, done) {
 			routes.getTracksByArtists([individual]).then(processTracks, error);
 		},
 		// Give up
-		error.bind(undefined, new Error('Could not find any tracks for contributor ' + individual))
+		error.bind(undefined, new Error('Could not find any unseen tracks for contributor ' + individual))
 	];
 
 	// Kick it off
