@@ -5,6 +5,7 @@ var videos = require('./_lib/videos.js');
 var async = require('async');
 var Promise = require('promise');
 var $ = require('jquery');
+var _ = require('lodash');
 
 var resultsElem = $('#results');
 var form = $('#startPlaylist');
@@ -30,24 +31,13 @@ var error = function (err) {
 	}
 };
 
-var random = function (array) {
-	return array[Math.floor(Math.random()*array.length)];
-};
-
-var valuesNotIn = function (values, notIn) {
-	// returns values from values that are not in notIn
-	return values.filter( function (value) { 
-		return notIn.indexOf( value ) === -1;
-	});
-};
-
 var embedShown = false;
 
 var generatePlaylist = function (individual, done) {
 	var processTracks = 	function (tracks) {
 		var track;
 		var trackDetails;
-		var notSeenTracks = valuesNotIn(tracks, seenTracks);
+		var notSeenTracks = _.difference(tracks, seenTracks);
 
 		if (notSeenTracks.length === 0) {
 			nextIndex = nextIndex +1;
@@ -61,8 +51,8 @@ var generatePlaylist = function (individual, done) {
 					return reject(Error('No details for ' + track));
 				}
 			
-				var theseArtistMids = trackDetails.artists.map(function (value) { return value.mid; });
-				seenArtists = seenArtists.concat(valuesNotIn(theseArtistMids, seenArtists));
+				var theseArtistMids = _.map(trackDetails.artists, 'mid');
+				seenArtists = seenArtists.concat(_.difference(theseArtistMids, seenArtists));
 
 				fulfill();
 			});
@@ -74,7 +64,7 @@ var generatePlaylist = function (individual, done) {
 			trackDetails.formatted.artist = trackDetails.artists.map(function (value) { 
 				return value.name || 'FREEBASE DOES NOT HAVE AN ENGLISH NAME FOR THIS ARTIST'; 
 			}).join(' & ');
-			trackDetails.formatted.release = random(trackDetails.releases).name || 'FREEBASE DOES NOT HAVE AN ENGLISH NAME FOR THIS RELEASE';
+			trackDetails.formatted.release = _.sample(trackDetails.releases).name || 'FREEBASE DOES NOT HAVE AN ENGLISH NAME FOR THIS RELEASE';
 		};
 
 		var renderTrackDetails = function () {
@@ -97,7 +87,7 @@ var generatePlaylist = function (individual, done) {
 		};
 
 		var extractVideoId = function (data) {
-			return data.items[0] && data.items[0].videoId;
+			return _.result(data.items[0], 'videoId');
 		};
 
 		var getVideoEmbedCode = function (videoId) {
@@ -122,12 +112,12 @@ var generatePlaylist = function (individual, done) {
 		var pickContributor = function (contributors) {
 			return new Promise(function (fulfill, reject) {
 				var contributor;
-				var notSeen = valuesNotIn(contributors, seenIndividuals);				
+				var notSeen = _.difference(contributors, seenIndividuals);				
 				if (notSeen.length > 0) {
-					contributor = random(notSeen);
+					contributor = _.sample(notSeen);
 					seenIndividuals.push(contributor);
 				} else {
-					contributor = random(contributors);
+					contributor = _.sample(contributors);
 				}
 
 				sourceIndividual = contributor;
@@ -161,12 +151,12 @@ var generatePlaylist = function (individual, done) {
 							reject(Error('Could not find a track that was not a dead end. Bummer.'));
 							return next();
 						}
-						track = random(notSeenTracks);
+						track = _.sample(notSeenTracks);
 						seenTracks.push(track);
-						notSeenTracks = valuesNotIn(notSeenTracks, [track]);
+						notSeenTracks = _.pull(notSeenTracks, track);
 						routes.getArtistsAndContributorsFromTracks([track])
 						.then(function (folks) {
-							var contributorPool = valuesNotIn(folks, [individual]);
+							var contributorPool = _.difference(folks, [individual]);
 							foundSomeoneElse = (contributorPool.length > 0);
 							if (foundSomeoneElse) {
 								fulfill(track);
@@ -174,14 +164,7 @@ var generatePlaylist = function (individual, done) {
 							next();
 						}, error);
 					},
-					function (err) {
-						if (err) {
-							error(err);
-							continueButtons.css('visibility', 'visible');
-							startOverButtons.css('visibility', 'visible');
-							progress.removeAttr('active');
-						}
-					}
+					error
 				);
 			});
 		};
@@ -258,9 +241,9 @@ var go = function () {
 		},
 		function (err) {
 			error(err);
-			continueButtons.css('visibility', 'visible');
-			startOverButtons.css('visibility', 'visible');
 			progress.removeAttr('active');
+			startOverButtons.css('visibility', 'visible');
+			continueButtons.css('visibility', 'visible');
 		}
 	);
 };

@@ -2,25 +2,14 @@
 var freebase = require('mqlread');
 var Promise = require('promise');
 var apikey = require('../.apikey');
+var _ = require('lodash');
+
 var options = {
   html_escape: false,
   key: apikey.key
 };
 
 var limit = 9007199254740992;
-
-var grabMid = function (value, prop) {
-  if (prop) {
-    return value[prop] ? value[prop].mid : undefined;
-  }
-  return value.mid;
-};
-
-var each = function (obj, prop, callback) {
-  if (obj && obj[prop] instanceof Array) {
-    return obj[prop].forEach(callback);
-  }
-};
 
 exports.getMids = function (name, type) {
   var query = JSON.stringify([{
@@ -34,11 +23,7 @@ exports.getMids = function (name, type) {
       if (err) {
         return reject(err);
       }
-      var rv = [];
-      each(data, 'result', function (value) {
-        rv.push(grabMid(value));
-      });
-      fulfill(rv);
+      fulfill(_.map(data.result, 'mid'));
     });
   });
 };
@@ -55,12 +40,7 @@ exports.getTracksWithContributors = function (mids, opts) {
     }],
   }];
 
-  if (opts.subquery) {
-    for (var key in opts.subquery) {
-      // shallow copy, we're about to throw it away
-      query[0].track_contributions[0].track[key] = opts.subquery[key];
-    }
-  }
+  _.assign(query[0].track_contributions[0].track, opts.subquery);
 
   query = JSON.stringify(query);
 
@@ -70,13 +50,11 @@ exports.getTracksWithContributors = function (mids, opts) {
         return reject(err);
       }
       var rv = [];
-      each(data, 'result',
-        function (value) {
-          each(value, 'track_contributions', function (value) { 
-            rv.push(grabMid(value, 'track')); 
-          });
-        }
-      );
+      _.forEach(data.result, function (value) {
+        _.forEach(value.track_contributions, function (value) {
+          rv.push(_.result(value.track, 'mid'));
+        });
+      });
       fulfill(rv);
     };
 
@@ -100,13 +78,11 @@ exports.getTracksByArtists = function (mids) {
         return reject(err);
       }
       var rv = [];
-      each(data, 'result', 
-        function (value) {
-          each(value, 'track', function (value) {
-            rv.push(grabMid(value));
-          });
-        }
-      );
+      _.forEach(data.result, function (value) {
+        _.forEach(value.track, function (value) {
+          rv.push(_.result(value, 'mid'));
+        });
+      });
       fulfill(rv);
     };
 
@@ -124,8 +100,8 @@ exports.getArtistsAndContributorsFromTracks = function (mids) {
     }],
     contributions: [{
       mid: null,
-      contributor: [{ 
-        mid: null 
+      contributor: [{
+        mid: null
       }],
       limit: limit,
       optional: 'optional'
@@ -138,13 +114,13 @@ exports.getArtistsAndContributorsFromTracks = function (mids) {
         return reject(err);
       }
       var rv = [];
-      each(data, 'result', function (value) {
-        each(value, 'artist', function (value) {
-          rv.push(grabMid(value));
+      _.forEach(data.result, function (value) {
+        _.forEach(value.artist, function (value) {
+          rv.push(_.result(value, 'mid'));
         });
-        each(value, 'contributions', function (value) {
-          each(value, 'contributor', function (value) {
-            rv.push(grabMid(value));
+        _.forEach(value.contributions, function (value) {
+          _.forEach(value.contributor, function (value) {
+            rv.push(_.result(value, 'mid'));
           });
         });
       });
@@ -168,8 +144,7 @@ exports.getArtistDetails = function (mid) {
       if (err) {
         return reject(err);
       }
-      data = data && data.result;
-      fulfill(data);
+      fulfill(_.result(data, 'result'));
     };
 
     freebase.mqlread(query, options, cleanup);
@@ -203,7 +178,7 @@ exports.getTrackDetails = function (mid) {
         rv.name = data.result.name;
         rv.artists = data.result.artist;
         rv.releases = [];
-        each(data.result, 'tracks', function (value) {
+        _.forEach(data.result.tracks, function (value) {
           rv.releases.push(value.release);
         });
       }

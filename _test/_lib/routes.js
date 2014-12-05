@@ -225,14 +225,14 @@ describe('exports', function () {
 			routes.getArtistDetails(BobDylan).catch(failure);
 		});
 
-		it('should return null if data from MQL query is, somehow, null', function (done) {
+		it('should return undefined if data from MQL query is, somehow, null', function (done) {
 			// Should never happen, but you know, defensive programming and all that.
 			revert = routes.__set__({freebase: {mqlread: function (query, options, callback) {
 				callback(null, null);
 			}}});
 
 			var success = function (data) {
-				expect(data).to.be.null();
+				expect(data).to.be.undefined();
 				done();
 			};
 
