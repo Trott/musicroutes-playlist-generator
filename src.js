@@ -31,10 +31,6 @@ var error = function (err) {
 	}
 };
 
-var random = function (array) {
-	return array[_.random(array.length-1)];
-};
-
 var embedShown = false;
 
 var generatePlaylist = function (individual, done) {
@@ -68,7 +64,7 @@ var generatePlaylist = function (individual, done) {
 			trackDetails.formatted.artist = trackDetails.artists.map(function (value) { 
 				return value.name || 'FREEBASE DOES NOT HAVE AN ENGLISH NAME FOR THIS ARTIST'; 
 			}).join(' & ');
-			trackDetails.formatted.release = random(trackDetails.releases).name || 'FREEBASE DOES NOT HAVE AN ENGLISH NAME FOR THIS RELEASE';
+			trackDetails.formatted.release = _.sample(trackDetails.releases).name || 'FREEBASE DOES NOT HAVE AN ENGLISH NAME FOR THIS RELEASE';
 		};
 
 		var renderTrackDetails = function () {
@@ -118,10 +114,10 @@ var generatePlaylist = function (individual, done) {
 				var contributor;
 				var notSeen = _.difference(contributors, seenIndividuals);				
 				if (notSeen.length > 0) {
-					contributor = random(notSeen);
+					contributor = _.sample(notSeen);
 					seenIndividuals.push(contributor);
 				} else {
-					contributor = random(contributors);
+					contributor = _.sample(contributors);
 				}
 
 				sourceIndividual = contributor;
@@ -155,7 +151,7 @@ var generatePlaylist = function (individual, done) {
 							reject(Error('Could not find a track that was not a dead end. Bummer.'));
 							return next();
 						}
-						track = random(notSeenTracks);
+						track = _.sample(notSeenTracks);
 						seenTracks.push(track);
 						notSeenTracks = _.pull(notSeenTracks, track);
 						routes.getArtistsAndContributorsFromTracks([track])
@@ -243,7 +239,12 @@ var go = function () {
 			loopCount = loopCount + 1;
 			generatePlaylist(sourceIndividual, next);
 		},
-		error
+		function (err) {
+			error(err);
+			progress.removeAttr('active');
+			startOverButtons.css('visibility', 'visible');
+			continueButtons.css('visibility', 'visible');
+		}
 	);
 };
 

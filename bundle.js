@@ -6,25 +6,14 @@ exports.key = "AIzaSyB3yM4RkyAqYVPAr6lQLfzp8H6yQrmmHCs";
 var freebase = require('mqlread');
 var Promise = require('promise');
 var apikey = require('../.apikey');
+var _ = require('lodash');
+
 var options = {
   html_escape: false,
   key: apikey.key
 };
 
 var limit = 9007199254740992;
-
-var grabMid = function (value, prop) {
-  if (prop) {
-    return value[prop] ? value[prop].mid : undefined;
-  }
-  return value.mid;
-};
-
-var each = function (obj, prop, callback) {
-  if (obj && obj[prop] instanceof Array) {
-    return obj[prop].forEach(callback);
-  }
-};
 
 exports.getMids = function (name, type) {
   var query = JSON.stringify([{
@@ -38,11 +27,7 @@ exports.getMids = function (name, type) {
       if (err) {
         return reject(err);
       }
-      var rv = [];
-      each(data, 'result', function (value) {
-        rv.push(grabMid(value));
-      });
-      fulfill(rv);
+      fulfill(_.map(data.result, 'mid'));
     });
   });
 };
@@ -59,12 +44,7 @@ exports.getTracksWithContributors = function (mids, opts) {
     }],
   }];
 
-  if (opts.subquery) {
-    for (var key in opts.subquery) {
-      // shallow copy, we're about to throw it away
-      query[0].track_contributions[0].track[key] = opts.subquery[key];
-    }
-  }
+  _.assign(query[0].track_contributions[0].track, opts.subquery);
 
   query = JSON.stringify(query);
 
@@ -74,13 +54,11 @@ exports.getTracksWithContributors = function (mids, opts) {
         return reject(err);
       }
       var rv = [];
-      each(data, 'result',
-        function (value) {
-          each(value, 'track_contributions', function (value) { 
-            rv.push(grabMid(value, 'track')); 
-          });
-        }
-      );
+      _.forEach(data.result, function (value) {
+        _.forEach(value.track_contributions, function (value) {
+          rv.push(_.result(value.track, 'mid'));
+        });
+      });
       fulfill(rv);
     };
 
@@ -104,13 +82,11 @@ exports.getTracksByArtists = function (mids) {
         return reject(err);
       }
       var rv = [];
-      each(data, 'result', 
-        function (value) {
-          each(value, 'track', function (value) {
-            rv.push(grabMid(value));
-          });
-        }
-      );
+      _.forEach(data.result, function (value) {
+        _.forEach(value.track, function (value) {
+          rv.push(_.result(value, 'mid'));
+        });
+      });
       fulfill(rv);
     };
 
@@ -128,8 +104,8 @@ exports.getArtistsAndContributorsFromTracks = function (mids) {
     }],
     contributions: [{
       mid: null,
-      contributor: [{ 
-        mid: null 
+      contributor: [{
+        mid: null
       }],
       limit: limit,
       optional: 'optional'
@@ -142,13 +118,13 @@ exports.getArtistsAndContributorsFromTracks = function (mids) {
         return reject(err);
       }
       var rv = [];
-      each(data, 'result', function (value) {
-        each(value, 'artist', function (value) {
-          rv.push(grabMid(value));
+      _.forEach(data.result, function (value) {
+        _.forEach(value.artist, function (value) {
+          rv.push(_.result(value, 'mid'));
         });
-        each(value, 'contributions', function (value) {
-          each(value, 'contributor', function (value) {
-            rv.push(grabMid(value));
+        _.forEach(value.contributions, function (value) {
+          _.forEach(value.contributor, function (value) {
+            rv.push(_.result(value, 'mid'));
           });
         });
       });
@@ -172,8 +148,7 @@ exports.getArtistDetails = function (mid) {
       if (err) {
         return reject(err);
       }
-      data = data && data.result;
-      fulfill(data);
+      fulfill(_.result(data, 'result'));
     };
 
     freebase.mqlread(query, options, cleanup);
@@ -207,7 +182,7 @@ exports.getTrackDetails = function (mid) {
         rv.name = data.result.name;
         rv.artists = data.result.artist;
         rv.releases = [];
-        each(data.result, 'tracks', function (value) {
+        _.forEach(data.result.tracks, function (value) {
           rv.releases.push(value.release);
         });
       }
@@ -217,7 +192,7 @@ exports.getTrackDetails = function (mid) {
     freebase.mqlread(query, options, cleanup);
   });
 };
-},{"../.apikey":1,"mqlread":64,"promise":65}],3:[function(require,module,exports){
+},{"../.apikey":1,"lodash":63,"mqlread":64,"promise":65}],3:[function(require,module,exports){
 /* global -Promise */
 var hyperquest = require('hyperquest');
 var querystring = require('querystring');
@@ -8214,9 +8189,9 @@ DuplexWrapper.prototype._read = function _read(n) {
 
 },{"readable-stream":51}],42:[function(require,module,exports){
 arguments[4][24][0].apply(exports,arguments)
-},{"./_stream_readable":44,"./_stream_writable":46,"/Users/trott/musicroutes-playlist-generator/node_modules/browserify/node_modules/readable-stream/lib/_stream_duplex.js":24,"_process":18,"core-util-is":47,"inherits":48}],43:[function(require,module,exports){
+},{"./_stream_readable":44,"./_stream_writable":46,"/Users/richtrott/musicroutes-playlist-generator/node_modules/browserify/node_modules/readable-stream/lib/_stream_duplex.js":24,"_process":18,"core-util-is":47,"inherits":48}],43:[function(require,module,exports){
 arguments[4][25][0].apply(exports,arguments)
-},{"./_stream_transform":45,"/Users/trott/musicroutes-playlist-generator/node_modules/browserify/node_modules/readable-stream/lib/_stream_passthrough.js":25,"core-util-is":47,"inherits":48}],44:[function(require,module,exports){
+},{"./_stream_transform":45,"/Users/richtrott/musicroutes-playlist-generator/node_modules/browserify/node_modules/readable-stream/lib/_stream_passthrough.js":25,"core-util-is":47,"inherits":48}],44:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -9865,13 +9840,13 @@ function endWritable(stream, state, cb) {
 }).call(this,require('_process'))
 },{"./_stream_duplex":42,"_process":18,"buffer":6,"core-util-is":47,"inherits":48,"stream":34}],47:[function(require,module,exports){
 module.exports=require(29)
-},{"/Users/trott/musicroutes-playlist-generator/node_modules/browserify/node_modules/readable-stream/node_modules/core-util-is/lib/util.js":29,"buffer":6}],48:[function(require,module,exports){
+},{"/Users/richtrott/musicroutes-playlist-generator/node_modules/browserify/node_modules/readable-stream/node_modules/core-util-is/lib/util.js":29,"buffer":6}],48:[function(require,module,exports){
 module.exports=require(16)
-},{"/Users/trott/musicroutes-playlist-generator/node_modules/browserify/node_modules/inherits/inherits_browser.js":16}],49:[function(require,module,exports){
+},{"/Users/richtrott/musicroutes-playlist-generator/node_modules/browserify/node_modules/inherits/inherits_browser.js":16}],49:[function(require,module,exports){
 module.exports=require(17)
-},{"/Users/trott/musicroutes-playlist-generator/node_modules/browserify/node_modules/isarray/index.js":17}],50:[function(require,module,exports){
+},{"/Users/richtrott/musicroutes-playlist-generator/node_modules/browserify/node_modules/isarray/index.js":17}],50:[function(require,module,exports){
 module.exports=require(35)
-},{"/Users/trott/musicroutes-playlist-generator/node_modules/browserify/node_modules/string_decoder/index.js":35,"buffer":6}],51:[function(require,module,exports){
+},{"/Users/richtrott/musicroutes-playlist-generator/node_modules/browserify/node_modules/string_decoder/index.js":35,"buffer":6}],51:[function(require,module,exports){
 exports = module.exports = require('./lib/_stream_readable.js');
 exports.Stream = require('stream');
 exports.Readable = exports;
@@ -9882,23 +9857,23 @@ exports.PassThrough = require('./lib/_stream_passthrough.js');
 
 },{"./lib/_stream_duplex.js":42,"./lib/_stream_passthrough.js":43,"./lib/_stream_readable.js":44,"./lib/_stream_transform.js":45,"./lib/_stream_writable.js":46,"stream":34}],52:[function(require,module,exports){
 module.exports=require(24)
-},{"./_stream_readable":53,"./_stream_writable":55,"/Users/trott/musicroutes-playlist-generator/node_modules/browserify/node_modules/readable-stream/lib/_stream_duplex.js":24,"_process":18,"core-util-is":56,"inherits":57}],53:[function(require,module,exports){
+},{"./_stream_readable":53,"./_stream_writable":55,"/Users/richtrott/musicroutes-playlist-generator/node_modules/browserify/node_modules/readable-stream/lib/_stream_duplex.js":24,"_process":18,"core-util-is":56,"inherits":57}],53:[function(require,module,exports){
 module.exports=require(26)
-},{"/Users/trott/musicroutes-playlist-generator/node_modules/browserify/node_modules/readable-stream/lib/_stream_readable.js":26,"_process":18,"buffer":6,"core-util-is":56,"events":10,"inherits":57,"isarray":58,"stream":34,"string_decoder/":59}],54:[function(require,module,exports){
+},{"/Users/richtrott/musicroutes-playlist-generator/node_modules/browserify/node_modules/readable-stream/lib/_stream_readable.js":26,"_process":18,"buffer":6,"core-util-is":56,"events":10,"inherits":57,"isarray":58,"stream":34,"string_decoder/":59}],54:[function(require,module,exports){
 module.exports=require(27)
-},{"./_stream_duplex":52,"/Users/trott/musicroutes-playlist-generator/node_modules/browserify/node_modules/readable-stream/lib/_stream_transform.js":27,"core-util-is":56,"inherits":57}],55:[function(require,module,exports){
+},{"./_stream_duplex":52,"/Users/richtrott/musicroutes-playlist-generator/node_modules/browserify/node_modules/readable-stream/lib/_stream_transform.js":27,"core-util-is":56,"inherits":57}],55:[function(require,module,exports){
 module.exports=require(28)
-},{"./_stream_duplex":52,"/Users/trott/musicroutes-playlist-generator/node_modules/browserify/node_modules/readable-stream/lib/_stream_writable.js":28,"_process":18,"buffer":6,"core-util-is":56,"inherits":57,"stream":34}],56:[function(require,module,exports){
+},{"./_stream_duplex":52,"/Users/richtrott/musicroutes-playlist-generator/node_modules/browserify/node_modules/readable-stream/lib/_stream_writable.js":28,"_process":18,"buffer":6,"core-util-is":56,"inherits":57,"stream":34}],56:[function(require,module,exports){
 module.exports=require(29)
-},{"/Users/trott/musicroutes-playlist-generator/node_modules/browserify/node_modules/readable-stream/node_modules/core-util-is/lib/util.js":29,"buffer":6}],57:[function(require,module,exports){
+},{"/Users/richtrott/musicroutes-playlist-generator/node_modules/browserify/node_modules/readable-stream/node_modules/core-util-is/lib/util.js":29,"buffer":6}],57:[function(require,module,exports){
 module.exports=require(16)
-},{"/Users/trott/musicroutes-playlist-generator/node_modules/browserify/node_modules/inherits/inherits_browser.js":16}],58:[function(require,module,exports){
+},{"/Users/richtrott/musicroutes-playlist-generator/node_modules/browserify/node_modules/inherits/inherits_browser.js":16}],58:[function(require,module,exports){
 module.exports=require(17)
-},{"/Users/trott/musicroutes-playlist-generator/node_modules/browserify/node_modules/isarray/index.js":17}],59:[function(require,module,exports){
+},{"/Users/richtrott/musicroutes-playlist-generator/node_modules/browserify/node_modules/isarray/index.js":17}],59:[function(require,module,exports){
 module.exports=require(35)
-},{"/Users/trott/musicroutes-playlist-generator/node_modules/browserify/node_modules/string_decoder/index.js":35,"buffer":6}],60:[function(require,module,exports){
+},{"/Users/richtrott/musicroutes-playlist-generator/node_modules/browserify/node_modules/string_decoder/index.js":35,"buffer":6}],60:[function(require,module,exports){
 module.exports=require(32)
-},{"./lib/_stream_transform.js":54,"/Users/trott/musicroutes-playlist-generator/node_modules/browserify/node_modules/readable-stream/transform.js":32}],61:[function(require,module,exports){
+},{"./lib/_stream_transform.js":54,"/Users/richtrott/musicroutes-playlist-generator/node_modules/browserify/node_modules/readable-stream/transform.js":32}],61:[function(require,module,exports){
 (function (process){
 var Transform = require('readable-stream/transform')
   , inherits  = require('util').inherits
@@ -26489,10 +26464,6 @@ var error = function (err) {
 	}
 };
 
-var random = function (array) {
-	return array[_.random(array.length-1)];
-};
-
 var embedShown = false;
 
 var generatePlaylist = function (individual, done) {
@@ -26526,7 +26497,7 @@ var generatePlaylist = function (individual, done) {
 			trackDetails.formatted.artist = trackDetails.artists.map(function (value) { 
 				return value.name || 'FREEBASE DOES NOT HAVE AN ENGLISH NAME FOR THIS ARTIST'; 
 			}).join(' & ');
-			trackDetails.formatted.release = random(trackDetails.releases).name || 'FREEBASE DOES NOT HAVE AN ENGLISH NAME FOR THIS RELEASE';
+			trackDetails.formatted.release = _.sample(trackDetails.releases).name || 'FREEBASE DOES NOT HAVE AN ENGLISH NAME FOR THIS RELEASE';
 		};
 
 		var renderTrackDetails = function () {
@@ -26576,10 +26547,10 @@ var generatePlaylist = function (individual, done) {
 				var contributor;
 				var notSeen = _.difference(contributors, seenIndividuals);				
 				if (notSeen.length > 0) {
-					contributor = random(notSeen);
+					contributor = _.sample(notSeen);
 					seenIndividuals.push(contributor);
 				} else {
-					contributor = random(contributors);
+					contributor = _.sample(contributors);
 				}
 
 				sourceIndividual = contributor;
@@ -26613,7 +26584,7 @@ var generatePlaylist = function (individual, done) {
 							reject(Error('Could not find a track that was not a dead end. Bummer.'));
 							return next();
 						}
-						track = random(notSeenTracks);
+						track = _.sample(notSeenTracks);
 						seenTracks.push(track);
 						notSeenTracks = _.pull(notSeenTracks, track);
 						routes.getArtistsAndContributorsFromTracks([track])
@@ -26701,7 +26672,12 @@ var go = function () {
 			loopCount = loopCount + 1;
 			generatePlaylist(sourceIndividual, next);
 		},
-		error
+		function (err) {
+			error(err);
+			progress.removeAttr('active');
+			startOverButtons.css('visibility', 'visible');
+			continueButtons.css('visibility', 'visible');
+		}
 	);
 };
 
