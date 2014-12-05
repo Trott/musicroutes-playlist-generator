@@ -458,6 +458,7 @@ that it uses one color only.
 -->
 
 
+    
     <link rel="stylesheet" href="styles/main.css">
 </head>
 <body><div hidden="">
@@ -3307,6 +3308,7 @@ polyfill-next-selector {
       </div>
     </header>
     <main>
+        <paper-shadow z="1">
 			<form id="startPlaylist">
 				<paper-input-decorator floatinglabel="" label="Musician" id="paperStartPoint">
 					<input is="core-input" id="startPoint" autofocus="">
@@ -3315,14 +3317,15 @@ polyfill-next-selector {
                 <paper-button class="startOver hidden" raised="">Start Over</paper-button>
 				<paper-fab id="startPointSubmit" class="right" icon="arrow-forward">Start</paper-fab>
 			</form>
+        </paper-shadow>
 
-			<div id="results" class="results"></div>
-			<div>
-				<paper-spinner id="progress"></paper-spinner>
-			</div>
+		<div id="results" class="results"></div>
+		<div>
+			<paper-spinner id="progress"></paper-spinner>
+		</div>
 
-            <paper-button class="continue hidden" raised="">Continue</paper-button>
-            <paper-button class="startOver hidden" raised="">Start Over</paper-button>
+        <paper-button class="continue hidden" raised="">Continue</paper-button>
+        <paper-button class="startOver hidden" raised="">Start Over</paper-button>
     </main>
 <script src="bundle.js"></script>
 
