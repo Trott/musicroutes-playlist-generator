@@ -11,6 +11,7 @@
     <link rel="import" href="bower_components/paper-fab/paper-fab.html">
     <link rel="import" href="bower_components/paper-button/paper-button.html">
     <link rel="import" href="bower_components/paper-spinner/paper-spinner.html">
+    <link rel="import" href="bower_components/paper-shadow/paper-shadow.html">
     <link rel="stylesheet" href="styles/main.css">
 </head>
 <body>
@@ -20,6 +21,7 @@
       </div>
     </header>
     <main>
+        <paper-shadow z="1">
 			<form id="startPlaylist">
 				<paper-input-decorator floatingLabel label="Musician" id="paperStartPoint">
 					<input is="core-input" id="startPoint" autofocus>
@@ -28,14 +30,15 @@
                 <paper-button class="startOver hidden" raised>Start Over</paper-button>
 				<paper-fab id="startPointSubmit" class="right" icon="arrow-forward">Start</paper-fab>
 			</form>
+        </paper-shadow>
 
-			<div id="results" class="results"></div>
-			<div>
-				<paper-spinner id="progress"></paper-spinner>
-			</div>
+		<div id="results" class="results"></div>
+		<div>
+			<paper-spinner id="progress"></paper-spinner>
+		</div>
 
-            <paper-button class="continue hidden" raised>Continue</paper-button>
-            <paper-button class="startOver hidden" raised>Start Over</paper-button>
+        <paper-button class="continue hidden" raised>Continue</paper-button>
+        <paper-button class="startOver hidden" raised>Start Over</paper-button>
     </main>
 <script src="bundle.js"></script>
 </body>
