@@ -129,6 +129,14 @@ paper-fab[disabled] {
   float: right;
 }
 
+.github-ribbon {
+  display: none;
+}
+
+.github-ribbon img {
+  z-index: 1;
+}
+
 @media only screen and (min-width: 800px) {
   h1 {
     font-family: 'Roboto Condensed', Helvetica, sans-serif;
@@ -138,6 +146,10 @@ paper-fab[disabled] {
     /* 78px */
     padding-top: 0.3824em;
     padding-bottom: 0;
+  }
+
+  .github-ribbon {
+    display: block;
   }
 }
 
