@@ -165,8 +165,6 @@ body {
   top: 0;
   left: 0;
   background-color: #4285f4;
-  overflow: hidden;
-  z-index: 1;
 }
 
 .app-bar-container {
