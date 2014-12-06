@@ -24,7 +24,7 @@ main {
 }
 
 form {
-  margin: 1em;
+  margin: 2em;
   padding: 1em;
 }
 
@@ -105,12 +105,12 @@ h1 {
 }
 
 paper-button {
-  background: #4285f4;
+  background: #2196f3;
   color: #ffffff;
 }
 
 paper-fab {
-  background: #ff9800;
+  background: #ec8b58;
 }
 
 paper-fab[disabled] {
@@ -127,6 +127,10 @@ paper-fab[disabled] {
 
 .right {
   float: right;
+}
+
+.logo img {
+  vertical-align: middle;
 }
 
 .github-ribbon {
@@ -176,7 +180,7 @@ body {
   position: fixed;
   top: 0;
   left: 0;
-  background-color: #4285f4;
+  background-color: #2196f3;
 }
 
 .app-bar-container {
@@ -236,7 +240,7 @@ main {
     max-width: 864px;
     padding: 0 16px;
     box-sizing: border-box;
-    background-color: #4285f4;
+    background-color: #2196f3;
   }
 
   .app-bar .logo {
