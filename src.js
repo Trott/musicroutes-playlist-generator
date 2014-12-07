@@ -88,18 +88,28 @@ var generatePlaylist = function (individual, done) {
 
 			p.append($('<br>'));
 
-			var release = _.sample(trackDetails.releases);
-
-			if (release.name) {
-				p.append($('<i>').text(release.name));
+			if (trackDetails.release.name) {
+				p.append($('<i>').text(trackDetails.release.name));
 			} else {
-				if (release.mid) {
-					p.append(anchorFromMid(release.mid));
+				if (trackDetails.release.mid) {
+					p.append(anchorFromMid(trackDetails.release.mid));
 				}
 			}
 
 			resultsElem.append(p);
-			return p.text();
+		};
+
+		var searchForVideo = function () {
+			var q = '';
+			if (trackDetails.name) {
+				q = '"' + trackDetails.name + '" ';
+			}
+			q = q + _.reduce(trackDetails.artists, function (rv, artist) { return artist.name ? rv + '"' + artist.name + '" ' : rv;}, '');
+			if (trackDetails.release.name) {
+				q = q + '"' + trackDetails.release.name + '"';
+			}
+
+			return videos.search(q);
 		};
 
 		var extractVideoId = function (data) {
@@ -192,10 +202,10 @@ var generatePlaylist = function (individual, done) {
 
 		pickATrack()
 		.then(routes.getTrackDetails)
-		.then(function (details) { trackDetails = details; })
+		.then(function (details) { trackDetails = details; trackDetails.release = _.sample(trackDetails.releases);  })
 		.then(addToSeenArtists)
 		.then(renderTrackDetails)
-		.then(videos.search)
+		.then(searchForVideo)
 		.then(extractVideoId)
 		.then(getVideoEmbedCode)
 		.then(embedVideoInDom)
