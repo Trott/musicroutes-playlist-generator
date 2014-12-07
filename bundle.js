@@ -26648,7 +26648,10 @@ var generatePlaylist = function (individual, done) {
 
 		pickATrack()
 		.then(routes.getTrackDetails)
-		.then(function (details) { trackDetails = details; trackDetails.release = _.sample(trackDetails.releases);  })
+		.then(function (details) { 
+			trackDetails = details; 
+			trackDetails.release = trackDetails.releases ? _.sample(trackDetails.releases) : ''; }
+		)
 		.then(addToSeenArtists)
 		.then(renderTrackDetails)
 		.then(function (details) { renderedTrackDetails = details; })
