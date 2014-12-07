@@ -21,9 +21,12 @@ var seenIndividuals = [];
 var seenTracks = [];
 var seenArtists = [];
 
+var previousConnector;
+var renderedTrackDetails;
+
 var error = function (err) {
 	if (err) {
-		resultsElem.append($('<p>').append(document.createTextNode('Error: ' + err.message)));
+		resultsElem.append($('<p>').append(document.createTextNode(err.message)));
 		console.log(err.stack);
 		progress.removeAttr('active');
 		startOverButtons.css('visibility', 'visible');
@@ -63,7 +66,7 @@ var generatePlaylist = function (individual, done) {
 		};
 
 		var renderTrackDetails = function () {
-			var p = $('<p>');
+			var p = $('<p>').attr('class', 'track-details');
 
 			if (trackDetails.name) {
 				p.append(document.createTextNode('"' + trackDetails.name + '"'));
@@ -96,7 +99,7 @@ var generatePlaylist = function (individual, done) {
 				}
 			}
 
-			resultsElem.append(p);
+			return p;
 		};
 
 		var searchForVideo = function () {
@@ -151,16 +154,26 @@ var generatePlaylist = function (individual, done) {
 			});
 		};
 
-		var renderConnector = function (details) {
-			var p = $('<p>');
-			p.append('…with ');
+		var renderNameOrMid = function (details) {
 			if (details.name) {
-				p.append(document.createTextNode(details.name));
-			} else {
-				p.append(anchorFromMid(details.mid));
+				return document.createTextNode(details.name);
 			}
-			p.append('…');
-			resultsElem.append(p);
+			if (details.mid) {
+				return anchorFromMid(details.mid);
+			}
+			return '';
+		};
+
+		var renderConnector = function (details) {
+			var currentConnector = renderNameOrMid(details);
+
+			var p = $('<p>');			
+			var previous = $('<b>').append(renderNameOrMid(previousConnector));
+			var current = $('<b>').append(currentConnector);
+			p.append(previous).append(' recorded with ').append(current).append(' on: ');
+
+			previousConnector = details;
+			return p;
 		};
 
 		var finished = function () {
@@ -205,14 +218,16 @@ var generatePlaylist = function (individual, done) {
 		.then(function (details) { trackDetails = details; trackDetails.release = _.sample(trackDetails.releases);  })
 		.then(addToSeenArtists)
 		.then(renderTrackDetails)
-		.then(searchForVideo)
-		.then(extractVideoId)
-		.then(getVideoEmbedCode)
-		.then(embedVideoInDom)
+		.then(function (details) { renderedTrackDetails = details; })
 		.then(getContributors)
 		.then(pickContributor)
 		.then(routes.getArtistDetails)
 		.then(renderConnector)
+		.then(function (connector) { resultsElem.append(connector); resultsElem.append(renderedTrackDetails); })
+		.then(searchForVideo)
+		.then(extractVideoId)
+		.then(getVideoEmbedCode)
+		.then(embedVideoInDom)
 		.then(finished, error);
 	};
 
@@ -319,6 +334,8 @@ var formHandler = function (evt) {
 		}
 		seenIndividuals.push(sourceIndividual);
 	};
+
+	previousConnector = {name: startingPoint};
 
 	routes.getMids(startingPoint, '/music/artist').then(lookupUserInput).then(go).catch(error);
 };

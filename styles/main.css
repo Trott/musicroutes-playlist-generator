@@ -25,7 +25,7 @@ main {
 
 form {
   margin: 2em;
-  padding: 1em;
+  padding: 2em;
 }
 
 input {
@@ -75,7 +75,6 @@ body::after {
   bottom: 0;
   right: 0;
   width: 100%;
-  z-index: 9;
   display: none;
   background-image: -webkit-linear-gradient(top, rgba(0, 0, 0, 0.15) 95%, rgba(0, 0, 0, 0.15) 100%);
   background-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.15) 95%, rgba(0, 0, 0, 0.15) 100%);
@@ -107,6 +106,7 @@ h1 {
 paper-button {
   background: #2196f3;
   color: #ffffff;
+  margin: 0;
 }
 
 paper-fab {
@@ -119,6 +119,10 @@ paper-fab[disabled] {
 
 .results {
   min-height: 1em;
+}
+
+.track-details {
+  padding-left: 1em;
 }
 
 .hidden {
@@ -177,7 +181,6 @@ body {
 .app-bar {
   display: block;
   width: 100%;
-  position: fixed;
   top: 0;
   left: 0;
   background-color: #2196f3;
@@ -225,7 +228,7 @@ main {
 main {
   margin: 0 auto;
   /* Height of the header */
-  padding: 60px 16px 16px 16px;
+  padding: 16px;
   min-height: 100%;
 }
 
