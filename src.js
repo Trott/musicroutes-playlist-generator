@@ -57,33 +57,49 @@ var generatePlaylist = function (individual, done) {
 				fulfill();
 			});
 		};
-			
-		var formatTrackDetails = function () {
-			trackDetails.formatted = {};
-			trackDetails.formatted.name = trackDetails.name || 'FREEBASE DOES NOT HAVE AN ENGLISH NAME FOR THIS TRACK';
-			trackDetails.formatted.artist = trackDetails.artists.map(function (value) { 
-				return value.name || 'FREEBASE DOES NOT HAVE AN ENGLISH NAME FOR THIS ARTIST'; 
-			}).join(' & ');
-			trackDetails.formatted.release = _.sample(trackDetails.releases).name || 'FREEBASE DOES NOT HAVE AN ENGLISH NAME FOR THIS RELEASE';
+
+		var anchorFromMid = function (mid) {
+			return $('<a>').attr('href', 'http://freebase.com' + mid).text(mid);
 		};
 
 		var renderTrackDetails = function () {
-			var p = $('<p>')
-				.append(document.createTextNode('"' + trackDetails.formatted.name + '"'))
-				.append($('<br>'))
-				.append(document.createTextNode(trackDetails.formatted.artist))
-				.append($('<br>'))
-				.append($('<i>').text(trackDetails.formatted.release));
+			var p = $('<p>');
+
+			if (trackDetails.name) {
+				p.append(document.createTextNode('"' + trackDetails.name + '"'));
+			} else {
+				p.append(anchorFromMid(track));
+			}
+
+			p.append($('<br>'));
+
+			var needsAmpersand = false;
+			_.forEach(trackDetails.artists, function (value) {
+				if (needsAmpersand) {
+					p.append(document.createTextNode(' & '));
+				}
+				if (value.name) {
+					p.append(document.createTextNode(value.name));
+				} else {
+					p.append(anchorFromMid(value.mid));
+				}
+				needsAmpersand = true;
+			});
+
+			p.append($('<br>'));
+
+			var release = _.sample(trackDetails.releases);
+
+			if (release.name) {
+				p.append($('<i>').text(release.name));
+			} else {
+				if (release.mid) {
+					p.append(anchorFromMid(release.mid));
+				}
+			}
 
 			resultsElem.append(p);
-		};
-
-		var searchForVideoId = function () {
-			var q = '"' + trackDetails.formatted.name + 
-				'" "' + trackDetails.formatted.artist + 
-				'" "' + trackDetails.formatted.release + '"';
-
-			return videos.search(q);
+			return p.text();
 		};
 
 		var extractVideoId = function (data) {
@@ -126,9 +142,14 @@ var generatePlaylist = function (individual, done) {
 		};
 
 		var renderConnector = function (details) {
-			var name = details.name || 'FREEBASE DOES NOT HAVE AN ENGLISH NAME FOR THIS PERSON';
 			var p = $('<p>');
-			p.text('…with ' + name + '…');
+			p.append('…with ');
+			if (details.name) {
+				p.append(document.createTextNode(details.name));
+			} else {
+				p.append(anchorFromMid(details.mid));
+			}
+			p.append('…');
 			resultsElem.append(p);
 		};
 
@@ -173,9 +194,8 @@ var generatePlaylist = function (individual, done) {
 		.then(routes.getTrackDetails)
 		.then(function (details) { trackDetails = details; })
 		.then(addToSeenArtists)
-		.then(formatTrackDetails)
 		.then(renderTrackDetails)
-		.then(searchForVideoId)
+		.then(videos.search)
 		.then(extractVideoId)
 		.then(getVideoEmbedCode)
 		.then(embedVideoInDom)
