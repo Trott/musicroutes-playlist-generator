@@ -225,11 +225,15 @@ main {
   transition: transform 0.3s ease-out;
 }
 
-main {
+main, footer {
   margin: 0 auto;
   /* Height of the header */
   padding: 16px;
   min-height: 100%;
+}
+
+p {
+  padding: 0 1em;
 }
 
 @media all and (min-width: 990px) {
@@ -262,7 +266,7 @@ main {
     clear: both;
   }
 
-  main {
+  main , footer {
     max-width: 864px;
     padding-top: 0;
     min-height: initial;
