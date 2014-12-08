@@ -174,7 +174,6 @@ var generatePlaylist = function (individual, done) {
 			var p = $('<p>');			
 			var previous = $('<b>').append(renderNameOrMid(previousConnector));
 			var current = $('<b>').append(currentConnector);
-			console.log(previousConnector.mid + ' recorded with ' + details.mid);
 			p.append(previous).append(' recorded with ').append(current).append(' on: ');
 
 			previousConnector = details;
