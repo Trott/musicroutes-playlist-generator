@@ -141,12 +141,16 @@ var generatePlaylist = function (individual, done) {
 		var pickContributor = function (contributors) {
 			return new Promise(function (fulfill, reject) {
 				var contributor;
-				var notSeen = _.difference(contributors, seenIndividuals);				
+				var notSeen = _.difference(contributors, seenIndividuals);			
 				if (notSeen.length > 0) {
 					contributor = _.sample(notSeen);
 					seenIndividuals.push(contributor);
 				} else {
-					contributor = _.sample(contributors);
+					contributor = _.sample(_.without(contributors, sourceIndividual));
+				}
+
+				if (! contributor) {
+					contributor = contributors[0];
 				}
 
 				sourceIndividual = contributor;
@@ -170,6 +174,7 @@ var generatePlaylist = function (individual, done) {
 			var p = $('<p>');			
 			var previous = $('<b>').append(renderNameOrMid(previousConnector));
 			var current = $('<b>').append(currentConnector);
+			console.log(previousConnector.mid + ' recorded with ' + details.mid);
 			p.append(previous).append(' recorded with ').append(current).append(' on: ');
 
 			previousConnector = details;
