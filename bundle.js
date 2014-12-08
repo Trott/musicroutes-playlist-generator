@@ -22058,8 +22058,6 @@ var error = function (err) {
 	}
 };
 
-var embedShown = false;
-
 var generatePlaylist = function (individual, done) {
 	var processTracks = 	function (tracks) {
 		var track;
@@ -22154,7 +22152,6 @@ var generatePlaylist = function (individual, done) {
 				// Yes, we're trusting YouTube's API not to p0wn us.
 				inner.html(data.items[0].embedHtml);
 				resultsElem.append(outer.append(inner));
-				embedShown = true;
 			}
 		};
 
@@ -22306,11 +22303,10 @@ var go = function () {
 	continueButtons.css('visibility', 'hidden'); 
 	startOverButtons.css('visibility', 'hidden');
 	progress.attr('active', 'active');
-	embedShown = false;
 	var loopCount = 0;
 	async.until(
 		function () { 
-			return embedShown || loopCount > 4;
+			return loopCount > 4;
 		},
 		function (next) {
 			loopCount = loopCount + 1;
@@ -22362,6 +22358,7 @@ var formHandler = function (evt) {
 		sourceIndividual = mids[0];
 		if (! sourceIndividual) {
 			resultsElem.text('Could not find an artist named ' + startingPoint);
+			progress.removeAttr('active');
 			resetForm();
 			return;
 		}
