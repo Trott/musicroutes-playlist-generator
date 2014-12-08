@@ -145,6 +145,23 @@ paper-fab[disabled] {
   z-index: 1;
 }
 
+.video-outer-wrapper {
+  max-width: 640px; 
+  margin: 0 auto; 
+}
+
+.video-inner-wrapper {
+  position:relative; 
+  padding-top: 53%;
+}
+
+.video-inner-wrapper iframe {
+  position: absolute;
+  top: 0;
+  width: 100%; 
+  height: 100%;
+}
+
 @media only screen and (min-width: 800px) {
   h1 {
     font-family: 'Roboto Condensed', Helvetica, sans-serif;

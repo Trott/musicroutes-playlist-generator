@@ -125,10 +125,11 @@ var generatePlaylist = function (individual, done) {
 
 		var embedVideoInDom = function (data) {
 			if (data && data.items && data.items[0] && data.items[0].embedHtml) {
-				var div = $('<div>');
+				var outer = $('<div class="video-outer-wrapper">');
+				var inner = $('<div class="video-inner-wrapper">');
 				// Yes, we're trusting YouTube's API not to p0wn us.
-				div.html(data.items[0].embedHtml);
-				resultsElem.append(div);
+				inner.html(data.items[0].embedHtml);
+				resultsElem.append(outer.append(inner));
 				embedShown = true;
 			}
 		};
