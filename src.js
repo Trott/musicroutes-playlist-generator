@@ -333,6 +333,7 @@ var formHandler = function (evt) {
 	input.attr('disabled', 'disabled');
 	paperInput.attr('disabled', 'disabled');
 	resultsElem.empty();
+	progress.attr('active', 'active');
 	var lookupUserInput = function(mids) {
 		sourceIndividual = mids[0];
 		if (! sourceIndividual) {
