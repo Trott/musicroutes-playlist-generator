@@ -1,11 +1,14 @@
 /*global document*/
 /*global -Promise*/
+/*global window*/
 var routes = require('./_lib/routes.js');
 var videos = require('./_lib/videos.js');
 var async = require('async');
 var Promise = require('promise');
 var $ = require('jquery');
 var _ = require('lodash');
+var url = require('url');
+var querystring = require('querystring');
 
 var resultsElem = $('#results');
 var form = $('#startPlaylist');
@@ -35,7 +38,7 @@ var error = function (err) {
 };
 
 var generatePlaylist = function (individual, done) {
-	var processTracks = 	function (tracks) {
+	var processTracks = function (tracks) {
 		var track;
 		var trackDetails;
 		var notSeenTracks = _.difference(tracks, seenTracks);
@@ -139,7 +142,7 @@ var generatePlaylist = function (individual, done) {
 		var pickContributor = function (contributors) {
 			return new Promise(function (fulfill, reject) {
 				var contributor;
-				var notSeen = _.difference(contributors, seenIndividuals);			
+				var notSeen = _.difference(contributors, seenIndividuals);
 				if (notSeen.length > 0) {
 					contributor = _.sample(notSeen);
 					seenIndividuals.push(contributor);
@@ -169,7 +172,7 @@ var generatePlaylist = function (individual, done) {
 		var renderConnector = function (details) {
 			var currentConnector = renderNameOrMid(details);
 
-			var p = $('<p>');			
+			var p = $('<p>');
 			var previous = $('<b>').append(renderNameOrMid(previousConnector));
 			var current = $('<b>').append(currentConnector);
 			p.append(previous).append(' recorded with ').append(current).append(' on: ');
@@ -217,8 +220,8 @@ var generatePlaylist = function (individual, done) {
 
 		pickATrack()
 		.then(routes.getTrackDetails)
-		.then(function (details) { 
-			trackDetails = details; 
+		.then(function (details) {
+			trackDetails = details;
 			trackDetails.release = trackDetails.releases ? _.sample(trackDetails.releases) : ''; }
 		)
 		.then(addToSeenArtists)
@@ -276,12 +279,12 @@ var go = function () {
 	if (seenIndividuals.length === 0) {
 		return;
 	}
-	continueButtons.css('visibility', 'hidden'); 
+	continueButtons.css('visibility', 'hidden');
 	startOverButtons.css('visibility', 'hidden');
 	progress.attr('active', 'active');
 	var loopCount = 0;
 	async.until(
-		function () { 
+		function () {
 			return loopCount > 4;
 		},
 		function (next) {
@@ -314,6 +317,7 @@ startOverButtons.on('click', function () {
 	seenTracks = [];
 	seenArtists = [];
 	resultsElem.empty();
+	window.history.replaceState({}, '', '?');
 	resetForm();
 });
 
@@ -330,6 +334,7 @@ var formHandler = function (evt) {
 	paperInput.attr('disabled', 'disabled');
 	resultsElem.empty();
 	progress.attr('active', 'active');
+	window.history.replaceState({}, '', '?' + querystring.stringify({q: startingPoint}));
 	var lookupUserInput = function(mids) {
 		sourceIndividual = mids[0];
 		if (! sourceIndividual) {
@@ -348,3 +353,11 @@ var formHandler = function (evt) {
 
 form.on('submit', formHandler);
 submit.on('click', formHandler);
+
+$(document).ready(function () {
+	var urlParts = url.parse(window.location.href, true);
+	if (urlParts.query.q) {
+		input.val(urlParts.query.q);
+	}
+	form.trigger('submit');
+});
