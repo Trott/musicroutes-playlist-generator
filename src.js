@@ -68,15 +68,19 @@ var generatePlaylist = function (individual, done) {
 			});
 		};
 
-		var anchorFromMid = function (mid) {
-			return $('<a>').attr('href', 'http://freebase.com' + mid).text(mid);
+		var anchorFromMid = function (mid, text) {
+			text = text || mid;
+			return $('<a>')
+				.attr('href', 'http://freebase.com' + mid)
+				.attr('target', '_blank')
+				.text(text);
 		};
 
 		var renderTrackDetails = function () {
 			var p = $('<p>').attr('class', 'track-details');
 
 			if (trackDetails.name) {
-				p.append(document.createTextNode('"' + trackDetails.name + '"'));
+				p.append(anchorFromMid(track, '"' + trackDetails.name + '"'));
 			} else {
 				p.append(anchorFromMid(track));
 			}
@@ -89,7 +93,7 @@ var generatePlaylist = function (individual, done) {
 					p.append(document.createTextNode(' & '));
 				}
 				if (value.name) {
-					p.append(document.createTextNode(value.name));
+					p.append(anchorFromMid(value.mid, value.name));
 				} else {
 					p.append(anchorFromMid(value.mid));
 				}
@@ -99,7 +103,8 @@ var generatePlaylist = function (individual, done) {
 			p.append($('<br>'));
 
 			if (trackDetails.release.name) {
-				p.append($('<i>').text(trackDetails.release.name));
+				console.dir(trackDetails);
+				p.append($('<i>').append(anchorFromMid(trackDetails.release.mid, trackDetails.release.name)));
 			} else {
 				if (trackDetails.release.mid) {
 					p.append(anchorFromMid(trackDetails.release.mid));
@@ -167,7 +172,7 @@ var generatePlaylist = function (individual, done) {
 
 		var renderNameOrMid = function (details) {
 			if (details.name) {
-				return document.createTextNode(details.name);
+				return anchorFromMid(details.mid, details.name);
 			}
 			if (details.mid) {
 				return anchorFromMid(details.mid);
@@ -176,11 +181,10 @@ var generatePlaylist = function (individual, done) {
 		};
 
 		var renderConnector = function (details) {
-			var currentConnector = renderNameOrMid(details);
+			var current = $('<b>').append(renderNameOrMid(details));
 
 			var p = $('<p>');
 			var previous = $('<b>').append(renderNameOrMid(previousConnector));
-			var current = $('<b>').append(currentConnector);
 			p.append(previous).append(' recorded with ').append(current).append(' on: ');
 
 			previousConnector = details;
@@ -371,9 +375,8 @@ var formHandler = function (evt) {
 			return;
 		}
 		seenIndividuals.push(sourceIndividual);
+		previousConnector = {mid: sourceIndividual, name: startingPoint};
 	};
-
-	previousConnector = {name: startingPoint};
 
 	routes.getMids(startingPoint, '/music/artist').then(lookupUserInput).then(go).catch(error);
 };

@@ -22,7 +22,9 @@ describe('exports', function () {
 	var Something = '/m/0mlx6x';
 	var YouKnowMyName = '/m/0fqv51t';
 	var BobDylan = '/m/01vrncs';
+	var CharlesMingus = '/m/024zq';
 	var OriginalFaubusFables = '/m/0q69hv';
+	var CharlesMingusPresentsCharlesMingus = '/m/03bc6qj';
 	var revert;
 
 	beforeEach(function (done) {
@@ -241,15 +243,21 @@ describe('exports', function () {
 	});
 
 	describe('getTrackDetails()', function () {
-		it('should return the track name, artist, and release title', function (done) {
+		it('should return the track name, artist, and release', function (done) {
 			var success = function (data) {
 				expect(data.name).to.equal('Original Faubus Fables');
-				expect(data.artists).to.deep.equal([{name: 'Charles Mingus', mid: '/m/024zq'}]);
-				expect(data.releases).to.deep.contain({name: 'Charles Mingus Presents Charles Mingus'});
+				expect(data.artists).to.deep.equal([{
+					name: 'Charles Mingus', 
+					mid: CharlesMingus
+				}]);
+				expect(data.releases).to.deep.contain({
+					name: 'Charles Mingus Presents Charles Mingus', 
+					mid: CharlesMingusPresentsCharlesMingus
+				});
 				done();
 			};
 
-			routes.getTrackDetails('/m/0q69hv').then(success);
+			routes.getTrackDetails(OriginalFaubusFables).then(success);
 		});
 
 		it('should return an error if there is a network error', function (done) {

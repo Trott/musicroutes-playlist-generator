@@ -162,6 +162,7 @@ exports.getTrackDetails = function (mid) {
     }],
     tracks: [{
       release: {
+        mid: null,
         name: null
       },
     }]
