@@ -16,6 +16,7 @@ var submit = $('#startPointSubmit');
 var input = $('#startPoint');
 var paperInput = $('#paperStartPoint');
 var continueButtons = $('.continue');
+var resetButtons = $('.reset');
 var startOverButtons = $('.startOver');
 var progress = $('#progress');
 
@@ -34,6 +35,7 @@ var error = function (err) {
 		resultsElem.append($('<p>').append(document.createTextNode(err.message)));
 		console.log(err.stack);
 		progress.removeAttr('active');
+		resetButtons.css('visibility', 'visible');
 		startOverButtons.css('visibility', 'visible');
 		if (! deadEnd) {
 			continueButtons.css('visibility', 'visible');
@@ -293,6 +295,7 @@ var go = function () {
 		return;
 	}
 	continueButtons.css('visibility', 'hidden');
+	resetButtons.css('visibility', 'hidden');
 	startOverButtons.css('visibility', 'hidden');
 	progress.attr('active', 'active');
 	var loopCount = 0;
@@ -307,8 +310,9 @@ var go = function () {
 		function (err) {
 			error(err);
 			progress.removeAttr('active');
-			startOverButtons.css('visibility', 'visible');
 			continueButtons.css('visibility', 'visible');
+			resetButtons.css('visibility', 'visible');
+			startOverButtons.css('visibility', 'visible');
 		}
 	);
 };
@@ -317,6 +321,7 @@ continueButtons.on('click', go);
 
 var resetForm = function () {
 	continueButtons.css('visibility', 'hidden');
+	resetButtons.css('visibility', 'hidden');
 	startOverButtons.css('visibility', 'hidden');
 	submit.removeAttr('disabled');
 	input.removeAttr('disabled');
@@ -325,13 +330,22 @@ var resetForm = function () {
 	input.focus();
 };
 
-startOverButtons.on('click', function () {
+var clearRoute = function () {
 	seenIndividuals = [];
 	seenTracks = [];
 	seenArtists = [];
 	resultsElem.empty();
+};
+
+resetButtons.on('click', function () {
+	clearRoute();
 	window.history.replaceState({}, '', '?');
 	resetForm();
+});
+
+startOverButtons.on('click', function () {
+	clearRoute();
+	form.trigger('submit');
 });
 
 var formHandler = function (evt) {
