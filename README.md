@@ -12,7 +12,7 @@ If you want to modify code or otherwise build from scratch, you'll want to run
 
 Make changes to `src.js` (not `bundle.js`) and `src.html` (not `index.html`).
 
-After making any code modifications, run `npm run-script build` to
+After making any code modifications, run `npm run build` to
 regenerate `bundle.js` and `index.html`.
 
 ### Stuff used in this project
