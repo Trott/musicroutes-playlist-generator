@@ -22067,11 +22067,12 @@ var deadEnd = false;
 var error = function (err) {
 	if (err) {
 		if (err instanceof Error) {
-			resultsElem.append($('<p>').append(document.createTextNode(err.message)));
+			var p = $('<p>').text(err.message);
+			resultsElem.append($('<paper-shadow>').addClass('error').append(p));
+			console.log(err.stack);
 		} else if(err instanceof $) {
 			resultsElem.append(err);
 		}
-		console.log('triple yeah or wtf!');
 		progress.removeAttr('active');
 		resetButtons.css('visibility', 'visible');
 		startOverButtons.css('visibility', 'visible');
@@ -22334,10 +22335,13 @@ var generatePlaylist = function (individual, done) {
 		// Give up
 		function () {
 			deadEnd = true;
-			var msg = $('<div>')
+			var p = $('<p>')
+				.text('Could not find any unseen tracks for ')
+				.append(anchorFromMid(previousConnector.mid, previousConnector.name))
+				.append('.');
+			var msg = $('<paper-shadow>')
 				.addClass('error')
-				.append(document.createTextNode('Could not find any unseen tracks for '))
-				.append(anchorFromMid(previousConnector.mid, previousConnector.name));
+				.append(p);
 			error(msg);
 		}
 	];

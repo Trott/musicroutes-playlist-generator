@@ -137,6 +137,10 @@ paper-input-decorator[disabled] {
   padding-left: 3em;
 }
 
+.error {
+  font-size: large;
+}
+
 .hidden {
   visibility: hidden;
 }
@@ -295,7 +299,7 @@ p {
     clear: both;
   }
 
-  main , footer {
+  main, footer {
     max-width: 864px;
     padding-top: 0;
     min-height: initial;
