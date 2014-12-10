@@ -125,6 +125,10 @@ paper-fab[disabled] {
   background: #eaeaea;
 }
 
+paper-input-decorator[disabled] {
+  color: #c9c9c9;
+}
+
 .results {
   min-height: 1em;
 }
