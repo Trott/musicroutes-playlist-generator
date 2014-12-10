@@ -19,6 +19,7 @@ var continueButtons = $('.continue');
 var resetButtons = $('.reset');
 var startOverButtons = $('.startOver');
 var progress = $('#progress');
+var formInstructions = $('.form-instructions');
 
 var sourceIndividual;
 var sourceIndividualRole;
@@ -406,6 +407,8 @@ $(document).ready(function () {
 	var urlParts = url.parse(window.location.href, true);
 	if (urlParts.query.q) {
 		input.val(urlParts.query.q);
+		formInstructions.empty();
+		input.focus(); // Needed so paper elements floating label appears
+		form.trigger('submit');
 	}
-	form.trigger('submit');
 });
