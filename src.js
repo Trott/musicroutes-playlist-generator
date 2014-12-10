@@ -34,8 +34,12 @@ var deadEnd = false;
 
 var error = function (err) {
 	if (err) {
-		resultsElem.append($('<p>').append(document.createTextNode(err.message)));
-		console.log(err.stack);
+		if (err instanceof Error) {
+			resultsElem.append($('<p>').append(document.createTextNode(err.message)));
+		} else if(err instanceof $) {
+			resultsElem.append(err);
+		}
+		console.log('triple yeah or wtf!');
 		progress.removeAttr('active');
 		resetButtons.css('visibility', 'visible');
 		startOverButtons.css('visibility', 'visible');
@@ -43,6 +47,14 @@ var error = function (err) {
 			continueButtons.css('visibility', 'visible');
 		}
 	}
+};
+
+var anchorFromMid = function (mid, text) {
+	text = text || mid;
+	return $('<a>')
+		.attr('href', 'http://freebase.com' + mid)
+		.attr('target', '_blank')
+		.text(text);
 };
 
 var generatePlaylist = function (individual, done) {
@@ -68,14 +80,6 @@ var generatePlaylist = function (individual, done) {
 
 				fulfill();
 			});
-		};
-
-		var anchorFromMid = function (mid, text) {
-			text = text || mid;
-			return $('<a>')
-				.attr('href', 'http://freebase.com' + mid)
-				.attr('target', '_blank')
-				.text(text);
 		};
 
 		var renderTrackDetails = function () {
@@ -298,13 +302,11 @@ var generatePlaylist = function (individual, done) {
 		// Give up
 		function () {
 			deadEnd = true;
-			var msg = 'Could not find any unseen tracks for ';
-			if (previousConnector.name) {
-				msg = msg + previousConnector.name;
-			} else {
-				msg = msg + 'this musical artist';
-			}
-			error(new Error(msg));
+			var msg = $('<div>')
+				.addClass('error')
+				.append(document.createTextNode('Could not find any unseen tracks for '))
+				.append(anchorFromMid(previousConnector.mid, previousConnector.name));
+			error(msg);
 		}
 	];
 
