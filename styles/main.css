@@ -114,7 +114,7 @@ a:active {
 paper-button {
   background: #2196f3;
   color: #ffffff;
-  margin: 0;
+  margin: 0 0 1em 0;
 }
 
 paper-fab {
