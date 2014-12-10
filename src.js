@@ -27,13 +27,17 @@ var seenArtists = [];
 var previousConnector;
 var renderedTrackDetails;
 
+var deadEnd = false;
+
 var error = function (err) {
 	if (err) {
 		resultsElem.append($('<p>').append(document.createTextNode(err.message)));
 		console.log(err.stack);
 		progress.removeAttr('active');
 		startOverButtons.css('visibility', 'visible');
-		continueButtons.css('visibility', 'visible');
+		if (! deadEnd) {
+			continueButtons.css('visibility', 'visible');
+		}
 	}
 };
 
@@ -186,7 +190,7 @@ var generatePlaylist = function (individual, done) {
 		};
 
 		var foundSomeoneElse;
-		var deadEnd;
+		deadEnd = false;
 
 		var pickATrack = function () {
 			return new Promise(function (fulfill, reject) {
@@ -197,7 +201,7 @@ var generatePlaylist = function (individual, done) {
 					function (next) {
 						if (notSeenTracks.length === 0) {
 							deadEnd = true;
-							reject(Error('Could not find a track that was not a dead end. Bummer.'));
+							reject(Error('Dead end! Bummer. To try again, use the Start Over button above the playlist!'));
 							return next();
 						}
 						track = _.sample(notSeenTracks);
@@ -267,7 +271,16 @@ var generatePlaylist = function (individual, done) {
 			routes.getTracksByArtists([individual]).then(processTracks, error);
 		},
 		// Give up
-		error.bind(undefined, new Error('Could not find any unseen tracks for contributor ' + individual))
+		function () {
+			deadEnd = true;
+			var msg = 'Could not find any unseen tracks for ';
+			if (previousConnector.name) {
+				msg = msg + previousConnector.name;
+			} else {
+				msg = msg + 'this musical artist';
+			}
+			error(new Error(msg));
+		}
 	];
 
 	// Kick it off

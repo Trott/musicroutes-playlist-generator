@@ -22051,18 +22051,22 @@ var seenArtists = [];
 var previousConnector;
 var renderedTrackDetails;
 
+var deadEnd = false;
+
 var error = function (err) {
 	if (err) {
 		resultsElem.append($('<p>').append(document.createTextNode(err.message)));
 		console.log(err.stack);
 		progress.removeAttr('active');
 		startOverButtons.css('visibility', 'visible');
-		continueButtons.css('visibility', 'visible');
+		if (! deadEnd) {
+			continueButtons.css('visibility', 'visible');
+		}
 	}
 };
 
 var generatePlaylist = function (individual, done) {
-	var processTracks = 	function (tracks) {
+	var processTracks = function (tracks) {
 		var track;
 		var trackDetails;
 		var notSeenTracks = _.difference(tracks, seenTracks);
@@ -22166,7 +22170,7 @@ var generatePlaylist = function (individual, done) {
 		var pickContributor = function (contributors) {
 			return new Promise(function (fulfill, reject) {
 				var contributor;
-				var notSeen = _.difference(contributors, seenIndividuals);			
+				var notSeen = _.difference(contributors, seenIndividuals);
 				if (notSeen.length > 0) {
 					contributor = _.sample(notSeen);
 					seenIndividuals.push(contributor);
@@ -22196,7 +22200,7 @@ var generatePlaylist = function (individual, done) {
 		var renderConnector = function (details) {
 			var currentConnector = renderNameOrMid(details);
 
-			var p = $('<p>');			
+			var p = $('<p>');
 			var previous = $('<b>').append(renderNameOrMid(previousConnector));
 			var current = $('<b>').append(currentConnector);
 			p.append(previous).append(' recorded with ').append(current).append(' on: ');
@@ -22210,7 +22214,7 @@ var generatePlaylist = function (individual, done) {
 		};
 
 		var foundSomeoneElse;
-		var deadEnd;
+		deadEnd = false;
 
 		var pickATrack = function () {
 			return new Promise(function (fulfill, reject) {
@@ -22221,7 +22225,7 @@ var generatePlaylist = function (individual, done) {
 					function (next) {
 						if (notSeenTracks.length === 0) {
 							deadEnd = true;
-							reject(Error('Could not find a track that was not a dead end. Bummer.'));
+							reject(Error('Dead end! Bummer. To try again, use the Start Over button above the playlist!'));
 							return next();
 						}
 						track = _.sample(notSeenTracks);
@@ -22244,8 +22248,8 @@ var generatePlaylist = function (individual, done) {
 
 		pickATrack()
 		.then(routes.getTrackDetails)
-		.then(function (details) { 
-			trackDetails = details; 
+		.then(function (details) {
+			trackDetails = details;
 			trackDetails.release = trackDetails.releases ? _.sample(trackDetails.releases) : ''; }
 		)
 		.then(addToSeenArtists)
@@ -22291,7 +22295,16 @@ var generatePlaylist = function (individual, done) {
 			routes.getTracksByArtists([individual]).then(processTracks, error);
 		},
 		// Give up
-		error.bind(undefined, new Error('Could not find any unseen tracks for contributor ' + individual))
+		function () {
+			deadEnd = true;
+			var msg = 'Could not find any unseen tracks for ';
+			if (previousConnector.name) {
+				msg = msg + previousConnector.name;
+			} else {
+				msg = msg + 'this musical artist';
+			}
+			error(new Error(msg));
+		}
 	];
 
 	// Kick it off
@@ -22303,12 +22316,12 @@ var go = function () {
 	if (seenIndividuals.length === 0) {
 		return;
 	}
-	continueButtons.css('visibility', 'hidden'); 
+	continueButtons.css('visibility', 'hidden');
 	startOverButtons.css('visibility', 'hidden');
 	progress.attr('active', 'active');
 	var loopCount = 0;
 	async.until(
-		function () { 
+		function () {
 			return loopCount > 4;
 		},
 		function (next) {
@@ -22341,7 +22354,7 @@ startOverButtons.on('click', function () {
 	seenTracks = [];
 	seenArtists = [];
 	resultsElem.empty();
-	window.history.replaceState({}, '', '?')
+	window.history.replaceState({}, '', '?');
 	resetForm();
 });
 
