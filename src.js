@@ -103,7 +103,6 @@ var generatePlaylist = function (individual, done) {
 			p.append($('<br>'));
 
 			if (trackDetails.release.name) {
-				console.dir(trackDetails);
 				p.append($('<i>').append(anchorFromMid(trackDetails.release.mid, trackDetails.release.name)));
 			} else {
 				if (trackDetails.release.mid) {
@@ -149,8 +148,10 @@ var generatePlaylist = function (individual, done) {
 			return routes.getArtistsAndContributorsFromTracks([track]);
 		};
 
-
 		var pickContributor = function (contributors) {
+			var myArtists = _.pluck(contributors.artists, 'mid'); 
+			var myContributors = _.pluck(contributors.contributors, 'mid');
+			contributors = _.union(myArtists, myContributors);
 			return new Promise(function (fulfill, reject) {
 				var contributor;
 				var notSeen = _.difference(contributors, seenIndividuals);
@@ -215,6 +216,9 @@ var generatePlaylist = function (individual, done) {
 						notSeenTracks = _.pull(notSeenTracks, track);
 						routes.getArtistsAndContributorsFromTracks([track])
 						.then(function (folks) {
+							var myArtists = _.pluck(folks.artists, 'mid'); 
+							var myContributors = _.pluck(folks.contributors, 'mid');
+							folks = _.union(myArtists, myContributors);
 							var contributorPool = _.difference(folks, [individual]);
 							foundSomeoneElse = (contributorPool.length > 0);
 							if (foundSomeoneElse) {

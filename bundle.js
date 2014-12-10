@@ -104,9 +104,12 @@ exports.getArtistsAndContributorsFromTracks = function (mids) {
     }],
     contributions: [{
       mid: null,
-      contributor: [{
-        mid: null
+      role: [{
+        name: null
       }],
+      contributor: {
+        mid: null
+      },
       limit: limit,
       optional: 'optional'
     }]
@@ -117,16 +120,20 @@ exports.getArtistsAndContributorsFromTracks = function (mids) {
       if (err) {
         return reject(err);
       }
-      var rv = [];
+      var rv = {artists: [], contributors: []};
       _.forEach(data.result, function (value) {
         _.forEach(value.artist, function (value) {
-          rv.push(_.result(value, 'mid'));
-        });
-        _.forEach(value.contributions, function (value) {
-          _.forEach(value.contributor, function (value) {
-            rv.push(_.result(value, 'mid'));
+          rv.artists.push({
+            mid: _.result(value, 'mid')
           });
         });
+
+        rv.contributors = _.map(value.contributions, function (value) {
+          return {
+            mid: _.result(value.contributor, 'mid'),
+            roles: _.result(value, 'role')
+          };
+        }); 
       });
 
       fulfill(rv);
@@ -22128,7 +22135,6 @@ var generatePlaylist = function (individual, done) {
 			p.append($('<br>'));
 
 			if (trackDetails.release.name) {
-				console.dir(trackDetails);
 				p.append($('<i>').append(anchorFromMid(trackDetails.release.mid, trackDetails.release.name)));
 			} else {
 				if (trackDetails.release.mid) {
@@ -22174,8 +22180,10 @@ var generatePlaylist = function (individual, done) {
 			return routes.getArtistsAndContributorsFromTracks([track]);
 		};
 
-
 		var pickContributor = function (contributors) {
+			var myArtists = _.pluck(contributors.artists, 'mid'); 
+			var myContributors = _.pluck(contributors.contributors, 'mid');
+			contributors = _.union(myArtists, myContributors);
 			return new Promise(function (fulfill, reject) {
 				var contributor;
 				var notSeen = _.difference(contributors, seenIndividuals);
@@ -22240,6 +22248,9 @@ var generatePlaylist = function (individual, done) {
 						notSeenTracks = _.pull(notSeenTracks, track);
 						routes.getArtistsAndContributorsFromTracks([track])
 						.then(function (folks) {
+							var myArtists = _.pluck(folks.artists, 'mid'); 
+							var myContributors = _.pluck(folks.contributors, 'mid');
+							folks = _.union(myArtists, myContributors);
 							var contributorPool = _.difference(folks, [individual]);
 							foundSomeoneElse = (contributorPool.length > 0);
 							if (foundSomeoneElse) {

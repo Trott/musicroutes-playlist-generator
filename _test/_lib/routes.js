@@ -19,6 +19,9 @@ describe('exports', function () {
 	var TheBeatles = '/m/07c0j';
 	var PaulMcCartney = '/m/03j24kf';
 	var GeorgeHarrison = '/m/03bnv';
+	var BrianJones = '/m/01p95y0';
+	var ToddRundgren = '/m/095x_';
+	var Afraid = '/m/0f2c414';
 	var Something = '/m/0mlx6x';
 	var YouKnowMyName = '/m/0fqv51t';
 	var BobDylan = '/m/01vrncs';
@@ -155,8 +158,8 @@ describe('exports', function () {
 	describe('getArtistsAndContributorsFromTracks()', function () {
 		it('should retrieve Beatles and Brian Jones from "You Know My Name (Look Up The Number)"', function (done) {
 			var success = function (data) {
-				expect(data).to.contain('/m/07c0j');
-				expect(data).to.contain('/m/01p95y0');
+				expect(data.artists).to.deep.contain({mid: TheBeatles});
+				expect(data.contributors).to.deep.contain({mid: BrianJones, roles: [{name: 'Saxophone'}]});
 				done();
 			};
 
@@ -165,22 +168,31 @@ describe('exports', function () {
 
 		it('should retrieve Todd Rundgren for "Afraid"', function (done) {
 			var success = function (data) {
-				expect(data).to.contain('/m/095x_');
+				expect(data.artists).to.deep.contain({mid: ToddRundgren});
 				done();
 			};
 
-			routes.getArtistsAndContributorsFromTracks(['/m/0f2c414']).then(success);
+			routes.getArtistsAndContributorsFromTracks([Afraid]).then(success);
 		});
 
 		it('should retrieve Beatles, Brian Jones, and Todd Rundgren for "You Know My Name" and "Afraid"', function (done) {
 			var success = function (data) {
-				expect(data).to.contain('/m/07c0j');
-				expect(data).to.contain('/m/01p95y0');
-				expect(data).to.contain('/m/095x_');
+				expect(data.artists).to.deep.contain({mid: TheBeatles});
+				expect(data.contributors).to.deep.contain({mid: BrianJones, roles: [{name: 'Saxophone'}]});
+				expect(data.artists).to.deep.contain({mid: ToddRundgren});
 				done();
 			};
 
-			routes.getArtistsAndContributorsFromTracks([YouKnowMyName, '/m/0f2c414']).then(success);
+			routes.getArtistsAndContributorsFromTracks([YouKnowMyName, Afraid]).then(success);
+		});
+
+		it('should retrieve roles for contributors', function (done) {
+			var success = function (data) {
+				expect(data.contributors).to.deep.contain({mid: BrianJones, roles: [{name: 'Saxophone'}]});
+				done();
+			};
+
+			routes.getArtistsAndContributorsFromTracks([YouKnowMyName]).then(success);
 		});
 
 		it('should return an error if there is a network error', function (done) {
@@ -199,7 +211,7 @@ describe('exports', function () {
 				.get('/')
 				.reply(200, '{"result": [false]}');
 			var success = function (data) {
-				expect(data).to.deep.equal([]);
+				expect(data).to.deep.equal({artists:[], contributors: []});
 				done();
 			};
 

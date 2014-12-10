@@ -100,9 +100,12 @@ exports.getArtistsAndContributorsFromTracks = function (mids) {
     }],
     contributions: [{
       mid: null,
-      contributor: [{
-        mid: null
+      role: [{
+        name: null
       }],
+      contributor: {
+        mid: null
+      },
       limit: limit,
       optional: 'optional'
     }]
@@ -113,16 +116,20 @@ exports.getArtistsAndContributorsFromTracks = function (mids) {
       if (err) {
         return reject(err);
       }
-      var rv = [];
+      var rv = {artists: [], contributors: []};
       _.forEach(data.result, function (value) {
         _.forEach(value.artist, function (value) {
-          rv.push(_.result(value, 'mid'));
-        });
-        _.forEach(value.contributions, function (value) {
-          _.forEach(value.contributor, function (value) {
-            rv.push(_.result(value, 'mid'));
+          rv.artists.push({
+            mid: _.result(value, 'mid')
           });
         });
+
+        rv.contributors = _.map(value.contributions, function (value) {
+          return {
+            mid: _.result(value.contributor, 'mid'),
+            roles: _.result(value, 'role')
+          };
+        }); 
       });
 
       fulfill(rv);
