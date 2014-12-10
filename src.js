@@ -21,6 +21,7 @@ var startOverButtons = $('.startOver');
 var progress = $('#progress');
 
 var sourceIndividual;
+var sourceIndividualRole;
 var seenIndividuals = [];
 var seenTracks = [];
 var seenArtists = [];
@@ -148,10 +149,10 @@ var generatePlaylist = function (individual, done) {
 			return routes.getArtistsAndContributorsFromTracks([track]);
 		};
 
-		var pickContributor = function (contributors) {
-			var myArtists = _.pluck(contributors.artists, 'mid'); 
-			var myContributors = _.pluck(contributors.contributors, 'mid');
-			contributors = _.union(myArtists, myContributors);
+		var pickContributor = function (folks) {
+			var myArtists = _.pluck(folks.artists, 'mid'); 
+			var myContributors = _.pluck(folks.contributors, 'mid');
+			var contributors = _.union(myArtists, myContributors);
 			return new Promise(function (fulfill, reject) {
 				var contributor;
 				var notSeen = _.difference(contributors, seenIndividuals);
@@ -167,6 +168,13 @@ var generatePlaylist = function (individual, done) {
 				}
 
 				sourceIndividual = contributor;
+				sourceIndividualRole = _.reduce(folks.contributors, function (rv, value) {
+					if (value.mid === sourceIndividual) {
+						return value.roles;
+					} else {
+						return rv;
+					}
+				}, []);
 				return contributor ? fulfill(contributor) : reject(Error('No contributors for track'));
 			});
 		};
@@ -184,9 +192,15 @@ var generatePlaylist = function (individual, done) {
 		var renderConnector = function (details) {
 			var current = $('<b>').append(renderNameOrMid(details));
 
-			var p = $('<p>');
 			var previous = $('<b>').append(renderNameOrMid(previousConnector));
-			p.append(previous).append(' recorded with ').append(current).append(' on: ');
+			var p = $('<p>');
+			p.append(previous).append(' recorded with ').append(current);
+
+			if (sourceIndividualRole.length) {
+				p.append(document.createTextNode(' (' + _.pluck(sourceIndividualRole, 'name').join(', ') + ')'));
+			}
+
+			p.append(' on: ');
 
 			previousConnector = details;
 			return p;
