@@ -75,7 +75,7 @@ var generatePlaylist = function (individual, done) {
 				if (!trackDetails) {
 					return reject(Error('No details for ' + track));
 				}
-			
+		
 				var theseArtistMids = _.map(trackDetails.artists, 'mid');
 				seenArtists = seenArtists.concat(_.difference(theseArtistMids, seenArtists));
 
@@ -153,6 +153,36 @@ var generatePlaylist = function (individual, done) {
 
 		var getContributors = function () {
 			return routes.getArtistsAndContributorsFromTracks([track]);
+		};
+
+		var previousConnectorDetails = function () {
+			// Get properly rendered name if we don't yet have one for the previous connector.
+			// Basically, if this is the first connection and the user entered 'janelle monae'
+			// we want to render it as 'Janelle Monae'. Ditto for missing umlauts and whatnot.
+			// So just pull from trackDetails if it's there.
+
+			if (! previousConnector.name) {
+				var matching = _.where(trackDetails.artists, {mid: previousConnector.mid});
+				if (matching[0]) {
+					previousConnector.name = matching[0].name;
+				}
+
+
+				// _.reduce(trackDetails.artists, function (rv, value) {
+				// 	if (value.mid === previousConnector.mid) {
+				// 		rv = value.name || value.mid;
+				// 	}
+				// 	return rv
+				// }, '');
+			}
+
+			// If they are a contributor and not the artist, we have to go out and fetch their details.
+			// This will happen on the first track if the user searches for, say, 'berry oakley'.
+			if (! previousConnector.name) {
+				return routes.getArtistDetails(previousConnector.mid)
+					.then(function (value) {previousConnector.name = value.name;});
+			}
+			return previousConnector.name;
 		};
 
 		var pickContributor = function (folks) {
@@ -256,11 +286,12 @@ var generatePlaylist = function (individual, done) {
 		.then(routes.getTrackDetails)
 		.then(function (details) {
 			trackDetails = details;
-			trackDetails.release = trackDetails.releases ? _.sample(trackDetails.releases) : ''; }
-		)
+			trackDetails.release = trackDetails.releases ? _.sample(trackDetails.releases) : '';
+		})
 		.then(addToSeenArtists)
 		.then(renderTrackDetails)
 		.then(function (details) { renderedTrackDetails = details; })
+		.then(previousConnectorDetails)
 		.then(getContributors)
 		.then(pickContributor)
 		.then(routes.getArtistDetails)
@@ -400,7 +431,7 @@ var formHandler = function (evt) {
 			return;
 		}
 		seenIndividuals.push(sourceIndividual);
-		previousConnector = {mid: sourceIndividual, name: startingPoint};
+		previousConnector = {mid: sourceIndividual};
 	};
 
 	routes.getMids(startingPoint, '/music/artist').then(lookupUserInput).then(go).catch(error);
