@@ -22110,7 +22110,6 @@ var generatePlaylist = function (individual, done) {
 		
 				var theseArtistMids = _.map(trackDetails.artists, 'mid');
 				seenArtists = seenArtists.concat(_.difference(theseArtistMids, seenArtists));
-
 				fulfill();
 			});
 		};
@@ -22198,24 +22197,16 @@ var generatePlaylist = function (individual, done) {
 				if (matching[0]) {
 					previousConnector.name = matching[0].name;
 				}
-
-
-				// _.reduce(trackDetails.artists, function (rv, value) {
-				// 	if (value.mid === previousConnector.mid) {
-				// 		rv = value.name || value.mid;
-				// 	}
-				// 	return rv
-				// }, '');
 			}
 
 			// If they are a contributor and not the artist, we have to go out and fetch their details.
 			// This will happen on the first track if the user searches for, say, 'berry oakley'.
 			if (! previousConnector.name) {
 				return routes.getArtistDetails(previousConnector.mid)
-					.then(function (value) {previousConnector.name = value.name});
+					.then(function (value) {previousConnector.name = value.name;});
 			}
 			return previousConnector.name;
-		}
+		};
 
 		var pickContributor = function (folks) {
 			var myArtists = _.pluck(folks.artists, 'mid'); 
@@ -22258,17 +22249,23 @@ var generatePlaylist = function (individual, done) {
 		};
 
 		var renderConnector = function (details) {
-			var current = $('<b>').append(renderNameOrMid(details));
-
 			var previous = $('<b>').append(renderNameOrMid(previousConnector));
+			var current;
+			
 			var p = $('<p>');
-			p.append(previous).append(' recorded with ').append(current);
 
-			if (sourceIndividualRole.length) {
-				p.append(document.createTextNode(' (' + _.pluck(sourceIndividualRole, 'name').join(', ') + ')'));
+			p.append(previous);
+
+			if (previousConnector.mid !== details.mid) {
+				current = $('<b>').append(renderNameOrMid(details));
+				p.append(' recorded with ').append(current);
+				if (sourceIndividualRole.length) {
+					p.append(document.createTextNode(' (' + _.pluck(sourceIndividualRole, 'name').join(', ') + ')'));
+				}
+				p.append(' on:');
+			} else {
+				p.append(' appeared on:');
 			}
-
-			p.append(' on: ');
 
 			previousConnector = details;
 			return p;
@@ -22303,8 +22300,11 @@ var generatePlaylist = function (individual, done) {
 							folks = _.union(myArtists, myContributors);
 							var contributorPool = _.difference(folks, [individual]);
 							foundSomeoneElse = (contributorPool.length > 0);
-							if (foundSomeoneElse) {
-								fulfill(track);
+							// Only accept this track if there's someone else associated with it...
+							// ...unless this is the very first track in which case, pick anything and
+							// get it in front of the user pronto.
+							if (foundSomeoneElse || seenTracks.length === 1) {
+								return fulfill(track);
 							}
 							next();
 						}, error);
