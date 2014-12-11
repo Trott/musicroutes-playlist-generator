@@ -22318,7 +22318,7 @@ var generatePlaylist = function (individual, done) {
 		.then(routes.getTrackDetails)
 		.then(function (details) {
 			trackDetails = details;
-			trackDetails.release = trackDetails.releases ? _.sample(trackDetails.releases) : '';
+			trackDetails.release = trackDetails && trackDetails.releases ? _.sample(trackDetails.releases) : '';
 		})
 		.then(addToSeenArtists)
 		.then(renderTrackDetails)
