@@ -54,7 +54,7 @@ var go = function () {
 		},
 		function (next) {
 			loopCount = loopCount + 1;
-			playlist.generate(resultsElem, error, next);
+			playlist.track(resultsElem, $, next);
 		},
 		function (err) {
 			error(err);

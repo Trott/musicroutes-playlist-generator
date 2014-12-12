@@ -5,7 +5,6 @@ var videos = require('./videos.js');
 var Promise = require('promise');
 var async = require('async');
 var _ = require('lodash');
-var $ = require('jquery');
 
 var seenIndividuals = [];
 var seenTracks = [];
@@ -25,7 +24,7 @@ exports.setSource = function (source) {
 	sourceIndividual = source;
 };
 
-exports.generate = function (domElem, error, done) {
+exports.track = function (domElem, $, callback) {
 	var individual = sourceIndividual;
 	var previousConnector = {mid: sourceIndividual};
 
@@ -259,7 +258,7 @@ exports.generate = function (domElem, error, done) {
 								return fulfill(track);
 							}
 							next();
-						}, error);
+						}, callback);
 					},
 					error
 				);
@@ -287,7 +286,7 @@ exports.generate = function (domElem, error, done) {
 		.then(extractVideoId)
 		.then(getVideoEmbedCode)
 		.then(embedVideoInDom)
-		.then(finished, error);
+		.then(finished, callback);
 	};
 
 	var optionsNewArtistsOnly = {subquery: {
@@ -303,19 +302,19 @@ exports.generate = function (domElem, error, done) {
 		function () {
 			if (seenArtists.length === 0) {
 				// If this is the first track, get one by this artist if we can.
-				routes.getTracksByArtists([individual]).then(processTracks, error);
+				routes.getTracksByArtists([individual]).then(processTracks, callback);
 			} else {
 				// Otherwise, get one by an artist we haven't seen yet
-				routes.getTracksWithContributors([individual], optionsNewArtistsOnly).then(processTracks, error);
+				routes.getTracksWithContributors([individual], optionsNewArtistsOnly).then(processTracks, callback);
 			}
 		},
 		// Look for any track with this contributor credited as a contributor regardless if we've seen the artist already.
 		function () {
-			routes.getTracksWithContributors([individual], {}).then(processTracks, error);
+			routes.getTracksWithContributors([individual], {}).then(processTracks, callback);
 		},
 		// Look for any tracks actually credited to this contributor as the main artist. We are desperate!
 		function () {
-			routes.getTracksByArtists([individual]).then(processTracks, error);
+			routes.getTracksByArtists([individual]).then(processTracks, callback);
 		},
 		// Give up
 		function () {
@@ -328,7 +327,7 @@ exports.generate = function (domElem, error, done) {
 				.addClass('error')
 				.append(p);
 			msg.deadEnd = true;
-			error(msg);
+			callback(msg);
 		}
 	];
 
