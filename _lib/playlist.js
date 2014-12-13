@@ -14,10 +14,14 @@ var sourceIndividual;
 var sourceIndividualRole;
 var renderedTrackDetails;
 
+var previousConnector;
+
 exports.clear = function () {
 	seenIndividuals = [];
 	seenTracks = [];
 	seenArtists = [];
+	sourceIndividual = null;
+	previousConnector = null;
 };
 
 exports.setSource = function (source) {
@@ -26,7 +30,7 @@ exports.setSource = function (source) {
 
 exports.track = function (domElem, $, callback) {
 	var individual = sourceIndividual;
-	var previousConnector = {mid: sourceIndividual};
+	previousConnector = previousConnector || {mid: sourceIndividual};
 
 	var resultsElem = $(domElem);
 
@@ -221,7 +225,7 @@ exports.track = function (domElem, $, callback) {
 		};
 
 		var finished = function () {
-			done(null);
+			callback();
 		};
 
 		var foundSomeoneElse;
@@ -238,29 +242,32 @@ exports.track = function (domElem, $, callback) {
 							deadEnd = true;
 							var err = new Error('Dead end! Bummer. To try again, use the Start Over button above the playlist!');
 							err.deadEnd = true;
-							reject(err);
-							return next();
+							return reject(err);
 						}
 						track = _.sample(notSeenTracks);
 						seenTracks.push(track);
 						notSeenTracks = _.pull(notSeenTracks, track);
-						routes.getArtistsAndContributorsFromTracks([track])
-						.then(function (folks) {
+
+						var validateTrack = function (folks) {
 							var myArtists = _.pluck(folks.artists, 'mid'); 
 							var myContributors = _.pluck(folks.contributors, 'mid');
 							folks = _.union(myArtists, myContributors);
 							var contributorPool = _.difference(folks, [individual]);
-							foundSomeoneElse = (contributorPool.length > 0);
 							// Only accept this track if there's someone else associated with it...
 							// ...unless this is the very first track in which case, pick anything and
-							// get it in front of the user pronto.
-							if (foundSomeoneElse || seenTracks.length === 1) {
+							// get it in front of the user pronto.				
+							foundSomeoneElse = (contributorPool.length > 0 || seenTracks.length === 1);
+
+							if (foundSomeoneElse) {
 								return fulfill(track);
 							}
 							next();
-						}, callback);
+						};
+
+						routes.getArtistsAndContributorsFromTracks([track])
+						.then(validateTrack, callback);
 					},
-					error
+					callback
 				);
 			});
 		};
@@ -302,6 +309,7 @@ exports.track = function (domElem, $, callback) {
 		function () {
 			if (seenArtists.length === 0) {
 				// If this is the first track, get one by this artist if we can.
+				console.dir(callback.toString());
 				routes.getTracksByArtists([individual]).then(processTracks, callback);
 			} else {
 				// Otherwise, get one by an artist we haven't seen yet

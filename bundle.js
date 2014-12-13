@@ -18,10 +18,14 @@ var sourceIndividual;
 var sourceIndividualRole;
 var renderedTrackDetails;
 
+var previousConnector;
+
 exports.clear = function () {
 	seenIndividuals = [];
 	seenTracks = [];
 	seenArtists = [];
+	sourceIndividual = null;
+	previousConnector = null;
 };
 
 exports.setSource = function (source) {
@@ -30,7 +34,7 @@ exports.setSource = function (source) {
 
 exports.track = function (domElem, $, callback) {
 	var individual = sourceIndividual;
-	var previousConnector = {mid: sourceIndividual};
+	previousConnector = previousConnector || {mid: sourceIndividual};
 
 	var resultsElem = $(domElem);
 
@@ -225,7 +229,7 @@ exports.track = function (domElem, $, callback) {
 		};
 
 		var finished = function () {
-			done(null);
+			callback();
 		};
 
 		var foundSomeoneElse;
@@ -242,29 +246,32 @@ exports.track = function (domElem, $, callback) {
 							deadEnd = true;
 							var err = new Error('Dead end! Bummer. To try again, use the Start Over button above the playlist!');
 							err.deadEnd = true;
-							reject(err);
-							return next();
+							return reject(err);
 						}
 						track = _.sample(notSeenTracks);
 						seenTracks.push(track);
 						notSeenTracks = _.pull(notSeenTracks, track);
-						routes.getArtistsAndContributorsFromTracks([track])
-						.then(function (folks) {
+
+						var validateTrack = function (folks) {
 							var myArtists = _.pluck(folks.artists, 'mid'); 
 							var myContributors = _.pluck(folks.contributors, 'mid');
 							folks = _.union(myArtists, myContributors);
 							var contributorPool = _.difference(folks, [individual]);
-							foundSomeoneElse = (contributorPool.length > 0);
 							// Only accept this track if there's someone else associated with it...
 							// ...unless this is the very first track in which case, pick anything and
-							// get it in front of the user pronto.
-							if (foundSomeoneElse || seenTracks.length === 1) {
+							// get it in front of the user pronto.				
+							foundSomeoneElse = (contributorPool.length > 0 || seenTracks.length === 1);
+
+							if (foundSomeoneElse) {
 								return fulfill(track);
 							}
 							next();
-						}, callback);
+						};
+
+						routes.getArtistsAndContributorsFromTracks([track])
+						.then(validateTrack, callback);
 					},
-					error
+					callback
 				);
 			});
 		};
@@ -306,6 +313,7 @@ exports.track = function (domElem, $, callback) {
 		function () {
 			if (seenArtists.length === 0) {
 				// If this is the first track, get one by this artist if we can.
+				console.dir(callback.toString());
 				routes.getTracksByArtists([individual]).then(processTracks, callback);
 			} else {
 				// Otherwise, get one by an artist we haven't seen yet
@@ -24665,10 +24673,8 @@ https.request = function (params, cb) {
 }
 
 },{"http":"/usr/local/lib/node_modules/watchify/node_modules/browserify/node_modules/http-browserify/index.js"}],"/usr/local/lib/node_modules/watchify/node_modules/browserify/node_modules/inherits/inherits_browser.js":[function(require,module,exports){
-module.exports=require("/Users/richtrott/musicroutes-playlist-generator/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/node_modules/inherits/inherits_browser.js")
-},{"/Users/richtrott/musicroutes-playlist-generator/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/node_modules/inherits/inherits_browser.js":"/Users/richtrott/musicroutes-playlist-generator/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/node_modules/inherits/inherits_browser.js"}],"/usr/local/lib/node_modules/watchify/node_modules/browserify/node_modules/isarray/index.js":[function(require,module,exports){
-module.exports=require("/Users/richtrott/musicroutes-playlist-generator/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/node_modules/isarray/index.js")
-},{"/Users/richtrott/musicroutes-playlist-generator/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/node_modules/isarray/index.js":"/Users/richtrott/musicroutes-playlist-generator/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/node_modules/isarray/index.js"}],"/usr/local/lib/node_modules/watchify/node_modules/browserify/node_modules/process/browser.js":[function(require,module,exports){
+module.exports=require("/Users/richtrott/musicroutes-playlist-generator/node_modules/hyperquest/node_modules/through2/node_modules/readable-stream/node_modules/inherits/inherits_browser.js")
+},{"/Users/richtrott/musicroutes-playlist-generator/node_modules/hyperquest/node_modules/through2/node_modules/readable-stream/node_modules/inherits/inherits_browser.js":"/Users/richtrott/musicroutes-playlist-generator/node_modules/hyperquest/node_modules/through2/node_modules/readable-stream/node_modules/inherits/inherits_browser.js"}],"/usr/local/lib/node_modules/watchify/node_modules/browserify/node_modules/process/browser.js":[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -25450,8 +25456,8 @@ exports.encode = exports.stringify = require('./encode');
 module.exports = require("./lib/_stream_duplex.js")
 
 },{"./lib/_stream_duplex.js":"/usr/local/lib/node_modules/watchify/node_modules/browserify/node_modules/readable-stream/lib/_stream_duplex.js"}],"/usr/local/lib/node_modules/watchify/node_modules/browserify/node_modules/readable-stream/lib/_stream_duplex.js":[function(require,module,exports){
-module.exports=require("/Users/richtrott/musicroutes-playlist-generator/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/lib/_stream_duplex.js")
-},{"/Users/richtrott/musicroutes-playlist-generator/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/lib/_stream_duplex.js":"/Users/richtrott/musicroutes-playlist-generator/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/lib/_stream_duplex.js"}],"/usr/local/lib/node_modules/watchify/node_modules/browserify/node_modules/readable-stream/lib/_stream_passthrough.js":[function(require,module,exports){
+module.exports=require("/Users/richtrott/musicroutes-playlist-generator/node_modules/hyperquest/node_modules/through2/node_modules/readable-stream/lib/_stream_duplex.js")
+},{"/Users/richtrott/musicroutes-playlist-generator/node_modules/hyperquest/node_modules/through2/node_modules/readable-stream/lib/_stream_duplex.js":"/Users/richtrott/musicroutes-playlist-generator/node_modules/hyperquest/node_modules/through2/node_modules/readable-stream/lib/_stream_duplex.js"}],"/usr/local/lib/node_modules/watchify/node_modules/browserify/node_modules/readable-stream/lib/_stream_passthrough.js":[function(require,module,exports){
 module.exports=require("/Users/richtrott/musicroutes-playlist-generator/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/lib/_stream_passthrough.js")
 },{"/Users/richtrott/musicroutes-playlist-generator/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/lib/_stream_passthrough.js":"/Users/richtrott/musicroutes-playlist-generator/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/lib/_stream_passthrough.js"}],"/usr/local/lib/node_modules/watchify/node_modules/browserify/node_modules/readable-stream/lib/_stream_readable.js":[function(require,module,exports){
 module.exports=require("/Users/richtrott/musicroutes-playlist-generator/node_modules/hyperquest/node_modules/through2/node_modules/readable-stream/lib/_stream_readable.js")
@@ -25459,9 +25465,7 @@ module.exports=require("/Users/richtrott/musicroutes-playlist-generator/node_mod
 module.exports=require("/Users/richtrott/musicroutes-playlist-generator/node_modules/hyperquest/node_modules/through2/node_modules/readable-stream/lib/_stream_transform.js")
 },{"/Users/richtrott/musicroutes-playlist-generator/node_modules/hyperquest/node_modules/through2/node_modules/readable-stream/lib/_stream_transform.js":"/Users/richtrott/musicroutes-playlist-generator/node_modules/hyperquest/node_modules/through2/node_modules/readable-stream/lib/_stream_transform.js"}],"/usr/local/lib/node_modules/watchify/node_modules/browserify/node_modules/readable-stream/lib/_stream_writable.js":[function(require,module,exports){
 module.exports=require("/Users/richtrott/musicroutes-playlist-generator/node_modules/hyperquest/node_modules/through2/node_modules/readable-stream/lib/_stream_writable.js")
-},{"/Users/richtrott/musicroutes-playlist-generator/node_modules/hyperquest/node_modules/through2/node_modules/readable-stream/lib/_stream_writable.js":"/Users/richtrott/musicroutes-playlist-generator/node_modules/hyperquest/node_modules/through2/node_modules/readable-stream/lib/_stream_writable.js"}],"/usr/local/lib/node_modules/watchify/node_modules/browserify/node_modules/readable-stream/node_modules/core-util-is/lib/util.js":[function(require,module,exports){
-module.exports=require("/Users/richtrott/musicroutes-playlist-generator/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/node_modules/core-util-is/lib/util.js")
-},{"/Users/richtrott/musicroutes-playlist-generator/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/node_modules/core-util-is/lib/util.js":"/Users/richtrott/musicroutes-playlist-generator/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/node_modules/core-util-is/lib/util.js"}],"/usr/local/lib/node_modules/watchify/node_modules/browserify/node_modules/readable-stream/passthrough.js":[function(require,module,exports){
+},{"/Users/richtrott/musicroutes-playlist-generator/node_modules/hyperquest/node_modules/through2/node_modules/readable-stream/lib/_stream_writable.js":"/Users/richtrott/musicroutes-playlist-generator/node_modules/hyperquest/node_modules/through2/node_modules/readable-stream/lib/_stream_writable.js"}],"/usr/local/lib/node_modules/watchify/node_modules/browserify/node_modules/readable-stream/passthrough.js":[function(require,module,exports){
 module.exports = require("./lib/_stream_passthrough.js")
 
 },{"./lib/_stream_passthrough.js":"/usr/local/lib/node_modules/watchify/node_modules/browserify/node_modules/readable-stream/lib/_stream_passthrough.js"}],"/usr/local/lib/node_modules/watchify/node_modules/browserify/node_modules/readable-stream/readable.js":[function(require,module,exports){
@@ -25608,9 +25612,7 @@ Stream.prototype.pipe = function(dest, options) {
   return dest;
 };
 
-},{"events":"/usr/local/lib/node_modules/watchify/node_modules/browserify/node_modules/events/events.js","inherits":"/usr/local/lib/node_modules/watchify/node_modules/browserify/node_modules/inherits/inherits_browser.js","readable-stream/duplex.js":"/usr/local/lib/node_modules/watchify/node_modules/browserify/node_modules/readable-stream/duplex.js","readable-stream/passthrough.js":"/usr/local/lib/node_modules/watchify/node_modules/browserify/node_modules/readable-stream/passthrough.js","readable-stream/readable.js":"/usr/local/lib/node_modules/watchify/node_modules/browserify/node_modules/readable-stream/readable.js","readable-stream/transform.js":"/usr/local/lib/node_modules/watchify/node_modules/browserify/node_modules/readable-stream/transform.js","readable-stream/writable.js":"/usr/local/lib/node_modules/watchify/node_modules/browserify/node_modules/readable-stream/writable.js"}],"/usr/local/lib/node_modules/watchify/node_modules/browserify/node_modules/string_decoder/index.js":[function(require,module,exports){
-module.exports=require("/Users/richtrott/musicroutes-playlist-generator/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/node_modules/string_decoder/index.js")
-},{"/Users/richtrott/musicroutes-playlist-generator/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/node_modules/string_decoder/index.js":"/Users/richtrott/musicroutes-playlist-generator/node_modules/hyperquest/node_modules/duplexer2/node_modules/readable-stream/node_modules/string_decoder/index.js"}],"/usr/local/lib/node_modules/watchify/node_modules/browserify/node_modules/url/url.js":[function(require,module,exports){
+},{"events":"/usr/local/lib/node_modules/watchify/node_modules/browserify/node_modules/events/events.js","inherits":"/usr/local/lib/node_modules/watchify/node_modules/browserify/node_modules/inherits/inherits_browser.js","readable-stream/duplex.js":"/usr/local/lib/node_modules/watchify/node_modules/browserify/node_modules/readable-stream/duplex.js","readable-stream/passthrough.js":"/usr/local/lib/node_modules/watchify/node_modules/browserify/node_modules/readable-stream/passthrough.js","readable-stream/readable.js":"/usr/local/lib/node_modules/watchify/node_modules/browserify/node_modules/readable-stream/readable.js","readable-stream/transform.js":"/usr/local/lib/node_modules/watchify/node_modules/browserify/node_modules/readable-stream/transform.js","readable-stream/writable.js":"/usr/local/lib/node_modules/watchify/node_modules/browserify/node_modules/readable-stream/writable.js"}],"/usr/local/lib/node_modules/watchify/node_modules/browserify/node_modules/url/url.js":[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a

@@ -15,8 +15,8 @@ var beforeEach = lab.beforeEach;
 
 var nock = require('nock');
 
-var jsdom = require("jsdom").jsdom;
-var document = jsdom("fhqwhagads");
+var jsdom = require('jsdom').jsdom;
+var document = jsdom('fhqwhagads');
 
 var $ = require('cheerio');
 
@@ -33,7 +33,7 @@ describe('exports', function () {
 			revert = null;
 		}
 		nock.cleanAll();
-		nock.enableNetConnect();
+		nock.disableNetConnect();
 		div = document.createElement('div');
 		done();
 	});
@@ -59,6 +59,20 @@ describe('exports', function () {
 			expect(playlist.__get__('seenArtists')).to.deep.equal([]);
 			done();
 		});
+
+		it('should reset sourceIndividual', function (done) {
+			revert = playlist.__set__({sourceIndividual: 'fhqwhagads'});
+			playlist.clear();
+			expect(playlist.__get__('sourceIndividual')).to.be.null();
+			done();
+		});
+
+		it('should reset previousConnector', function (done) {
+			revert = playlist.__set__({previousConnector: {mid: 'fhqwhagads'}});
+			playlist.clear();
+			expect(playlist.__get__('previousConnector')).to.be.null();
+			done();
+		});
 	});
 
 	describe('setSource()', function () {
@@ -72,7 +86,6 @@ describe('exports', function () {
 
 	describe('track()', function () {
 		it('should return an error if there is no network', function (done) {
-			nock.disableNetConnect();
 			var failure = function (err) {
 				expect(err instanceof Error).to.be.true();
 				done();
@@ -81,5 +94,25 @@ describe('exports', function () {
 			playlist.setSource(BobDylan);
 			playlist.track(div, $, failure);
 		});
+
+		// it('should not trigger an error if given a valid start point', function (done) {
+		// 	var success = function (err) {
+		// 		expect(err).to.be.undefined();
+		// 		done();
+		// 	};
+
+		// 	playlist.setSource(BobDylan);
+		// 	playlist.track(div, $, success);
+		// });
+
+		// it('should return a track if given a valid start point', function (done) {
+		// 	var success = function () {
+		// 		expect($(div).text()).to.contain('blah blah blah');
+		// 		done();
+		// 	};
+
+		// 	playlist.setSource(BobDylan);
+		// 	playlist.track(div, $, success);
+		// });
 	});
 });
