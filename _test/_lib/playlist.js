@@ -92,7 +92,7 @@ describe('exports', function () {
 			};
 
 			playlist.setSource(BobDylan);
-			playlist.track(div, $, failure);
+			playlist.track(div, $).catch(failure);
 		});
 
 		// it('should not trigger an error if given a valid start point', function (done) {
