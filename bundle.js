@@ -264,6 +264,10 @@ exports.track = function (domElem, $) {
 			function() { return foundSomeoneElse || deadEnd; },
 			function() { 
 				track = _.sample(notSeenTracks);
+				if (!track) {
+					deadEnd = true;
+					return Promise.reject();
+				}
 				seenTracks.push(track);
 				notSeenTracks = _.pull(notSeenTracks, track);
 				return routes.getArtistsAndContributorsFromTracks([track]).then(validatePathOutFromTrack);
@@ -350,7 +354,7 @@ exports.track = function (domElem, $) {
 		}
 		deadEnd = true;
 		var p = $('<p>')
-			.text('Could not find any unseen tracks for ')
+			.text('Playlist is at a dead end with ')
 			.append(anchorFromMid(previousConnector.mid, previousConnector.name))
 			.append('.');
 		var msg = $('<paper-shadow>')
