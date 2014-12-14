@@ -15,9 +15,6 @@ var beforeEach = lab.beforeEach;
 
 var nock = require('nock');
 
-var jsdom = require('jsdom').jsdom;
-var document = jsdom('fhqwhagads');
-
 var $ = require('cheerio');
 
 var div;
@@ -34,7 +31,7 @@ describe('exports', function () {
 		}
 		nock.cleanAll();
 		nock.disableNetConnect();
-		div = document.createElement('div');
+		div = $('<div>');
 		done();
 	});
 
@@ -95,24 +92,16 @@ describe('exports', function () {
 			playlist.track(div, $).catch(failure);
 		});
 
-		// it('should not trigger an error if given a valid start point', function (done) {
-		// 	var success = function (err) {
-		// 		expect(err).to.be.undefined();
-		// 		done();
-		// 	};
+		it('should return a track if given a valid start point', function (done) {
+			nock.enableNetConnect();
 
-		// 	playlist.setSource(BobDylan);
-		// 	playlist.track(div, $, success);
-		// });
+			var success = function () {
+				expect(div.text()).to.contain('Bob Dylan appeared on:');
+				done();
+			};
 
-		// it('should return a track if given a valid start point', function (done) {
-		// 	var success = function () {
-		// 		expect($(div).text()).to.contain('blah blah blah');
-		// 		done();
-		// 	};
-
-		// 	playlist.setSource(BobDylan);
-		// 	playlist.track(div, $, success);
-		// });
+			playlist.setSource(BobDylan);
+			playlist.track(div, $).then(success);
+		});
 	});
 });
