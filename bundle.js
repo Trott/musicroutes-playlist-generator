@@ -93,19 +93,6 @@ exports.track = function (domElem, $) {
 		return p;
 	};
 
-	var searchForVideo = function () {
-		var q = '';
-		if (trackDetails.name) {
-			q = '"' + trackDetails.name + '" ';
-		}
-		q = q + _.reduce(trackDetails.artists, function (rv, artist) { return artist.name ? rv + '"' + artist.name + '" ' : rv;}, '');
-		if (trackDetails.release.name) {
-			q = q + '"' + trackDetails.release.name + '"';
-		}
-
-		return videos.search(q);
-	};
-
 	var extractVideoId = function (data) {
 		return _.result(data.items[0], 'videoId');
 	};
@@ -294,7 +281,8 @@ exports.track = function (domElem, $) {
 			.then(routes.getArtistDetails)
 			.then(renderConnector)
 			.then(function (connector) { resultsElem.append(connector); resultsElem.append(renderedTrackDetails); })
-			.then(searchForVideo)
+			.then(function () { return trackDetails; })
+			.then(utils.searchForVideoFromTrackDetails)
 			.then(extractVideoId)
 			.then(getVideoEmbedCode)
 			.then(embedVideoInDom);
@@ -567,6 +555,9 @@ exports.getTrackDetails = function (mid) {
   });
 };
 },{"../.apikey":"/Users/richtrott/musicroutes-playlist-generator/.apikey","lodash":"/Users/richtrott/musicroutes-playlist-generator/node_modules/lodash/dist/lodash.js","mqlread":"/Users/richtrott/musicroutes-playlist-generator/node_modules/mqlread/index.js","promise":"/Users/richtrott/musicroutes-playlist-generator/node_modules/promise/index.js"}],"/Users/richtrott/musicroutes-playlist-generator/_lib/utils.js":[function(require,module,exports){
+var videos = require('./videos.js');
+var _ = require('lodash');
+
 exports.anchorFromMid = function ($, mid, text) {
 	text = text || mid;
 	return $('<a>')
@@ -574,7 +565,29 @@ exports.anchorFromMid = function ($, mid, text) {
 		.attr('target', '_blank')
 		.text(text);
 };
-},{}],"/Users/richtrott/musicroutes-playlist-generator/_lib/videos.js":[function(require,module,exports){
+
+exports.searchForVideoFromTrackDetails = function (trackDetails) {
+	var q = '';
+
+	var track = _.result(trackDetails, 'name');
+	if (track) {
+		q = '"' + track + '" ';
+	}
+
+	var artists = _.result(trackDetails, 'artists');
+	q = q + _.reduce(artists, function (rv, artist) { return artist.name ? rv + '"' + artist.name + '" ' : rv;}, '');
+
+	var release = _.result(trackDetails, 'release');
+	if (release) {
+		var releaseName = _.result(release, 'name');
+		if (releaseName) {
+			q = q + '"' + releaseName + '"';
+		}
+	}
+
+	return videos.search(q);
+};
+},{"./videos.js":"/Users/richtrott/musicroutes-playlist-generator/_lib/videos.js","lodash":"/Users/richtrott/musicroutes-playlist-generator/node_modules/lodash/dist/lodash.js"}],"/Users/richtrott/musicroutes-playlist-generator/_lib/videos.js":[function(require,module,exports){
 /* global -Promise */
 var hyperquest = require('hyperquest');
 var querystring = require('querystring');

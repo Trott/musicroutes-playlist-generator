@@ -89,19 +89,6 @@ exports.track = function (domElem, $) {
 		return p;
 	};
 
-	var searchForVideo = function () {
-		var q = '';
-		if (trackDetails.name) {
-			q = '"' + trackDetails.name + '" ';
-		}
-		q = q + _.reduce(trackDetails.artists, function (rv, artist) { return artist.name ? rv + '"' + artist.name + '" ' : rv;}, '');
-		if (trackDetails.release.name) {
-			q = q + '"' + trackDetails.release.name + '"';
-		}
-
-		return videos.search(q);
-	};
-
 	var extractVideoId = function (data) {
 		return _.result(data.items[0], 'videoId');
 	};
@@ -290,7 +277,8 @@ exports.track = function (domElem, $) {
 			.then(routes.getArtistDetails)
 			.then(renderConnector)
 			.then(function (connector) { resultsElem.append(connector); resultsElem.append(renderedTrackDetails); })
-			.then(searchForVideo)
+			.then(function () { return trackDetails; })
+			.then(utils.searchForVideoFromTrackDetails)
 			.then(extractVideoId)
 			.then(getVideoEmbedCode)
 			.then(embedVideoInDom);

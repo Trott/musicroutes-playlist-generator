@@ -1,6 +1,7 @@
 /*jshint expr: true*/
 
-var utils = require('../../_lib/utils.js');
+var rewire = require('rewire');
+var utils = rewire('../../_lib/utils.js');
 
 var Code = require('code');
 var expect = Code.expect;
@@ -10,10 +11,21 @@ var lab = exports.lab = Lab.script();
 
 var describe = lab.experiment;
 var it = lab.test;
+var beforeEach = lab.beforeEach;
 
 var $ = require('cheerio');
 
 describe('exports', function () {
+
+	var revert;
+
+	beforeEach(function (done) {
+		if (typeof revert === 'function') {
+			revert();
+			revert = null;
+		}
+		done();
+	});
 
 	describe('anchorFromMid()', function () {
 		it('should reutrn an anchor (<a>) element', function (done) {
@@ -39,6 +51,44 @@ describe('exports', function () {
 		it('should be set to open in a new browser window or tab', function (done) {
 			var rv = utils.anchorFromMid($, '/fhqwhagads');
 			expect(rv.attr('target')).to.equal('_blank');
+			done();
+		});
+	});
+
+	describe('searchForVideoFromTrackDetails()', function () {
+		beforeEach(function (done) {
+			utils.__set__({videos: {search: function (q) { return q; }}});
+			done();
+		});
+
+		it('should assemble trackDetails with each entity surrounded by quotation marks', function (done) {
+			var trackDetails = {
+				name: 'Everybody To The Limit!',
+				artists: [{name: 'Strong Bad'}, {name: 'The Cheat'}],
+				release: {name: 'Come On, fhqwhagads'}
+			};
+
+			var rv = utils.searchForVideoFromTrackDetails(trackDetails);
+
+			expect(rv).to.equal('"Everybody To The Limit!" "Strong Bad" "The Cheat" "Come On, fhqwhagads"');
+			done();
+		});
+
+		it('should gracefully handle missing properties', function (done) {
+			var rv = utils.searchForVideoFromTrackDetails();
+			expect(rv).to.equal('');
+			done();
+		});
+
+		it('should gracefully handle empty missing nested properties', function (done) {
+			var trackDetails = {
+				artists: [{}],
+				release: {}
+			};
+
+			var rv = utils.searchForVideoFromTrackDetails(trackDetails);
+
+			expect(rv).to.equal('');
 			done();
 		});
 	});
