@@ -2,6 +2,7 @@
 /* global -Promise */
 var routes = require('./routes.js');
 var videos = require('./videos.js');
+var utils = require('./utils.js');
 var Promise = require('promise');
 var _ = require('lodash');
 
@@ -36,14 +37,6 @@ exports.track = function (domElem, $) {
 
 	var deadEnd = false;
 
-	var anchorFromMid = function (mid, text) {
-		text = text || mid;
-		return $('<a>')
-		.attr('href', 'http://freebase.com' + mid)
-		.attr('target', '_blank')
-		.text(text);
-	};
-
 	var trackDetails;
 	var track;
 
@@ -63,9 +56,9 @@ exports.track = function (domElem, $) {
 		var p = $('<p>').attr('class', 'track-details');
 
 		if (trackDetails.name) {
-			p.append(anchorFromMid(track, '"' + trackDetails.name + '"'));
+			p.append(utils.anchorFromMid($, track, '"' + trackDetails.name + '"'));
 		} else {
-			p.append(anchorFromMid(track));
+			p.append(utils.anchorFromMid($, track));
 		}
 
 		p.append($('<br>'));
@@ -76,9 +69,9 @@ exports.track = function (domElem, $) {
 				p.append(document.createTextNode(' & '));
 			}
 			if (value.name) {
-				p.append(anchorFromMid(value.mid, value.name));
+				p.append(utils.anchorFromMid($, value.mid, value.name));
 			} else {
-				p.append(anchorFromMid(value.mid));
+				p.append(utils.anchorFromMid($, value.mid));
 			}
 			needsAmpersand = true;
 		});
@@ -86,10 +79,10 @@ exports.track = function (domElem, $) {
 		p.append($('<br>'));
 
 		if (trackDetails.release.name) {
-			p.append($('<i>').append(anchorFromMid(trackDetails.release.mid, trackDetails.release.name)));
+			p.append($('<i>').append(utils.anchorFromMid($, trackDetails.release.mid, trackDetails.release.name)));
 		} else {
 			if (trackDetails.release.mid) {
-				p.append(anchorFromMid(trackDetails.release.mid));
+				p.append(utils.anchorFromMid($, trackDetails.release.mid));
 			}
 		}
 
@@ -185,10 +178,10 @@ exports.track = function (domElem, $) {
 
 	var renderNameOrMid = function (details) {
 		if (details.name) {
-			return anchorFromMid(details.mid, details.name);
+			return utils.anchorFromMid($, details.mid, details.name);
 		}
 		if (details.mid) {
-			return anchorFromMid(details.mid);
+			return utils.anchorFromMid($, details.mid);
 		}
 		return '';
 	};
@@ -351,7 +344,7 @@ exports.track = function (domElem, $) {
 		deadEnd = true;
 		var p = $('<p>')
 			.text('Playlist is at a dead end with ')
-			.append(anchorFromMid(previousConnector.mid, previousConnector.name))
+			.append(utils.anchorFromMid($, previousConnector.mid, previousConnector.name))
 			.append('.');
 		var msg = $('<paper-shadow>')
 			.addClass('error')
