@@ -1,7 +1,6 @@
 /*global document*/
 /* global -Promise */
 var routes = require('./routes.js');
-var videos = require('./videos.js');
 var utils = require('./utils.js');
 var Promise = require('promise');
 var _ = require('lodash');
@@ -87,10 +86,6 @@ exports.track = function (domElem, $) {
 		}
 
 		return p;
-	};
-
-	var getVideoEmbedCode = function (videoId) {
-		return videoId && videos.embed(videoId);
 	};
 
 	var embedVideoInDom = function (data) {
@@ -276,7 +271,7 @@ exports.track = function (domElem, $) {
 			.then(function () { return trackDetails; })
 			.then(utils.searchForVideoFromTrackDetails)
 			.then(utils.extractVideoId)
-			.then(getVideoEmbedCode)
+			.then(utils.getVideoEmbedCode)
 			.then(embedVideoInDom);
 
 		return promise;

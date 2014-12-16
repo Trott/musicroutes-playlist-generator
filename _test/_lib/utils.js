@@ -11,21 +11,14 @@ var lab = exports.lab = Lab.script();
 
 var describe = lab.experiment;
 var it = lab.test;
-var beforeEach = lab.beforeEach;
 
 var $ = require('cheerio');
 
 describe('exports', function () {
-
-	var revert;
-
-	beforeEach(function (done) {
-		if (typeof revert === 'function') {
-			revert();
-			revert = null;
-		}
-		done();
-	});
+	utils.__set__({videos: {
+		search: function (q) { return q; },
+		embed: function (videoId) { return videoId; }
+	}});
 
 	describe('anchorFromMid()', function () {
 		it('should reutrn an anchor (<a>) element', function (done) {
@@ -56,11 +49,6 @@ describe('exports', function () {
 	});
 
 	describe('searchForVideoFromTrackDetails()', function () {
-		beforeEach(function (done) {
-			revert = utils.__set__({videos: {search: function (q) { return q; }}});
-			done();
-		});
-
 		it('should assemble trackDetails with each entity surrounded by quotation marks', function (done) {
 			var trackDetails = {
 				name: 'Everybody To The Limit!',
@@ -124,6 +112,18 @@ describe('exports', function () {
 
 		it('should handle a missing data object gracefully', function (done) {
 			expect(utils.extractVideoId()).to.be.undefined();
+			done();
+		});
+	});
+
+	describe('getVideoEmbedCode()', function () {
+		it('should request embed code for provided videoId', function (done) {
+			expect(utils.getVideoEmbedCode('fhqwhagads')).to.equal('fhqwhagads');
+			done();
+		});
+
+		it('should handle a missing videoId gracefully', function (done) {
+			expect(utils.getVideoEmbedCode()).to.be.undefined();
 			done();
 		});
 	});

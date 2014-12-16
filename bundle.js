@@ -5,7 +5,6 @@ exports.key = "AIzaSyB3yM4RkyAqYVPAr6lQLfzp8H6yQrmmHCs";
 /*global document*/
 /* global -Promise */
 var routes = require('./routes.js');
-var videos = require('./videos.js');
 var utils = require('./utils.js');
 var Promise = require('promise');
 var _ = require('lodash');
@@ -91,10 +90,6 @@ exports.track = function (domElem, $) {
 		}
 
 		return p;
-	};
-
-	var getVideoEmbedCode = function (videoId) {
-		return videoId && videos.embed(videoId);
 	};
 
 	var embedVideoInDom = function (data) {
@@ -280,7 +275,7 @@ exports.track = function (domElem, $) {
 			.then(function () { return trackDetails; })
 			.then(utils.searchForVideoFromTrackDetails)
 			.then(utils.extractVideoId)
-			.then(getVideoEmbedCode)
+			.then(utils.getVideoEmbedCode)
 			.then(embedVideoInDom);
 
 		return promise;
@@ -351,7 +346,7 @@ exports.track = function (domElem, $) {
 
 	return promise;
 };
-},{"./routes.js":"/Users/richtrott/musicroutes-playlist-generator/_lib/routes.js","./utils.js":"/Users/richtrott/musicroutes-playlist-generator/_lib/utils.js","./videos.js":"/Users/richtrott/musicroutes-playlist-generator/_lib/videos.js","lodash":"/Users/richtrott/musicroutes-playlist-generator/node_modules/lodash/dist/lodash.js","promise":"/Users/richtrott/musicroutes-playlist-generator/node_modules/promise/index.js"}],"/Users/richtrott/musicroutes-playlist-generator/_lib/routes.js":[function(require,module,exports){
+},{"./routes.js":"/Users/richtrott/musicroutes-playlist-generator/_lib/routes.js","./utils.js":"/Users/richtrott/musicroutes-playlist-generator/_lib/utils.js","lodash":"/Users/richtrott/musicroutes-playlist-generator/node_modules/lodash/dist/lodash.js","promise":"/Users/richtrott/musicroutes-playlist-generator/node_modules/promise/index.js"}],"/Users/richtrott/musicroutes-playlist-generator/_lib/routes.js":[function(require,module,exports){
 /* global -Promise */
 var freebase = require('mqlread');
 var Promise = require('promise');
@@ -588,6 +583,10 @@ exports.extractVideoId = function (data) {
 	var items = _.result(data, 'items');
 	var first = _.first(items);
 	return _.result(first, 'videoId');
+};
+
+exports.getVideoEmbedCode = function (videoId) {
+	return videoId && videos.embed(videoId);
 };
 },{"./videos.js":"/Users/richtrott/musicroutes-playlist-generator/_lib/videos.js","lodash":"/Users/richtrott/musicroutes-playlist-generator/node_modules/lodash/dist/lodash.js"}],"/Users/richtrott/musicroutes-playlist-generator/_lib/videos.js":[function(require,module,exports){
 /* global -Promise */
