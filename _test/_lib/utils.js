@@ -92,4 +92,39 @@ describe('exports', function () {
 			done();
 		});
 	});
+
+	describe('extractVideoId', function () {
+		it('should return the first videoId in the array of items', function (done) {
+			var data = {items: [{videoId: 'fhqwhagads'}, {videoId: 'jake'}, {videoId: 'joe'}]};
+
+			expect(utils.extractVideoId(data)).to.equal('fhqwhagads');
+			done();
+		});
+
+		it('should handle an item with no videoId gracefully', function (done) {
+			var data = {items:[{}]};
+
+			expect(utils.extractVideoId(data)).to.be.undefined();
+			done();
+		});
+
+		it('should handle an empty items array gracefully', function (done) {
+			var data = {items:[]};
+
+			expect(utils.extractVideoId(data)).to.be.undefined();
+			done();
+		});
+
+		it('should handle a missing items array gracefully', function (done) {
+			var data = {};
+
+			expect(utils.extractVideoId(data)).to.be.undefined();
+			done();
+		});
+
+		it('should handle a missing data object gracefully', function (done) {
+			expect(utils.extractVideoId()).to.be.undefined();
+			done();
+		});
+	});
 });

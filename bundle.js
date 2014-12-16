@@ -93,10 +93,6 @@ exports.track = function (domElem, $) {
 		return p;
 	};
 
-	var extractVideoId = function (data) {
-		return _.result(data.items[0], 'videoId');
-	};
-
 	var getVideoEmbedCode = function (videoId) {
 		return videoId && videos.embed(videoId);
 	};
@@ -283,7 +279,7 @@ exports.track = function (domElem, $) {
 			.then(function (connector) { resultsElem.append(connector); resultsElem.append(renderedTrackDetails); })
 			.then(function () { return trackDetails; })
 			.then(utils.searchForVideoFromTrackDetails)
-			.then(extractVideoId)
+			.then(utils.extractVideoId)
 			.then(getVideoEmbedCode)
 			.then(embedVideoInDom);
 
@@ -586,6 +582,12 @@ exports.searchForVideoFromTrackDetails = function (trackDetails) {
 	}
 
 	return videos.search(q);
+};
+
+exports.extractVideoId = function (data) {
+	var items = _.result(data, 'items');
+	var first = _.first(items);
+	return _.result(first, 'videoId');
 };
 },{"./videos.js":"/Users/richtrott/musicroutes-playlist-generator/_lib/videos.js","lodash":"/Users/richtrott/musicroutes-playlist-generator/node_modules/lodash/dist/lodash.js"}],"/Users/richtrott/musicroutes-playlist-generator/_lib/videos.js":[function(require,module,exports){
 /* global -Promise */

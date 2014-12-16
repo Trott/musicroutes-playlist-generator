@@ -89,10 +89,6 @@ exports.track = function (domElem, $) {
 		return p;
 	};
 
-	var extractVideoId = function (data) {
-		return _.result(data.items[0], 'videoId');
-	};
-
 	var getVideoEmbedCode = function (videoId) {
 		return videoId && videos.embed(videoId);
 	};
@@ -279,7 +275,7 @@ exports.track = function (domElem, $) {
 			.then(function (connector) { resultsElem.append(connector); resultsElem.append(renderedTrackDetails); })
 			.then(function () { return trackDetails; })
 			.then(utils.searchForVideoFromTrackDetails)
-			.then(extractVideoId)
+			.then(utils.extractVideoId)
 			.then(getVideoEmbedCode)
 			.then(embedVideoInDom);
 

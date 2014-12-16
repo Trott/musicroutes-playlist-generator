@@ -30,3 +30,9 @@ exports.searchForVideoFromTrackDetails = function (trackDetails) {
 
 	return videos.search(q);
 };
+
+exports.extractVideoId = function (data) {
+	var items = _.result(data, 'items');
+	var first = _.first(items);
+	return _.result(first, 'videoId');
+};
