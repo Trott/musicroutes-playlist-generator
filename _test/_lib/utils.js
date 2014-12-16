@@ -57,7 +57,7 @@ describe('exports', function () {
 
 	describe('searchForVideoFromTrackDetails()', function () {
 		beforeEach(function (done) {
-			utils.__set__({videos: {search: function (q) { return q; }}});
+			revert = utils.__set__({videos: {search: function (q) { return q; }}});
 			done();
 		});
 
