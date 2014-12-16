@@ -127,4 +127,18 @@ describe('exports', function () {
 			done();
 		});
 	});
+
+	describe('wrapVideo()', function () {
+		it('should wrap the embedHtml property in divs for scaling', function (done) {
+			var data = {items: [{embedHtml: '<iframe>fhqwhagads</iframe>'}]};
+
+			expect(utils.wrapVideo(data)).to.equal('<div class="video-outer-wrapper"><div class="video-inner-wrapper"><iframe>fhqwhagads</iframe></div></div>');
+			done();
+		});
+
+		it('should return an empty string if no embedHtml property exists', function (done) {
+			expect(utils.wrapVideo()).to.equal('');
+			done();
+		});
+	});
 });

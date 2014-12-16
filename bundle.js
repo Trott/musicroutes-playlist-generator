@@ -92,16 +92,6 @@ exports.track = function (domElem, $) {
 		return p;
 	};
 
-	var embedVideoInDom = function (data) {
-		if (data && data.items && data.items[0] && data.items[0].embedHtml) {
-			var outer = $('<div class="video-outer-wrapper">');
-			var inner = $('<div class="video-inner-wrapper">');
-			// Yes, we're trusting YouTube's API not to p0wn us.
-			inner.html(data.items[0].embedHtml);
-			resultsElem.append(outer.append(inner));
-		}
-	};
-
 	var getContributors = function () {
 		return routes.getArtistsAndContributorsFromTracks([track]);
 	};
@@ -276,7 +266,8 @@ exports.track = function (domElem, $) {
 			.then(utils.searchForVideoFromTrackDetails)
 			.then(utils.extractVideoId)
 			.then(utils.getVideoEmbedCode)
-			.then(embedVideoInDom);
+			.then(utils.wrapVideo)
+			.then(function (embedCode) { resultsElem.append($(embedCode)); });
 
 		return promise;
 	};
@@ -587,6 +578,20 @@ exports.extractVideoId = function (data) {
 
 exports.getVideoEmbedCode = function (videoId) {
 	return videoId && videos.embed(videoId);
+};
+
+exports.wrapVideo = function (data) {
+	var items = _.result(data, 'items');
+	var first = _.first(items);
+	var iframe = _.result(first, 'embedHtml');
+	// Yes, we're trusting YouTube's API not to p0wn us.
+	var embedCode = '';
+	if (iframe) {
+		embedCode = '<div class="video-outer-wrapper"><div class="video-inner-wrapper">' +
+			iframe +
+			'</div></div>';
+	}
+	return embedCode;
 };
 },{"./videos.js":"/Users/richtrott/musicroutes-playlist-generator/_lib/videos.js","lodash":"/Users/richtrott/musicroutes-playlist-generator/node_modules/lodash/dist/lodash.js"}],"/Users/richtrott/musicroutes-playlist-generator/_lib/videos.js":[function(require,module,exports){
 /* global -Promise */

@@ -40,3 +40,17 @@ exports.extractVideoId = function (data) {
 exports.getVideoEmbedCode = function (videoId) {
 	return videoId && videos.embed(videoId);
 };
+
+exports.wrapVideo = function (data) {
+	var items = _.result(data, 'items');
+	var first = _.first(items);
+	var iframe = _.result(first, 'embedHtml');
+	// Yes, we're trusting YouTube's API not to p0wn us.
+	var embedCode = '';
+	if (iframe) {
+		embedCode = '<div class="video-outer-wrapper"><div class="video-inner-wrapper">' +
+			iframe +
+			'</div></div>';
+	}
+	return embedCode;
+};
