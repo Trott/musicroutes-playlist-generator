@@ -3,7 +3,7 @@
   "version": "1.0.1",
   "description": "musicroutes-playlist-generator",
   "scripts": {
-    "test": "node_modules/lab/bin/lab -t 94 _test",
+    "test": "node_modules/lab/bin/lab -t 95 _test",
     "build": "node_modules/.bin/browserify src.js -o bundle.js && node_modules/.bin/vulcanize -o index.html src.html"
   },
   "repository": {
