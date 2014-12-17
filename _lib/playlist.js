@@ -43,38 +43,11 @@ exports.track = function (domElem, $) {
 
 	var renderTrackDetails = function () {
 		var p = $('<p>').attr('class', 'track-details');
-
-		if (trackDetails.name) {
-			p.append(utils.anchorFromMid($, track, '"' + trackDetails.name + '"'));
-		} else {
-			p.append(utils.anchorFromMid($, track));
-		}
-
+		p.append(utils.trackAnchor($, trackDetails));
 		p.append($('<br>'));
-
-		var needsAmpersand = false;
-		_.forEach(trackDetails.artists, function (value) {
-			if (needsAmpersand) {
-				p.append(document.createTextNode(' & '));
-			}
-			if (value.name) {
-				p.append(utils.anchorFromMid($, value.mid, value.name));
-			} else {
-				p.append(utils.anchorFromMid($, value.mid));
-			}
-			needsAmpersand = true;
-		});
-
+		p.append(utils.artistAnchors($, trackDetails.artists));
 		p.append($('<br>'));
-
-		if (trackDetails.release.name) {
-			p.append($('<i>').append(utils.anchorFromMid($, trackDetails.release.mid, trackDetails.release.name)));
-		} else {
-			if (trackDetails.release.mid) {
-				p.append(utils.anchorFromMid($, trackDetails.release.mid));
-			}
-		}
-
+		p.append(utils.releaseAnchor($, trackDetails.release));
 		return p;
 	};
 
@@ -222,7 +195,6 @@ exports.track = function (domElem, $) {
 		);
 	};
 
-
 	var trackPicked = false;
 
 	var processTracks = function () {
@@ -235,6 +207,7 @@ exports.track = function (domElem, $) {
 		var promise = routes.getTrackDetails(track)
 			.then(function (details) {
 				trackDetails = details || {};
+				trackDetails.mid = track;
 				trackDetails.release = _.sample(trackDetails.releases) || '';
 				return trackDetails;
 			})
@@ -258,15 +231,16 @@ exports.track = function (domElem, $) {
 		return promise;
 	};
 
-	var optionsNewArtistsOnly = {subquery: {
-		artist: [{
-			'mid|=': state.seenArtists,
-			optional: 'forbidden'
-		}]
-	}};
-
 	var tracksByUnseenArtists	= function () {
 		var promise;
+
+		var optionsNewArtistsOnly = {subquery: {
+			artist: [{
+				'mid|=': state.seenArtists,
+				optional: 'forbidden'
+			}]
+		}};
+
 		if (state.seenArtists.length === 0) {
  			// If this is the first track, get one by this artist if we can.
  			promise = routes.getTracksByArtists([individual]);

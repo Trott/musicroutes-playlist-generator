@@ -1,12 +1,43 @@
 var videos = require('./videos.js');
 var _ = require('lodash');
 
-exports.anchorFromMid = function ($, mid, text) {
+var anchorFromMid = exports.anchorFromMid = function ($, mid, text) {
+	if (! mid) {
+		return $();
+	}
 	text = text || mid;
 	return $('<a>')
 		.attr('href', 'http://freebase.com' + mid)
 		.attr('target', '_blank')
 		.text(text);
+};
+
+exports.trackAnchor = function ($, track) {
+	if (track.name) {
+		return anchorFromMid($, track.mid, '"' + track.name + '"');
+	}
+	return anchorFromMid($, track.mid);
+};
+
+exports.artistAnchors = function ($, artists) {
+	var container = $('<div>');
+	var needsAmpersand = false;
+	_.forEach(artists, function (value) {
+		if (needsAmpersand) {
+			container.append($('<span>').text(' & '));
+		}
+		container.append(anchorFromMid($, value.mid, value.name));
+		needsAmpersand = true;
+	});
+	return container.children();
+};
+
+exports.releaseAnchor = function ($, release) {
+	if (_.result(release, 'name')) {
+		return $('<i>').append(anchorFromMid($, release.mid, release.name));
+	}
+	
+	return anchorFromMid($, _.result(release, 'mid'));
 };
 
 exports.searchForVideoFromTrackDetails = function (trackDetails) {
