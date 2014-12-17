@@ -44,15 +44,13 @@ exports.track = function (domElem, $) {
 	var track;
 
 	var addToSeenArtists = function () {
-		return new Promise(function (fulfill, reject) {
-			if (!trackDetails) {
-				return reject(Error('No details for ' + track));
-			}
+		if (!trackDetails) {
+			return Promise.reject(Error('No details for ' + track));
+		}
 
-			var theseArtistMids = _.map(trackDetails.artists, 'mid');
-			seenArtists = seenArtists.concat(_.difference(theseArtistMids, seenArtists));
-			fulfill();
-		});
+		var theseArtistMids = _.map(trackDetails.artists, 'mid');
+		seenArtists = seenArtists.concat(_.difference(theseArtistMids, seenArtists));
+		return seenArtists;
 	};
 
 	var renderTrackDetails = function () {
