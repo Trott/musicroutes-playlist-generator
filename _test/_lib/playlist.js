@@ -37,46 +37,46 @@ describe('exports', function () {
 
 	describe('clear()', function () {
 		it('should reset seenIndividuals', function (done) {
-			revert = playlist.__set__({seenIndividuals: ['fhqwhagads']});
+			revert = playlist.__set__({state: {seenIndividuals: ['fhqwhagads']}});
 			playlist.clear();
-			expect(playlist.__get__('seenIndividuals')).to.deep.equal([]);
+			expect(playlist.__get__('state.seenIndividuals')).to.deep.equal([]);
 			done();
 		});
 
 		it('should reset seenTracks', function (done) {
-			revert = playlist.__set__({seenTracks: ['fhqwhagads']});
+			revert = playlist.__set__({state: {seenTracks: ['fhqwhagads']}});
 			playlist.clear();
-			expect(playlist.__get__('seenTracks')).to.deep.equal([]);
+			expect(playlist.__get__('state.seenTracks')).to.deep.equal([]);
 			done();
 		});
 
 		it('should reset seenArtists', function (done) {
-			revert = playlist.__set__({seenArtists: ['fhqwhagads']});
+			revert = playlist.__set__({state: {seenArtists: ['fhqwhagads']}});
 			playlist.clear();
-			expect(playlist.__get__('seenArtists')).to.deep.equal([]);
+			expect(playlist.__get__('state.seenArtists')).to.deep.equal([]);
 			done();
 		});
 
 		it('should reset sourceIndividual', function (done) {
-			revert = playlist.__set__({sourceIndividual: 'fhqwhagads'});
+			revert = playlist.__set__({state: {sourceIndividual: 'fhqwhagads'}});
 			playlist.clear();
-			expect(playlist.__get__('sourceIndividual')).to.be.null();
+			expect(playlist.__get__('state.sourceIndividual')).to.deep.equal({});
 			done();
 		});
 
 		it('should reset previousConnector', function (done) {
-			revert = playlist.__set__({previousConnector: {mid: 'fhqwhagads'}});
+			revert = playlist.__set__({state: {previousConnector: {mid: 'fhqwhagads'}}});
 			playlist.clear();
-			expect(playlist.__get__('previousConnector')).to.be.null();
+			expect(playlist.__get__('state.previousConnector')).to.deep.equal({});
 			done();
 		});
 	});
 
 	describe('setSource()', function () {
 		it('should set the source Individual', function (done) {
-			revert = playlist.__set__({sourceIndividual: 'jake'});
+			revert = playlist.__set__({state: {sourceIndividual: {mid: 'jake'}}});
 			playlist.setSource('joe');
-			expect(playlist.__get__('sourceIndividual')).to.equal('joe');
+			expect(playlist.__get__('state.sourceIndividual.mid')).to.equal('joe');
 			done();
 		});
 	});

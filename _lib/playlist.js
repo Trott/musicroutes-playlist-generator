@@ -5,49 +5,39 @@ var utils = require('./utils.js');
 var Promise = require('promise');
 var _ = require('lodash');
 
-var seenIndividuals = [];
-var seenTracks = [];
-var seenArtists = [];
-
-var sourceIndividual;
-var sourceIndividualRole;
-var renderedTrackDetails;
-
-var previousConnector;
-var notSeenTracks;
+var state = {
+	seenIndividuals: [],
+	seenTracks: [],
+	seenArtists: [],
+	previousConnector: {},
+	sourceIndividual: {}
+};
 
 exports.clear = function () {
-	seenIndividuals = [];
-	seenTracks = [];
-	seenArtists = [];
-	sourceIndividual = null;
-	previousConnector = null;
+	state.seenIndividuals = [];
+	state.seenTracks = [];
+	state.seenArtists = [];
+	state.sourceIndividual = {};
+	state.previousConnector = {};
 };
 
 exports.setSource = function (source) {
-	sourceIndividual = source;
+	state.sourceIndividual.mid = source;
 };
 
 exports.track = function (domElem, $) {
-	var individual = sourceIndividual;
-	previousConnector = previousConnector || {mid: sourceIndividual};
+	var individual = state.sourceIndividual.mid;
+	if (! state.previousConnector.mid) {
+		state.previousConnector = state.sourceIndividual;
+	}
 
 	var resultsElem = $(domElem);
 
 	var deadEnd = false;
 
 	var trackDetails;
+	var renderedTrackDetails;
 	var track;
-
-	var addToSeenArtists = function () {
-		if (!trackDetails) {
-			return Promise.reject(Error('No details for ' + track));
-		}
-
-		var theseArtistMids = _.map(trackDetails.artists, 'mid');
-		seenArtists = seenArtists.concat(_.difference(theseArtistMids, seenArtists));
-		return seenArtists;
-	};
 
 	var renderTrackDetails = function () {
 		var p = $('<p>').attr('class', 'track-details');
@@ -96,20 +86,20 @@ exports.track = function (domElem, $) {
 		// we want to render it as 'Janelle Monae'. Ditto for missing umlauts and whatnot.
 		// So just pull from trackDetails if it's there.
 
-		if (! previousConnector.name) {
-			var matching = _.where(trackDetails.artists, {mid: previousConnector.mid});
+		if (! state.previousConnector.name) {
+			var matching = _.where(trackDetails.artists, {mid: state.previousConnector.mid});
 			if (matching[0]) {
-				previousConnector.name = matching[0].name;
+				state.previousConnector.name = matching[0].name;
 			}
 		}
 
 		// If they are a contributor and not the artist, we have to go out and fetch their details.
 		// This will happen on the first track if the user searches for, say, 'berry oakley'.
-		if (! previousConnector.name) {
-			return routes.getArtistDetails(previousConnector.mid)
-			.then(function (value) {previousConnector.name = value.name;});
+		if (! state.previousConnector.name) {
+			return routes.getArtistDetails(state.previousConnector.mid)
+			.then(function (value) {state.previousConnector.name = value.name;});
 		}
-		return previousConnector.name;
+		return state.previousConnector.name;
 	};
 
 	var pickContributor = function (folks) {
@@ -118,21 +108,21 @@ exports.track = function (domElem, $) {
 		var contributors = _.union(myArtists, myContributors);
 		return new Promise(function (fulfill, reject) {
 			var contributor;
-			var notSeen = _.difference(contributors, seenIndividuals);
+			var notSeen = _.difference(contributors, state.seenIndividuals);
 			if (notSeen.length > 0) {
 				contributor = _.sample(notSeen);
-				seenIndividuals.push(contributor);
+				state.seenIndividuals.push(contributor);
 			} else {
-				contributor = _.sample(_.without(contributors, sourceIndividual));
+				contributor = _.sample(_.without(contributors, state.sourceIndividual.mid));
 			}
 
 			if (! contributor) {
 				contributor = contributors[0];
 			}
 
-			sourceIndividual = contributor;
-			sourceIndividualRole = _.reduce(folks.contributors, function (rv, value) {
-				if (value.mid === sourceIndividual) {
+			state.sourceIndividual.mid = contributor;
+			state.sourceIndividual.roles = _.reduce(folks.contributors, function (rv, value) {
+				if (value.mid === state.sourceIndividual.mid) {
 					return value.roles;
 				} else {
 					return rv;
@@ -153,25 +143,25 @@ exports.track = function (domElem, $) {
 	};
 
 	var renderConnector = function (details) {
-		var previous = $('<b>').append(renderNameOrMid(previousConnector));
+		var previous = $('<b>').append(renderNameOrMid(state.previousConnector));
 		var current;
 		
 		var p = $('<p>');
 
 		p.append(previous);
 
-		if (previousConnector.mid !== details.mid) {
+		if (state.previousConnector.mid !== details.mid) {
 			current = $('<b>').append(renderNameOrMid(details));
 			p.append(' recorded with ').append(current);
-			if (sourceIndividualRole.length) {
-				p.append(document.createTextNode(' (' + _.pluck(sourceIndividualRole, 'name').join(', ') + ')'));
+			if (state.sourceIndividual.roles.length) {
+				p.append(document.createTextNode(' (' + _.pluck(state.sourceIndividual.roles, 'name').join(', ') + ')'));
 			}
 			p.append(' on:');
 		} else {
 			p.append(' appeared on:');
 		}
 
-		previousConnector = details;
+		state.previousConnector = details;
 		return p;
 	};
 
@@ -179,7 +169,7 @@ exports.track = function (domElem, $) {
 
 	var pickATrack = function (tracks) {
 		deadEnd = false;
-		notSeenTracks = _.difference(tracks, seenTracks);
+		var notSeenTracks = _.difference(tracks, state.seenTracks);
 
 		// Promise returns nothing if a dead end, a track if a good one is found, else rejects
 		//    which basically means "try again"
@@ -196,7 +186,7 @@ exports.track = function (domElem, $) {
 			// Only accept this track if there's someone else associated with it...
 			// ...unless this is the very first track in which case, pick anything and
 			// get it in front of the user pronto.				
-			foundSomeoneElse = (contributorPool.length > 0 || seenTracks.length === 1);
+			foundSomeoneElse = (contributorPool.length > 0 || state.seenTracks.length === 1);
 
 			return Promise.resolve();
 		};
@@ -223,7 +213,7 @@ exports.track = function (domElem, $) {
 					deadEnd = true;
 					return Promise.reject();
 				}
-				seenTracks.push(track);
+				state.seenTracks.push(track);
 				notSeenTracks = _.pull(notSeenTracks, track);
 				return routes.getArtistsAndContributorsFromTracks([track]).then(validatePathOutFromTrack);
 			}
@@ -242,12 +232,12 @@ exports.track = function (domElem, $) {
 		trackPicked = true;
 		var promise = routes.getTrackDetails(track)
 			.then(function (details) {
-				trackDetails = details;
-				if (trackDetails) {
-					trackDetails.release = trackDetails.releases ? _.sample(trackDetails.releases) : '';
-				}
+				trackDetails = details || {};
+				trackDetails.release = _.sample(trackDetails.releases) || '';
+				return trackDetails;
 			})
-			.then(addToSeenArtists)
+			.then(function (trackDetails) { return _.pluck(trackDetails.artists, 'mid');})
+			.then(function (currentArtists) { state.seenArtists = state.seenArtists.concat(_.difference(currentArtists, state.seenArtists));})
 			.then(renderTrackDetails)
 			.then(function (details) { renderedTrackDetails = details; })
 			.then(previousConnectorDetails)
@@ -268,7 +258,7 @@ exports.track = function (domElem, $) {
 
 	var optionsNewArtistsOnly = {subquery: {
 		artist: [{
-			'mid|=': seenArtists,
+			'mid|=': state.seenArtists,
 			optional: 'forbidden'
 		}]
 	}};
@@ -276,7 +266,7 @@ exports.track = function (domElem, $) {
 	var tracksByUnseenArtists	= function () {
 		return new Promise(function (fulfill, reject) {
 			var promise;
-			if (seenArtists.length === 0) {
+			if (state.seenArtists.length === 0) {
 	 			// If this is the first track, get one by this artist if we can.
 	 			promise = routes.getTracksByArtists([individual]);
 	 		}  else {
@@ -312,7 +302,7 @@ exports.track = function (domElem, $) {
 		deadEnd = true;
 		var p = $('<p>')
 			.text('Playlist is at a dead end with ')
-			.append(utils.anchorFromMid($, previousConnector.mid, previousConnector.name))
+			.append(utils.anchorFromMid($, state.previousConnector.mid, state.previousConnector.name))
 			.append('.');
 		var msg = $('<paper-shadow>')
 			.addClass('error')
@@ -321,7 +311,7 @@ exports.track = function (domElem, $) {
 		return Promise.reject(msg);
 	};
 
-	seenIndividuals.push(sourceIndividual);
+	state.seenIndividuals.push(state.sourceIndividual.mid);
 
 	var promise = tracksByUnseenArtists()
 		.then(processTracks, tracksWithContributor)
