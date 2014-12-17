@@ -32,11 +32,13 @@ exports.track = function (domElem, $) {
 	}
 
 	var resultsElem = $(domElem);
+	var appendToResultsElem = function (elem) {
+		resultsElem.append(elem);
+	};
 
 	var deadEnd = false;
 
 	var trackDetails;
-	var renderedTrackDetails;
 	var track;
 
 	var renderTrackDetails = function () {
@@ -238,20 +240,20 @@ exports.track = function (domElem, $) {
 			})
 			.then(function (trackDetails) { return _.pluck(trackDetails.artists, 'mid');})
 			.then(function (currentArtists) { state.seenArtists = state.seenArtists.concat(_.difference(currentArtists, state.seenArtists));})
-			.then(renderTrackDetails)
-			.then(function (details) { renderedTrackDetails = details; })
 			.then(previousConnectorDetails)
 			.then(getContributors)
 			.then(pickContributor)
 			.then(routes.getArtistDetails)
 			.then(renderConnector)
-			.then(function (connector) { resultsElem.append(connector); resultsElem.append(renderedTrackDetails); })
+			.then(appendToResultsElem)
+			.then(renderTrackDetails)
+			.then(appendToResultsElem)
 			.then(function () { return trackDetails; })
 			.then(utils.searchForVideoFromTrackDetails)
 			.then(utils.extractVideoId)
 			.then(utils.getVideoEmbedCode)
 			.then(utils.wrapVideo)
-			.then(function (embedCode) { resultsElem.append($(embedCode)); });
+			.then(appendToResultsElem);
 
 		return promise;
 	};
@@ -264,18 +266,16 @@ exports.track = function (domElem, $) {
 	}};
 
 	var tracksByUnseenArtists	= function () {
-		return new Promise(function (fulfill, reject) {
-			var promise;
-			if (state.seenArtists.length === 0) {
-	 			// If this is the first track, get one by this artist if we can.
-	 			promise = routes.getTracksByArtists([individual]);
-	 		}  else {
-				// Otherwise, get one by an artist we haven't seen yet
-				promise = routes.getTracksWithContributors([individual], optionsNewArtistsOnly);
-			}
+		var promise;
+		if (state.seenArtists.length === 0) {
+ 			// If this is the first track, get one by this artist if we can.
+ 			promise = routes.getTracksByArtists([individual]);
+ 		}  else {
+			// Otherwise, get one by an artist we haven't seen yet
+			promise = routes.getTracksWithContributors([individual], optionsNewArtistsOnly);
+		}
 
-			return promise.then(pickATrack).then(fulfill, reject);
-		});
+		return promise.then(pickATrack);
 	};
 
 	// Look for any track with this contributor credited as a contributor regardless if we've seen the artist already.
@@ -283,7 +283,7 @@ exports.track = function (domElem, $) {
 		if (err) {
 			return Promise.reject(err);
 		}
-		return routes.getTracksWithContributors([individual], {}).then(pickATrack).then(Promise.resolve, Promise.reject);
+		return routes.getTracksWithContributors([individual], {}).then(pickATrack);
 	};
 
 	// Look for any tracks actually credited to this contributor as the main artist. We are desperate!
@@ -291,7 +291,7 @@ exports.track = function (domElem, $) {
 		if (err) {
 			return Promise.reject(err);
 		}
-		return routes.getTracksByArtists([individual]).then(pickATrack).then(Promise.resolve, Promise.reject);
+		return routes.getTracksByArtists([individual]).then(pickATrack);
 	};
 
 	// Give up if we haven't found anything we can use yet
