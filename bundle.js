@@ -1,7 +1,305 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({"/Users/richtrott/musicroutes-playlist-generator/.apikey":[function(require,module,exports){
 exports.key = "AIzaSyB3yM4RkyAqYVPAr6lQLfzp8H6yQrmmHCs";
 
-},{}],"/Users/richtrott/musicroutes-playlist-generator/_lib/routes.js":[function(require,module,exports){
+},{}],"/Users/richtrott/musicroutes-playlist-generator/_lib/playlist.js":[function(require,module,exports){
+/*global document*/
+/* global -Promise */
+var routes = require('./routes.js');
+var utils = require('./utils.js');
+var Promise = require('promise');
+var _ = require('lodash');
+
+var state = {
+	seenIndividuals: [],
+	seenTracks: [],
+	seenArtists: [],
+	previousConnector: {},
+	sourceIndividual: {}
+};
+
+exports.clear = function () {
+	state.seenIndividuals = [];
+	state.seenTracks = [];
+	state.seenArtists = [];
+	state.sourceIndividual = {};
+	state.previousConnector = {};
+};
+
+exports.setSource = function (source) {
+	state.sourceIndividual.mid = source;
+};
+
+exports.track = function (domElem, $) {
+	var individual = state.sourceIndividual.mid;
+	if (! state.previousConnector.mid) {
+		state.previousConnector = state.sourceIndividual;
+	}
+
+	var resultsElem = $(domElem);
+	var appendToResultsElem = function (elem) {
+		resultsElem.append(elem);
+	};
+
+	var deadEnd = false;
+
+	var trackDetails;
+	var track;
+
+	var renderTrackDetails = function () {
+		var p = $('<p>').attr('class', 'track-details');
+		p.append(utils.trackAnchor($, trackDetails));
+		p.append($('<br>'));
+		p.append(utils.artistAnchors($, trackDetails.artists));
+		p.append($('<br>'));
+		p.append(utils.releaseAnchor($, trackDetails.release));
+		return p;
+	};
+
+	var getContributors = function () {
+		return routes.getArtistsAndContributorsFromTracks([track]);
+	};
+
+	var previousConnectorDetails = function () {
+		// Get properly rendered name if we don't yet have one for the previous connector.
+		// Basically, if this is the first connection and the user entered 'janelle monae'
+		// we want to render it as 'Janelle Monae'. Ditto for missing umlauts and whatnot.
+		// So just pull from trackDetails if it's there.
+
+		if (! state.previousConnector.name) {
+			var matching = _.where(trackDetails.artists, {mid: state.previousConnector.mid});
+			if (matching[0]) {
+				state.previousConnector.name = matching[0].name;
+			}
+		}
+
+		// If they are a contributor and not the artist, we have to go out and fetch their details.
+		// This will happen on the first track if the user searches for, say, 'berry oakley'.
+		if (! state.previousConnector.name) {
+			return routes.getArtistDetails(state.previousConnector.mid)
+			.then(function (value) {state.previousConnector.name = value.name;});
+		}
+		return state.previousConnector.name;
+	};
+
+	var pickContributor = function (folks) {
+		var myArtists = _.pluck(folks.artists, 'mid'); 
+		var myContributors = _.pluck(folks.contributors, 'mid');
+		var contributors = _.union(myArtists, myContributors);
+		return new Promise(function (fulfill, reject) {
+			var contributor;
+			var notSeen = _.difference(contributors, state.seenIndividuals);
+			if (notSeen.length > 0) {
+				contributor = _.sample(notSeen);
+				state.seenIndividuals.push(contributor);
+			} else {
+				contributor = _.sample(_.without(contributors, state.sourceIndividual.mid));
+			}
+
+			if (! contributor) {
+				contributor = contributors[0];
+			}
+
+			state.sourceIndividual.mid = contributor;
+			state.sourceIndividual.roles = _.reduce(folks.contributors, function (rv, value) {
+				if (value.mid === state.sourceIndividual.mid) {
+					return value.roles;
+				} else {
+					return rv;
+				}
+			}, []);
+			return contributor ? fulfill(contributor) : reject(Error('No contributors for track'));
+		});
+	};
+
+	var renderNameOrMid = function (details) {
+		if (details.name) {
+			return utils.anchorFromMid($, details.mid, details.name);
+		}
+		if (details.mid) {
+			return utils.anchorFromMid($, details.mid);
+		}
+		return '';
+	};
+
+	var renderConnector = function (details) {
+		var previous = $('<b>').append(renderNameOrMid(state.previousConnector));
+		var current;
+		
+		var p = $('<p>');
+
+		p.append(previous);
+
+		if (state.previousConnector.mid !== details.mid) {
+			current = $('<b>').append(renderNameOrMid(details));
+			p.append(' recorded with ').append(current);
+			if (state.sourceIndividual.roles.length) {
+				p.append(document.createTextNode(' (' + _.pluck(state.sourceIndividual.roles, 'name').join(', ') + ')'));
+			}
+			p.append(' on:');
+		} else {
+			p.append(' appeared on:');
+		}
+
+		state.previousConnector = details;
+		return p;
+	};
+
+	var foundSomeoneElse;
+
+	var pickATrack = function (tracks) {
+		deadEnd = false;
+		var notSeenTracks = _.difference(tracks, state.seenTracks);
+
+		// Promise returns nothing if a dead end, a track if a good one is found, else rejects
+		//    which basically means "try again"
+		if (notSeenTracks.length === 0) {
+			deadEnd = true;
+			return Promise.reject();
+		}
+
+		var validatePathOutFromTrack = function (folks) {
+			var myArtists = _.pluck(folks.artists, 'mid'); 
+			var myContributors = _.pluck(folks.contributors, 'mid');
+			folks = _.union(myArtists, myContributors);
+			var contributorPool = _.difference(folks, [individual]);
+			// Only accept this track if there's someone else associated with it...
+			// ...unless this is the very first track in which case, pick anything and
+			// get it in front of the user pronto.				
+			foundSomeoneElse = (contributorPool.length > 0 || state.seenTracks.length === 1);
+
+			return Promise.resolve();
+		};
+
+		var promiseUntil = function(condition, action) {
+  		var loop = function() {
+      	if (condition()) {
+					return Promise.resolve();
+				}
+
+      	return action().then(loop).catch(Promise.reject);
+  		};
+
+	    // var promise = process.nextTick(loop);
+
+	    return loop();
+		};
+
+		return promiseUntil(
+			function() { return foundSomeoneElse || deadEnd; },
+			function() { 
+				track = _.sample(notSeenTracks);
+				if (!track) {
+					deadEnd = true;
+					return Promise.reject();
+				}
+				state.seenTracks.push(track);
+				notSeenTracks = _.pull(notSeenTracks, track);
+				return routes.getArtistsAndContributorsFromTracks([track]).then(validatePathOutFromTrack);
+			}
+		);
+	};
+
+	var trackPicked = false;
+
+	var processTracks = function () {
+		// If a previous step picked a track, just pass on through.
+		if (trackPicked) {
+			return Promise.resolve();
+		}
+
+		trackPicked = true;
+		var promise = routes.getTrackDetails(track)
+			.then(function (details) {
+				trackDetails = details || {};
+				trackDetails.mid = track;
+				trackDetails.release = _.sample(trackDetails.releases) || '';
+				return trackDetails;
+			})
+			.then(function (trackDetails) { return _.pluck(trackDetails.artists, 'mid');})
+			.then(function (currentArtists) { state.seenArtists = state.seenArtists.concat(_.difference(currentArtists, state.seenArtists));})
+			.then(previousConnectorDetails)
+			.then(getContributors)
+			.then(pickContributor)
+			.then(routes.getArtistDetails)
+			.then(renderConnector)
+			.then(appendToResultsElem)
+			.then(renderTrackDetails)
+			.then(appendToResultsElem)
+			.then(function () { return trackDetails; })
+			.then(utils.searchForVideoFromTrackDetails)
+			.then(utils.extractVideoId)
+			.then(utils.getVideoEmbedCode)
+			.then(utils.wrapVideo)
+			.then(appendToResultsElem);
+
+		return promise;
+	};
+
+	var tracksByUnseenArtists	= function () {
+		var promise;
+
+		var optionsNewArtistsOnly = {subquery: {
+			artist: [{
+				'mid|=': state.seenArtists,
+				optional: 'forbidden'
+			}]
+		}};
+
+		if (state.seenArtists.length === 0) {
+ 			// If this is the first track, get one by this artist if we can.
+ 			promise = routes.getTracksByArtists([individual]);
+ 		}  else {
+			// Otherwise, get one by an artist we haven't seen yet
+			promise = routes.getTracksWithContributors([individual], optionsNewArtistsOnly);
+		}
+
+		return promise.then(pickATrack);
+	};
+
+	// Look for any track with this contributor credited as a contributor regardless if we've seen the artist already.
+	var tracksWithContributor =	function (err) {
+		if (err) {
+			return Promise.reject(err);
+		}
+		return routes.getTracksWithContributors([individual], {}).then(pickATrack);
+	};
+
+	// Look for any tracks actually credited to this contributor as the main artist. We are desperate!
+	var tracksWithArtist = function (err) {
+		if (err) {
+			return Promise.reject(err);
+		}
+		return routes.getTracksByArtists([individual]).then(pickATrack);
+	};
+
+	// Give up if we haven't found anything we can use yet
+	var giveUpIfNoTracks = function (err) {
+		if (err) {
+			return Promise.reject(err);
+		}
+		deadEnd = true;
+		var p = $('<p>')
+			.text('Playlist is at a dead end with ')
+			.append(utils.anchorFromMid($, state.previousConnector.mid, state.previousConnector.name))
+			.append('.');
+		var msg = $('<paper-shadow>')
+			.addClass('error')
+			.append(p);
+		msg.deadEnd = true;
+		return Promise.reject(msg);
+	};
+
+	state.seenIndividuals.push(state.sourceIndividual.mid);
+
+	var promise = tracksByUnseenArtists()
+		.then(processTracks, tracksWithContributor)
+		.then(processTracks, tracksWithContributor)
+		.then(processTracks, tracksWithArtist)
+		.then(processTracks, giveUpIfNoTracks);
+
+	return promise;
+};
+},{"./routes.js":"/Users/richtrott/musicroutes-playlist-generator/_lib/routes.js","./utils.js":"/Users/richtrott/musicroutes-playlist-generator/_lib/utils.js","lodash":"/Users/richtrott/musicroutes-playlist-generator/node_modules/lodash/dist/lodash.js","promise":"/Users/richtrott/musicroutes-playlist-generator/node_modules/promise/index.js"}],"/Users/richtrott/musicroutes-playlist-generator/_lib/routes.js":[function(require,module,exports){
 /* global -Promise */
 var freebase = require('mqlread');
 var Promise = require('promise');
@@ -200,7 +498,95 @@ exports.getTrackDetails = function (mid) {
     freebase.mqlread(query, options, cleanup);
   });
 };
-},{"../.apikey":"/Users/richtrott/musicroutes-playlist-generator/.apikey","lodash":"/Users/richtrott/musicroutes-playlist-generator/node_modules/lodash/dist/lodash.js","mqlread":"/Users/richtrott/musicroutes-playlist-generator/node_modules/mqlread/index.js","promise":"/Users/richtrott/musicroutes-playlist-generator/node_modules/promise/index.js"}],"/Users/richtrott/musicroutes-playlist-generator/_lib/videos.js":[function(require,module,exports){
+},{"../.apikey":"/Users/richtrott/musicroutes-playlist-generator/.apikey","lodash":"/Users/richtrott/musicroutes-playlist-generator/node_modules/lodash/dist/lodash.js","mqlread":"/Users/richtrott/musicroutes-playlist-generator/node_modules/mqlread/index.js","promise":"/Users/richtrott/musicroutes-playlist-generator/node_modules/promise/index.js"}],"/Users/richtrott/musicroutes-playlist-generator/_lib/utils.js":[function(require,module,exports){
+var videos = require('./videos.js');
+var _ = require('lodash');
+
+var anchorFromMid = exports.anchorFromMid = function ($, mid, text) {
+	if (! mid) {
+		return $();
+	}
+	text = text || mid;
+	return $('<a>')
+		.attr('href', 'http://freebase.com' + mid)
+		.attr('target', '_blank')
+		.text(text);
+};
+
+exports.trackAnchor = function ($, track) {
+	if (track.name) {
+		return anchorFromMid($, track.mid, '"' + track.name + '"');
+	}
+	return anchorFromMid($, track.mid);
+};
+
+exports.artistAnchors = function ($, artists) {
+	var container = $('<div>');
+	var needsAmpersand = false;
+	_.forEach(artists, function (value) {
+		if (needsAmpersand) {
+			container.append($('<span>').text(' & '));
+		}
+		container.append(anchorFromMid($, value.mid, value.name));
+		needsAmpersand = true;
+	});
+	return container.children();
+};
+
+exports.releaseAnchor = function ($, release) {
+	if (_.result(release, 'name')) {
+		return $('<i>').append(anchorFromMid($, release.mid, release.name));
+	}
+	
+	return anchorFromMid($, _.result(release, 'mid'));
+};
+
+exports.searchForVideoFromTrackDetails = function (trackDetails) {
+	var q = '';
+
+	var track = _.result(trackDetails, 'name');
+	if (track) {
+		q = '"' + track + '" ';
+	}
+
+	var artists = _.result(trackDetails, 'artists');
+	q = q + _.reduce(artists, function (rv, artist) { return artist.name ? rv + '"' + artist.name + '" ' : rv;}, '');
+
+	var release = _.result(trackDetails, 'release');
+	if (release) {
+		var releaseName = _.result(release, 'name');
+		if (releaseName) {
+			q = q + '"' + releaseName + '"';
+		}
+	}
+
+	return videos.search(q);
+};
+
+exports.extractVideoId = function (data) {
+	var items = _.result(data, 'items');
+	var first = _.first(items);
+	return _.result(first, 'videoId');
+};
+
+exports.getVideoEmbedCode = function (videoId) {
+	return videoId && videos.embed(videoId);
+};
+
+exports.wrapVideo = function (data) {
+	var items = _.result(data, 'items');
+	var first = _.first(items);
+	var iframe = _.result(first, 'embedHtml');
+	// Yes, we're trusting YouTube's API not to p0wn us.
+	var embedCode = '';
+	if (iframe) {
+		embedCode = '<div class="video-outer-wrapper"><div class="video-inner-wrapper">' +
+			iframe +
+			'</div></div>';
+	}
+	return embedCode;
+};
+},{"./videos.js":"/Users/richtrott/musicroutes-playlist-generator/_lib/videos.js","lodash":"/Users/richtrott/musicroutes-playlist-generator/node_modules/lodash/dist/lodash.js"}],"/Users/richtrott/musicroutes-playlist-generator/_lib/videos.js":[function(require,module,exports){
 /* global -Promise */
 var hyperquest = require('hyperquest');
 var querystring = require('querystring');
@@ -22031,14 +22417,11 @@ function extend() {
 
 },{}],"/Users/richtrott/musicroutes-playlist-generator/src.js":[function(require,module,exports){
 /*global document*/
-/*global -Promise*/
 /*global window*/
 var routes = require('./_lib/routes.js');
-var videos = require('./_lib/videos.js');
+var playlist = require('./_lib/playlist.js');
 var async = require('async');
-var Promise = require('promise');
 var $ = require('jquery');
-var _ = require('lodash');
 var url = require('url');
 var querystring = require('querystring');
 
@@ -22054,15 +22437,6 @@ var progress = $('#progress');
 var formInstructions = $('.form-instructions');
 
 var sourceIndividual;
-var sourceIndividualRole;
-var seenIndividuals = [];
-var seenTracks = [];
-var seenArtists = [];
-
-var previousConnector;
-var renderedTrackDetails;
-
-var deadEnd = false;
 
 var error = function (err) {
 	if (err) {
@@ -22070,320 +22444,21 @@ var error = function (err) {
 			var p = $('<p>').text(err.message);
 			resultsElem.append($('<paper-shadow>').addClass('error').append(p));
 			console.log(err.stack);
-		} else if(err instanceof $) {
+		} else if (err instanceof $) {
 			resultsElem.append(err);
 		}
 		progress.removeAttr('active');
 		resetButtons.css('visibility', 'visible');
 		startOverButtons.css('visibility', 'visible');
-		if (! deadEnd) {
+		if (! err.deadEnd) {
 			continueButtons.css('visibility', 'visible');
 		}
 	}
 };
 
-var generatePlaylist = function (individual, done) {
-	var anchorFromMid = function (mid, text) {
-		text = text || mid;
-		return $('<a>')
-			.attr('href', 'http://freebase.com' + mid)
-			.attr('target', '_blank')
-			.text(text);
-	};
-
-	var processTracks = function (tracks) {
-		var track;
-		var trackDetails;
-		var notSeenTracks = _.difference(tracks, seenTracks);
-
-		if (notSeenTracks.length === 0) {
-			nextIndex = nextIndex +1;
-			next[nextIndex]();
-			return;
-		}
-
-		var addToSeenArtists = function () {
-			return new Promise(function (fulfill, reject) {
-				if (!trackDetails) {
-					return reject(Error('No details for ' + track));
-				}
-		
-				var theseArtistMids = _.map(trackDetails.artists, 'mid');
-				seenArtists = seenArtists.concat(_.difference(theseArtistMids, seenArtists));
-				fulfill();
-			});
-		};
-
-		var renderTrackDetails = function () {
-			var p = $('<p>').attr('class', 'track-details');
-
-			if (trackDetails.name) {
-				p.append(anchorFromMid(track, '"' + trackDetails.name + '"'));
-			} else {
-				p.append(anchorFromMid(track));
-			}
-
-			p.append($('<br>'));
-
-			var needsAmpersand = false;
-			_.forEach(trackDetails.artists, function (value) {
-				if (needsAmpersand) {
-					p.append(document.createTextNode(' & '));
-				}
-				if (value.name) {
-					p.append(anchorFromMid(value.mid, value.name));
-				} else {
-					p.append(anchorFromMid(value.mid));
-				}
-				needsAmpersand = true;
-			});
-
-			p.append($('<br>'));
-
-			if (trackDetails.release.name) {
-				p.append($('<i>').append(anchorFromMid(trackDetails.release.mid, trackDetails.release.name)));
-			} else {
-				if (trackDetails.release.mid) {
-					p.append(anchorFromMid(trackDetails.release.mid));
-				}
-			}
-
-			return p;
-		};
-
-		var searchForVideo = function () {
-			var q = '';
-			if (trackDetails.name) {
-				q = '"' + trackDetails.name + '" ';
-			}
-			q = q + _.reduce(trackDetails.artists, function (rv, artist) { return artist.name ? rv + '"' + artist.name + '" ' : rv;}, '');
-			if (trackDetails.release.name) {
-				q = q + '"' + trackDetails.release.name + '"';
-			}
-
-			return videos.search(q);
-		};
-
-		var extractVideoId = function (data) {
-			return _.result(data.items[0], 'videoId');
-		};
-
-		var getVideoEmbedCode = function (videoId) {
-			return videoId && videos.embed(videoId);
-		};
-
-		var embedVideoInDom = function (data) {
-			if (data && data.items && data.items[0] && data.items[0].embedHtml) {
-				var outer = $('<div class="video-outer-wrapper">');
-				var inner = $('<div class="video-inner-wrapper">');
-				// Yes, we're trusting YouTube's API not to p0wn us.
-				inner.html(data.items[0].embedHtml);
-				resultsElem.append(outer.append(inner));
-			}
-		};
-
-		var getContributors = function () {
-			return routes.getArtistsAndContributorsFromTracks([track]);
-		};
-
-		var previousConnectorDetails = function () {
-			// Get properly rendered name if we don't yet have one for the previous connector.
-			// Basically, if this is the first connection and the user entered 'janelle monae'
-			// we want to render it as 'Janelle Monae'. Ditto for missing umlauts and whatnot.
-			// So just pull from trackDetails if it's there.
-
-			if (! previousConnector.name) {
-				var matching = _.where(trackDetails.artists, {mid: previousConnector.mid});
-				if (matching[0]) {
-					previousConnector.name = matching[0].name;
-				}
-			}
-
-			// If they are a contributor and not the artist, we have to go out and fetch their details.
-			// This will happen on the first track if the user searches for, say, 'berry oakley'.
-			if (! previousConnector.name) {
-				return routes.getArtistDetails(previousConnector.mid)
-					.then(function (value) {previousConnector.name = value.name;});
-			}
-			return previousConnector.name;
-		};
-
-		var pickContributor = function (folks) {
-			var myArtists = _.pluck(folks.artists, 'mid'); 
-			var myContributors = _.pluck(folks.contributors, 'mid');
-			var contributors = _.union(myArtists, myContributors);
-			return new Promise(function (fulfill, reject) {
-				var contributor;
-				var notSeen = _.difference(contributors, seenIndividuals);
-				if (notSeen.length > 0) {
-					contributor = _.sample(notSeen);
-					seenIndividuals.push(contributor);
-				} else {
-					contributor = _.sample(_.without(contributors, sourceIndividual));
-				}
-
-				if (! contributor) {
-					contributor = contributors[0];
-				}
-
-				sourceIndividual = contributor;
-				sourceIndividualRole = _.reduce(folks.contributors, function (rv, value) {
-					if (value.mid === sourceIndividual) {
-						return value.roles;
-					} else {
-						return rv;
-					}
-				}, []);
-				return contributor ? fulfill(contributor) : reject(Error('No contributors for track'));
-			});
-		};
-
-		var renderNameOrMid = function (details) {
-			if (details.name) {
-				return anchorFromMid(details.mid, details.name);
-			}
-			if (details.mid) {
-				return anchorFromMid(details.mid);
-			}
-			return '';
-		};
-
-		var renderConnector = function (details) {
-			var previous = $('<b>').append(renderNameOrMid(previousConnector));
-			var current;
-			
-			var p = $('<p>');
-
-			p.append(previous);
-
-			if (previousConnector.mid !== details.mid) {
-				current = $('<b>').append(renderNameOrMid(details));
-				p.append(' recorded with ').append(current);
-				if (sourceIndividualRole.length) {
-					p.append(document.createTextNode(' (' + _.pluck(sourceIndividualRole, 'name').join(', ') + ')'));
-				}
-				p.append(' on:');
-			} else {
-				p.append(' appeared on:');
-			}
-
-			previousConnector = details;
-			return p;
-		};
-
-		var finished = function () {
-			done(null);
-		};
-
-		var foundSomeoneElse;
-		deadEnd = false;
-
-		var pickATrack = function () {
-			return new Promise(function (fulfill, reject) {
-				async.until(
-					function () {
-						return foundSomeoneElse || deadEnd;
-					},
-					function (next) {
-						if (notSeenTracks.length === 0) {
-							deadEnd = true;
-							reject(Error('Dead end! Bummer. To try again, use the Start Over button above the playlist!'));
-							return next();
-						}
-						track = _.sample(notSeenTracks);
-						seenTracks.push(track);
-						notSeenTracks = _.pull(notSeenTracks, track);
-						routes.getArtistsAndContributorsFromTracks([track])
-						.then(function (folks) {
-							var myArtists = _.pluck(folks.artists, 'mid'); 
-							var myContributors = _.pluck(folks.contributors, 'mid');
-							folks = _.union(myArtists, myContributors);
-							var contributorPool = _.difference(folks, [individual]);
-							foundSomeoneElse = (contributorPool.length > 0);
-							// Only accept this track if there's someone else associated with it...
-							// ...unless this is the very first track in which case, pick anything and
-							// get it in front of the user pronto.
-							if (foundSomeoneElse || seenTracks.length === 1) {
-								return fulfill(track);
-							}
-							next();
-						}, error);
-					},
-					error
-				);
-			});
-		};
-
-		pickATrack()
-		.then(routes.getTrackDetails)
-		.then(function (details) {
-			trackDetails = details;
-			trackDetails.release = trackDetails && trackDetails.releases ? _.sample(trackDetails.releases) : '';
-		})
-		.then(addToSeenArtists)
-		.then(renderTrackDetails)
-		.then(function (details) { renderedTrackDetails = details; })
-		.then(previousConnectorDetails)
-		.then(getContributors)
-		.then(pickContributor)
-		.then(routes.getArtistDetails)
-		.then(renderConnector)
-		.then(function (connector) { resultsElem.append(connector); resultsElem.append(renderedTrackDetails); })
-		.then(searchForVideo)
-		.then(extractVideoId)
-		.then(getVideoEmbedCode)
-		.then(embedVideoInDom)
-		.then(finished, error);
-	};
-
-	var optionsNewArtistsOnly = {subquery: {
-		artist: [{
-			'mid|=': seenArtists,
-			optional: 'forbidden'
-		}]
-	}};
-
-	// next[nextIndex] = what function to invoke if the current one doesn't find a track
-	var nextIndex = 0;
-	var next = [
-		function () {
-			if (seenArtists.length === 0) {
-				// If this is the first track, get one by this artist if we can.
-				routes.getTracksByArtists([individual]).then(processTracks, error);
-			} else {
-				// Otherwise, get one by an artist we haven't seen yet
-				routes.getTracksWithContributors([individual], optionsNewArtistsOnly).then(processTracks, error);
-			}
-		},
-		// Look for any track with this contributor credited as a contributor regardless if we've seen the artist already.
-		function () {
-			routes.getTracksWithContributors([individual], {}).then(processTracks, error);
-		},
-		// Look for any tracks actually credited to this contributor as the main artist. We are desperate!
-		function () {
-			routes.getTracksByArtists([individual]).then(processTracks, error);
-		},
-		// Give up
-		function () {
-			deadEnd = true;
-			var p = $('<p>')
-				.text('Could not find any unseen tracks for ')
-				.append(anchorFromMid(previousConnector.mid, previousConnector.name))
-				.append('.');
-			var msg = $('<paper-shadow>')
-				.addClass('error')
-				.append(p);
-			error(msg);
-		}
-	];
-
-	// Kick it off
-	next[nextIndex]();
-};
-
 var go = function () {
 	// If lookupUserInput() didn't find an individual, don't do anything.
-	if (seenIndividuals.length === 0) {
+	if (!sourceIndividual) {
 		return;
 	}
 	continueButtons.css('visibility', 'hidden');
@@ -22397,7 +22472,7 @@ var go = function () {
 		},
 		function (next) {
 			loopCount = loopCount + 1;
-			generatePlaylist(sourceIndividual, next);
+			playlist.track(resultsElem, $).then(next, next);
 		},
 		function (err) {
 			error(err);
@@ -22423,9 +22498,7 @@ var resetForm = function () {
 };
 
 var clearRoute = function () {
-	seenIndividuals = [];
-	seenTracks = [];
-	seenArtists = [];
+	playlist.clear();
 	resultsElem.empty();
 };
 
@@ -22462,8 +22535,7 @@ var formHandler = function (evt) {
 			resetForm();
 			return;
 		}
-		seenIndividuals.push(sourceIndividual);
-		previousConnector = {mid: sourceIndividual};
+		playlist.setSource(sourceIndividual);
 	};
 
 	routes.getMids(startingPoint, '/music/artist').then(lookupUserInput).then(go).catch(error);
@@ -22482,7 +22554,7 @@ $(document).ready(function () {
 	}
 });
 
-},{"./_lib/routes.js":"/Users/richtrott/musicroutes-playlist-generator/_lib/routes.js","./_lib/videos.js":"/Users/richtrott/musicroutes-playlist-generator/_lib/videos.js","async":"/Users/richtrott/musicroutes-playlist-generator/node_modules/async/lib/async.js","jquery":"/Users/richtrott/musicroutes-playlist-generator/node_modules/jquery/dist/jquery.js","lodash":"/Users/richtrott/musicroutes-playlist-generator/node_modules/lodash/dist/lodash.js","promise":"/Users/richtrott/musicroutes-playlist-generator/node_modules/promise/index.js","querystring":"/usr/local/lib/node_modules/watchify/node_modules/browserify/node_modules/querystring-es3/index.js","url":"/usr/local/lib/node_modules/watchify/node_modules/browserify/node_modules/url/url.js"}],"/usr/local/lib/node_modules/watchify/node_modules/browserify/node_modules/browser-resolve/empty.js":[function(require,module,exports){
+},{"./_lib/playlist.js":"/Users/richtrott/musicroutes-playlist-generator/_lib/playlist.js","./_lib/routes.js":"/Users/richtrott/musicroutes-playlist-generator/_lib/routes.js","async":"/Users/richtrott/musicroutes-playlist-generator/node_modules/async/lib/async.js","jquery":"/Users/richtrott/musicroutes-playlist-generator/node_modules/jquery/dist/jquery.js","querystring":"/usr/local/lib/node_modules/watchify/node_modules/browserify/node_modules/querystring-es3/index.js","url":"/usr/local/lib/node_modules/watchify/node_modules/browserify/node_modules/url/url.js"}],"/usr/local/lib/node_modules/watchify/node_modules/browserify/node_modules/browser-resolve/empty.js":[function(require,module,exports){
 
 },{}],"/usr/local/lib/node_modules/watchify/node_modules/browserify/node_modules/buffer/index.js":[function(require,module,exports){
 /*!
