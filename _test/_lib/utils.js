@@ -15,10 +15,17 @@ var it = lab.test;
 var $ = require('cheerio');
 
 describe('exports', function () {
-	utils.__set__({videos: {
-		search: function (q) { return q; },
-		embed: function (videoId) { return videoId; }
-	}});
+	utils.__set__({
+		routes: {
+			getArtistDetails: function () {
+				return {then: function (cb) { cb({name: 'Strong Bad'}); }};
+			}
+		},
+		videos: {
+			search: function (q) { return q; },
+			embed: function (videoId) { return videoId; }
+		}
+	});
 
 	describe('anchorFromMid()', function () {
 		it('should reutrn an anchor (<a>) element', function (done) {
@@ -110,6 +117,63 @@ describe('exports', function () {
 		it('should return empty element if no mid', function (done) {
 			var rv = utils.releaseAnchor($);
 			expect(rv).to.deep.equal($());
+			done();
+		});
+	});
+
+	describe('fomatPreviousConnector()', function () {
+		it('should do nothing if there is already a previousConnector.name', function (done) {
+			var state = {previousConnector: {name: 'fhqwhagads'}};
+			utils.formatPreviousConnectorName(state);
+			expect(state.previousConnector.name).to.equal('fhqwhagads');
+			done();
+		});
+
+		it('should use the artist name if the mid matches', function (done) {
+			var state = {previousConnector: {mid: '/fhqwhagads'}, trackDetails: {artists: [{mid: '/fhqwhagads', name: 'Strong Bad'}]}};
+			utils.formatPreviousConnectorName(state);
+			expect(state.previousConnector.name).to.equal('Strong Bad');
+			done();
+		});
+
+		it('should query Freebase for the connector details if not mid is not in artists', function (done) {
+			var state = {previousConnector: {mid: '/fhqwhagads'}, trackDetails: {artists:[]}};
+			utils.formatPreviousConnectorName(state);
+			expect(state.previousConnector.name).to.equal('Strong Bad');
+			done();
+		});
+	});
+
+	describe('mergeArtistsAndContributors()', function () {
+		it('should return an array of de-duplicated mids', function (done) {
+			var artists = [{mid: '/fhqwhagads'}, {mid: '/jake'}];
+			var contributors = [{mid: '/fhqwhagads'}, {mid: '/joe'}];
+			var rv = utils.mergeArtistsAndContributors(artists, contributors);
+
+			expect(rv.length).to.equal(3);
+			expect(rv).to.contain('/fhqwhagads');
+			expect(rv).to.contain('/jake');
+			expect(rv).to.contain('/joe');
+			done();
+		});
+	});
+
+	describe('pickContributor()', function () {
+		it('should return a candidate from the new candidate pool', function (done) {
+			var rv = utils.pickContributor(['/fhqwhagads'], ['/fhqwhagads', '/jake', '/joe'], '/jake');
+			expect(rv).to.equal('/fhqwhagads');
+			done();
+		});
+
+		it('should return a candidate from the all-candidates pool excluding source individual if no new candidates', function (done) {
+			var rv = utils.pickContributor([], ['/fhqwhagads', '/jake'], '/jake');
+			expect(rv).to.equal('/fhqwhagads');
+			done();
+		});
+
+		it('should return the source individual if there is not other option', function (done) {
+			var rv = utils.pickContributor([], ['/fhqwhagads'], '/fhqwhagads');
+			expect(rv).to.equal('/fhqwhagads');
 			done();
 		});
 	});
