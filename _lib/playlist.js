@@ -60,19 +60,16 @@ exports.track = function (domElem, $) {
 		var notSeen = _.difference(contributors, state.seenIndividuals);
 		var contributor = utils.pickContributor(notSeen, contributors, state.sourceIndividual.mid);
 
-		var sourceDetails = _.find(folks.contributors, {mid: state.sourceIndividual.mid});
-		state.sourceIndividual.roles = _.result(sourceDetails, 'roles');
+		state.sourceIndividual = _.find(folks.contributors, {mid: contributor});
+		if (!state.sourceIndividual) {
+			state.sourceIndividual = _.find(folks.artists, {mid: contributor});
+		}
+
 		return contributor;
 	};
 
 	var renderNameOrMid = function (details) {
-		if (details.name) {
-			return utils.anchorFromMid($, details.mid, details.name);
-		}
-		if (details.mid) {
-			return utils.anchorFromMid($, details.mid);
-		}
-		return '';
+		return utils.anchorFromMid($, details.mid, details.name);
 	};
 
 	var renderConnector = function (details) {
