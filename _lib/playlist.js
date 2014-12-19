@@ -60,10 +60,9 @@ exports.track = function (domElem, $) {
 		var notSeen = _.difference(contributors, state.seenIndividuals);
 		var contributor = utils.pickContributor(notSeen, contributors, state.sourceIndividual.mid);
 
-		state.sourceIndividual = _.find(folks.contributors, {mid: contributor});
-		if (!state.sourceIndividual) {
-			state.sourceIndividual = _.find(folks.artists, {mid: contributor});
-		}
+		var allFolksDetails = folks.contributors.concat(folks.artists); // Do contributors first because they have roles
+
+		state.sourceIndividual = _.find(allFolksDetails, {mid: contributor});
 
 		return contributor;
 	};
@@ -73,13 +72,14 @@ exports.track = function (domElem, $) {
 	};
 
 	var renderConnector = function (details) {
-		var previous = $('<b>').append(renderNameOrMid(state.previousConnector));
+		var previous;
 		var current;
-		
+
 		var p = $('<p>');
 
+		previous = $('<b>').append(renderNameOrMid(state.previousConnector));
 		p.append(previous);
-
+		
 		if (state.previousConnector.mid !== details.mid) {
 			current = $('<b>').append(renderNameOrMid(details));
 			p.append(' recorded with ').append(current);
