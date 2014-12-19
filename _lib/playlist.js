@@ -57,20 +57,11 @@ exports.track = function (domElem, $) {
 
 	var pickContributor = function (folks) {
 		var contributors = utils.mergeArtistsAndContributors(folks.artists, folks.contributors);
-
 		var notSeen = _.difference(contributors, state.seenIndividuals);
-		
 		var contributor = utils.pickContributor(notSeen, contributors, state.sourceIndividual.mid);
 
-		state.seenIndividuals = _.union(state.seenIndividuals, [contributor]);
-
-		state.sourceIndividual.mid = contributor;
-		state.sourceIndividual.roles = _.reduce(folks.contributors, function (rv, value) {
-			if (value.mid === state.sourceIndividual.mid) {
-				return value.roles;
-			} 
-			return rv;
-		}, []);
+		var sourceDetails = _.find(folks.contributors, {mid: state.sourceIndividual.mid});
+		state.sourceIndividual.roles = _.result(sourceDetails, 'roles');
 		return contributor || Promise.reject(Error('No contributors for track'));
 	};
 
@@ -95,7 +86,7 @@ exports.track = function (domElem, $) {
 		if (state.previousConnector.mid !== details.mid) {
 			current = $('<b>').append(renderNameOrMid(details));
 			p.append(' recorded with ').append(current);
-			if (state.sourceIndividual.roles.length) {
+			if (state.sourceIndividual.roles) {
 				p.append(document.createTextNode(' (' + _.pluck(state.sourceIndividual.roles, 'name').join(', ') + ')'));
 			}
 			p.append(' on:');
