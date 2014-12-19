@@ -2,7 +2,6 @@
 exports.key = "AIzaSyB3yM4RkyAqYVPAr6lQLfzp8H6yQrmmHCs";
 
 },{}],"/Users/richtrott/musicroutes-playlist-generator/_lib/playlist.js":[function(require,module,exports){
-/*global document*/
 /* global -Promise */
 var routes = require('./routes.js');
 var utils = require('./utils.js');
@@ -71,34 +70,6 @@ exports.track = function (domElem, $) {
 		return contributor;
 	};
 
-	var renderNameOrMid = function (details) {
-		return utils.anchorFromMid($, details.mid, details.name);
-	};
-
-	var renderConnector = function (details) {
-		var previous;
-		var current;
-
-		var p = $('<p>');
-
-		previous = $('<b>').append(renderNameOrMid(state.previousConnector));
-		p.append(previous);
-		
-		if (state.previousConnector.mid !== details.mid) {
-			current = $('<b>').append(renderNameOrMid(details));
-			p.append(' recorded with ').append(current);
-			if (state.sourceIndividual.roles) {
-				p.append(document.createTextNode(' (' + _.pluck(state.sourceIndividual.roles, 'name').join(', ') + ')'));
-			}
-			p.append(' on:');
-		} else {
-			p.append(' appeared on:');
-		}
-
-		state.previousConnector = details;
-		return p;
-	};
-
 	var foundSomeoneElse;
 
 	var pickATrack = function (tracks) {
@@ -163,6 +134,8 @@ exports.track = function (domElem, $) {
 		}
 
 		trackPicked = true;
+
+
 		var promise = routes.getTrackDetails(track)
 			.then(function (details) {
 				state.trackDetails = details || {};
@@ -179,7 +152,7 @@ exports.track = function (domElem, $) {
 			.then(getContributors)
 			.then(pickContributor)
 			.then(routes.getArtistDetails)
-			.then(renderConnector)
+			.then(function (details) { return utils.renderConnector($, details, state); })
 			.then(appendToResultsElem)
 			.then(renderTrackDetails)
 			.then(appendToResultsElem)
@@ -533,6 +506,34 @@ exports.pickContributor = function (newCandidates, allCandidates, sourceIndividu
 			return _.sample(newCandidates);
 	} 
 	return _.sample(_.without(allCandidates, sourceIndividual)) || sourceIndividual;
+};
+
+exports.renderConnector = function ($, details, state) {
+	var previous;
+	var current;
+
+	var renderNameOrMid = function (details) {
+		return anchorFromMid($, details.mid, details.name);
+	};
+
+	var p = $('<p>');
+
+	previous = $('<b>').append(renderNameOrMid(state.previousConnector));
+	p.append(previous);
+	
+	if (state.previousConnector.mid !== details.mid) {
+		current = $('<b>').append(renderNameOrMid(details));
+		p.append(' recorded with ').append(current);
+		if (state.sourceIndividual.roles) {
+			p.append($('<span>').text(' (' + _.pluck(state.sourceIndividual.roles, 'name').join(', ') + ')'));
+		}
+		p.append(' on:');
+	} else {
+		p.append(' appeared on:');
+	}
+
+	state.previousConnector = details;
+	return p;
 };
 
 exports.searchForVideoFromTrackDetails = function (trackDetails) {

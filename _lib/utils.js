@@ -76,6 +76,34 @@ exports.pickContributor = function (newCandidates, allCandidates, sourceIndividu
 	return _.sample(_.without(allCandidates, sourceIndividual)) || sourceIndividual;
 };
 
+exports.renderConnector = function ($, details, state) {
+	var previous;
+	var current;
+
+	var renderNameOrMid = function (details) {
+		return anchorFromMid($, details.mid, details.name);
+	};
+
+	var p = $('<p>');
+
+	previous = $('<b>').append(renderNameOrMid(state.previousConnector));
+	p.append(previous);
+	
+	if (state.previousConnector.mid !== details.mid) {
+		current = $('<b>').append(renderNameOrMid(details));
+		p.append(' recorded with ').append(current);
+		if (state.sourceIndividual.roles) {
+			p.append($('<span>').text(' (' + _.pluck(state.sourceIndividual.roles, 'name').join(', ') + ')'));
+		}
+		p.append(' on:');
+	} else {
+		p.append(' appeared on:');
+	}
+
+	state.previousConnector = details;
+	return p;
+};
+
 exports.searchForVideoFromTrackDetails = function (trackDetails) {
 	var q = '';
 

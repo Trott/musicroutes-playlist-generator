@@ -178,6 +178,35 @@ describe('exports', function () {
 		});
 	});
 
+	describe('renderConnector()', function () {
+		it('should render name and anchor just once when mids match', function (done) {
+			var details = {mid: '/fhqwhagads', name: 'jake'};
+			var state = { previousConnector: {mid: '/fhqwhagads', name: 'joe'}};
+
+			var connector = utils.renderConnector($, details, state);
+			expect(connector.html()).to.equal('<b><a href="http://freebase.com/fhqwhagads" target="_blank">joe</a></b> appeared on:');
+			done();
+		});
+
+		it('should render name and anchor for each entity when mids are different', function (done) {
+			var details = {mid: '/fhqwhagads', name: 'joe'};
+			var state = { previousConnector: {mid: '/lorenzmagazineman', name: 'jake'}, sourceIndividual: {}};
+
+			var connector = utils.renderConnector($, details, state);
+			expect(connector.html()).to.equal('<b><a href="http://freebase.com/lorenzmagazineman" target="_blank">jake</a></b> recorded with <b><a href="http://freebase.com/fhqwhagads" target="_blank">joe</a></b> on:');
+			done();
+		});
+
+		it('should render roles from sourceIndividual if present', function (done) {
+			var details = {mid: '/fhqwhagads', name: 'joe'};
+			var state = { previousConnector: {mid: '/lorenzmagazineman', name: 'jake'}, sourceIndividual: {roles: [{name: 'jocking'}]}};
+
+			var connector = utils.renderConnector($, details, state);
+			expect(connector.html()).to.equal('<b><a href="http://freebase.com/lorenzmagazineman" target="_blank">jake</a></b> recorded with <b><a href="http://freebase.com/fhqwhagads" target="_blank">joe</a></b><span> (jocking)</span> on:');
+			done();
+		});
+	});
+
 	describe('searchForVideoFromTrackDetails()', function () {
 		it('should assemble trackDetails with each entity surrounded by quotation marks', function (done) {
 			var trackDetails = {
