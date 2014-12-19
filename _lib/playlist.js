@@ -62,7 +62,7 @@ exports.track = function (domElem, $) {
 
 		var sourceDetails = _.find(folks.contributors, {mid: state.sourceIndividual.mid});
 		state.sourceIndividual.roles = _.result(sourceDetails, 'roles');
-		return contributor || Promise.reject(Error('No contributors for track'));
+		return contributor;
 	};
 
 	var renderNameOrMid = function (details) {
