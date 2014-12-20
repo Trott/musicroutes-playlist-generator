@@ -79,19 +79,6 @@ exports.track = function (domElem, $) {
 			return Promise.reject();
 		}
 
-		var validatePathOutFromTrack = function (folks) {
-			var myArtists = _.pluck(folks.artists, 'mid'); 
-			var myContributors = _.pluck(folks.contributors, 'mid');
-			folks = _.union(myArtists, myContributors);
-			var contributorPool = _.difference(folks, [state.sourceIndividual.mid]);
-			// Only accept this track if there's someone else associated with it...
-			// ...unless this is the very first track in which case, pick anything and
-			// get it in front of the user pronto.
-			state.foundSomeoneElse = (contributorPool.length > 0 || state.seenTracks.length === 1);
-
-			return Promise.resolve();
-		};
-
 		return utils.promiseUntil(
 			function() { return state.foundSomeoneElse || state.atDeadEnd; },
 			function() { 
@@ -102,7 +89,8 @@ exports.track = function (domElem, $) {
 				}
 				state.seenTracks.push(track);
 				notSeenTracks = _.pull(notSeenTracks, track);
-				return routes.getArtistsAndContributorsFromTracks([track]).then(validatePathOutFromTrack);
+				return routes.getArtistsAndContributorsFromTracks([track])
+					.then(utils.validatePathOutFromTrack.bind(undefined, state));
 			}
 		);
 	};

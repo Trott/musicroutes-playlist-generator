@@ -230,6 +230,66 @@ describe('exports', function () {
 		});
 	});
 
+	describe('validatePathOutForTrack()', function () {
+//  exports.validatePathOutFromTrack = function (state, folks) {
+//   var myArtists = _.pluck(folks.artists, 'mid'); 
+//   var myContributors = _.pluck(folks.contributors, 'mid');
+//   folks = _.union(myArtists, myContributors);
+//   var contributorPool = _.difference(folks, [state.sourceIndividual.mid]);
+//   // Only accept this track if there's someone else associated with it...
+//   // ...unless this is the very first track in which case, pick anything and
+//   // get it in front of the user pronto.
+//   state.foundSomeoneElse = (contributorPool.length > 0 || state.seenTracks.length === 1);
+
+//   return state.foundSomeoneElse;
+// };
+		it('should return true if there is someone on the track other than the source individual', function (done) {
+			var state = {
+				foundSomeoneElse: false,
+				sourceIndividual: {mid: '/fhqwhagads'},
+				seenTracks: ['/everybody-to-the-limit', '/the-system-is-down']
+			};
+
+			var folks = {
+				artists: [{mid: '/jake'}],
+				contributors: [{mid: '/joe'}, {mid: '/fhqwhagads'}]
+			};
+
+			expect(utils.validatePathOutFromTrack(state, folks)).to.be.true();
+			done();
+		});
+
+		it('should return false if there is only the source individual on the track', function (done) {
+			var state = {
+				foundSomeoneElse: false,
+				sourceIndividual: {mid: '/fhqwhagads'},
+				seenTracks: ['/everybody-to-the-limit', '/the-system-is-down']
+			};
+
+			var folks = {
+				artists: [{mid: '/fhqwhagads'}]
+			};
+
+			expect(utils.validatePathOutFromTrack(state, folks)).to.be.false();
+			done();
+		});
+
+		it('should return true no matter what if this is the only track we have seen', function (done) {
+			var state = {
+				foundSomeoneElse: false,
+				sourceIndividual: {mid: '/fhqwhagads'},
+				seenTracks: ['/everybody-to-the-limit']
+			};
+
+			var folks = {
+				artists: [{mid: '/fhqwhagads'}]
+			};
+
+			expect(utils.validatePathOutFromTrack(state, folks)).to.be.true();
+			done();			
+		});
+	});
+
 	describe('searchForVideoFromTrackDetails()', function () {
 		it('should assemble trackDetails with each entity surrounded by quotation marks', function (done) {
 			var trackDetails = {
