@@ -88,12 +88,7 @@ exports.track = function (domElem, $) {
 
 
 		var promise = routes.getTrackDetails(state.track)
-			.then(function (details) {
-				state.trackDetails = details || {};
-				state.trackDetails.mid = state.track;
-				state.trackDetails.release = _.sample(state.trackDetails.releases) || '';
-				return state.trackDetails;
-			})
+			.then(utils.setTrackDetails.bind(undefined, state))
 			.then(function (trackDetails) { return _.pluck(trackDetails.artists, 'mid');})
 			.then(function (currentArtists) { 
 				state.seenArtists = state.seenArtists.concat(_.difference(currentArtists, state.seenArtists));

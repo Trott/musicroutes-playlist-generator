@@ -343,24 +343,34 @@ describe('utils', function () {
 
 			utils.findTrackWithPathOut(state, tracks).then(success);
 		});
-// exports.findTrackWithPathOut = function (state, tracks) {
-//   return promiseUntil(
-//     function() { return state.foundSomeoneElse || state.atDeadEnd; },
-//     function() {
-//       state.track = _.sample(tracks);
-//       if (! state.track) {
-//         state.atDeadEnd = true;
-//         return Promise.reject();
-//       }
-//       state.seenTracks.push(state.track);
-//       tracks = _.pull(tracks, state.track);
+	});
 
-//       return routes.getArtistsAndContributorsFromTracks([state.track])
-//         .then(validatePathOutFromTrack.bind(undefined, state))
-//         .then(function (useIt) { state.foundSomeoneElse = useIt; });
-//     }
-//   );
-// };
+	describe('setTrackDetails()', function () {
+		it('should set defaults gracefully if null object sent for details', function (done) {
+			var state = {track: '/fhqwhagads'};
+			var trackDetails = utils.setTrackDetails(state, null);
+
+			var expectedResults = {
+				mid: '/fhqwhagads', 
+				release: ''
+			};
+			expect(trackDetails).to.deep.equal(expectedResults);
+			done();
+		});
+
+		it('should use details provided', function (done) {
+			var state = {track: '/fhqwhagads'};
+			var details = {releases: [{mid: '/live-from-east-reykjavik'}]};
+			var trackDetails = utils.setTrackDetails(state, details);
+
+			var expectedResults = {
+				mid: '/fhqwhagads',
+				releases: [{mid: '/live-from-east-reykjavik'}],
+				release: {mid: '/live-from-east-reykjavik'}
+			};
+			expect(trackDetails).to.deep.equal(expectedResults);
+			done();
+		});
 	});
 
 	describe('searchForVideoFromTrackDetails()', function () {

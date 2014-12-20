@@ -150,6 +150,13 @@ exports.findTrackWithPathOut = function (state, tracks) {
   );
 };
 
+exports.setTrackDetails = function (state, details) {
+  state.trackDetails = details || {};
+  state.trackDetails.mid = state.track;
+  state.trackDetails.release = _.sample(state.trackDetails.releases) || '';
+  return state.trackDetails;
+};
+
 exports.searchForVideoFromTrackDetails = function (trackDetails) {
 	var q = '';
 
