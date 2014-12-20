@@ -15,7 +15,8 @@ var state = {
 	previousConnector: {},
 	sourceIndividual: {},
 	trackDetails: {},
-	atDeadEnd: false
+	atDeadEnd: false,
+	foundSomeoneElse: false
 };
 
 exports.clear = function () {
@@ -71,7 +72,7 @@ exports.track = function (domElem, $) {
 		return contributor;
 	};
 
-	var foundSomeoneElse;
+	state.foundSomeoneElse = false;
 
 	var pickATrack = function (tracks) {
 		state.atDeadEnd = false;
@@ -89,14 +90,14 @@ exports.track = function (domElem, $) {
 			var contributorPool = _.difference(folks, [state.sourceIndividual.mid]);
 			// Only accept this track if there's someone else associated with it...
 			// ...unless this is the very first track in which case, pick anything and
-			// get it in front of the user pronto.				
-			foundSomeoneElse = (contributorPool.length > 0 || state.seenTracks.length === 1);
+			// get it in front of the user pronto.
+			state.foundSomeoneElse = (contributorPool.length > 0 || state.seenTracks.length === 1);
 
 			return Promise.resolve();
 		};
 
 		return utils.promiseUntil(
-			function() { return foundSomeoneElse || state.atDeadEnd; },
+			function() { return state.foundSomeoneElse || state.atDeadEnd; },
 			function() { 
 				track = _.sample(notSeenTracks);
 				if (!track) {
