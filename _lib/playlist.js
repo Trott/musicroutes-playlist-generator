@@ -90,7 +90,8 @@ exports.track = function (domElem, $) {
 				state.seenTracks.push(track);
 				notSeenTracks = _.pull(notSeenTracks, track);
 				return routes.getArtistsAndContributorsFromTracks([track])
-					.then(utils.validatePathOutFromTrack.bind(undefined, state));
+					.then(utils.validatePathOutFromTrack.bind(undefined, state))
+					.then(function (useIt) { state.foundSomeoneElse = useIt; });
 			}
 		);
 	};

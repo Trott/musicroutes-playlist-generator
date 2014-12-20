@@ -94,7 +94,8 @@ exports.track = function (domElem, $) {
 				state.seenTracks.push(track);
 				notSeenTracks = _.pull(notSeenTracks, track);
 				return routes.getArtistsAndContributorsFromTracks([track])
-					.then(utils.validatePathOutFromTrack.bind(undefined, state));
+					.then(utils.validatePathOutFromTrack.bind(undefined, state))
+					.then(function (useIt) { state.foundSomeoneElse = useIt; });
 			}
 		);
 	};
@@ -524,6 +525,9 @@ exports.promiseUntil = function(condition, action) {
 };
 
 exports.validatePathOutFromTrack = function (state, folks) {
+  if (state.seenTracks.length === 1) {
+    return true;
+  }
   var myArtists = _.pluck(folks.artists, 'mid'); 
   var myContributors = _.pluck(folks.contributors, 'mid');
   folks = _.union(myArtists, myContributors);
@@ -531,9 +535,7 @@ exports.validatePathOutFromTrack = function (state, folks) {
   // Only accept this track if there's someone else associated with it...
   // ...unless this is the very first track in which case, pick anything and
   // get it in front of the user pronto.
-  state.foundSomeoneElse = (contributorPool.length > 0 || state.seenTracks.length === 1);
-
-  return state.foundSomeoneElse;
+  return contributorPool.length > 0;
 };
 
 exports.searchForVideoFromTrackDetails = function (trackDetails) {
