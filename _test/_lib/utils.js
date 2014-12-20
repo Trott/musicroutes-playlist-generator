@@ -22,6 +22,12 @@ describe('exports', function () {
 		routes: {
 			getArtistDetails: function () {
 				return {then: function (cb) { cb({name: 'Strong Bad'}); }};
+			},
+			getArtistsAndContributorsFromTracks: function () {
+				return {then: function (cb) { return Promise.resolve(cb({
+					artists:[{mid: '/fhqwhagads'}], 
+					contributors: [{mid: '/jake'}, {mid: '/joe'}]
+				}));}};
 			}
 		},
 		videos: {
@@ -231,18 +237,6 @@ describe('exports', function () {
 	});
 
 	describe('validatePathOutForTrack()', function () {
-//  exports.validatePathOutFromTrack = function (state, folks) {
-//   var myArtists = _.pluck(folks.artists, 'mid'); 
-//   var myContributors = _.pluck(folks.contributors, 'mid');
-//   folks = _.union(myArtists, myContributors);
-//   var contributorPool = _.difference(folks, [state.sourceIndividual.mid]);
-//   // Only accept this track if there's someone else associated with it...
-//   // ...unless this is the very first track in which case, pick anything and
-//   // get it in front of the user pronto.
-//   state.foundSomeoneElse = (contributorPool.length > 0 || state.seenTracks.length === 1);
-
-//   return state.foundSomeoneElse;
-// };
 		it('should return true if there is someone on the track other than the source individual', function (done) {
 			var state = {
 				foundSomeoneElse: false,
@@ -288,6 +282,85 @@ describe('exports', function () {
 			expect(utils.validatePathOutFromTrack(state, folks)).to.be.true();
 			done();			
 		});
+	});
+
+	describe('findTrackWithPathOut()', function () {
+		it('should resolve if foundSomeoneElse', function (done) {
+			var state = {
+				foundSomeoneElse: true
+			};
+
+			var success = function () {
+				done();
+			};
+
+			utils.findTrackWithPathOut(state).then(success);
+		});
+
+		it('should resolve if atDeadEnd', function (done) {
+			var state = {
+				foundSomeoneElse: false,
+				atDeadEnd: true
+			};
+
+			var success = function () {
+				done();
+			};
+
+			utils.findTrackWithPathOut(state).then(success);
+		});
+
+		it('should set atDeadEnd true and reject if no tracks', function (done) {
+			var state = {
+				foundSomeoneElse: false,
+				atDeadEnd: false
+			};
+
+			var tracks = [];
+
+			var failure = function () {
+				expect(state.atDeadEnd).to.be.true();
+				done();
+			};
+
+			utils.findTrackWithPathOut(state, tracks).catch(failure);
+		});
+
+		it('should call routes.getArtistsAndContributorsFromTracks() on tracks', function (done) {
+			var state = {
+				foundSomeoneElse: false,
+				atDeadEnd: false,
+				seenTracks: [{mid: '/the-system-is-down'}, {mid: '/trogdor-the-burninator'}],
+				sourceIndividual: {mid: '/fhqwhagads'}
+			};
+
+			var tracks = [{mid: '/everybody-to-the-limit'}];
+
+			var success = function () {
+				expect(state.foundSomeoneElse).to.be.true();
+				done();
+			};
+
+			utils.findTrackWithPathOut(state, tracks).then(success);
+		});
+// exports.findTrackWithPathOut = function (state, tracks) {
+//   return promiseUntil(
+//     function() { return state.foundSomeoneElse || state.atDeadEnd; },
+//     function() {
+//       state.track = _.sample(tracks);
+//       if (! state.track) {
+//         state.atDeadEnd = true;
+//         return Promise.reject();
+//       }
+//       state.seenTracks.push(state.track);
+//       tracks = _.pull(tracks, state.track);
+
+//       return routes.getArtistsAndContributorsFromTracks([state.track])
+//         .then(validatePathOutFromTrack.bind(undefined, state))
+//         .then(function (useIt) { state.foundSomeoneElse = useIt; });
+//     }
+//   );
+// };
 	});
 
 	describe('searchForVideoFromTrackDetails()', function () {

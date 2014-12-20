@@ -77,22 +77,7 @@ exports.track = function (domElem, $) {
 		state.atDeadEnd = false;
 		var notSeenTracks = _.difference(tracks, state.seenTracks);
 
-		return utils.promiseUntil(
-			function() { return state.foundSomeoneElse || state.atDeadEnd; },
-			function() { 
-				state.track = _.sample(notSeenTracks);
-				if (! state.track) {
-					state.atDeadEnd = true;
-					return Promise.reject();
-				}
-				state.seenTracks.push(state.track);
-				notSeenTracks = _.pull(notSeenTracks, state.track);
-
-				return routes.getArtistsAndContributorsFromTracks([state.track])
-					.then(utils.validatePathOutFromTrack.bind(undefined, state))
-					.then(function (useIt) { state.foundSomeoneElse = useIt; });
-			}
-		);
+		return utils.findTrackWithPathOut(state, notSeenTracks);
 	};
 
 	var trackPicked = false;
@@ -508,7 +493,7 @@ exports.renderConnector = function ($, details, state) {
 	return p;
 };
 
-exports.promiseUntil = function(condition, action) {
+var promiseUntil = exports.promiseUntil = function(condition, action) {
   var loop = function() {
     if (condition()) {
       return Promise.resolve();
@@ -519,7 +504,7 @@ exports.promiseUntil = function(condition, action) {
   return loop();
 };
 
-exports.validatePathOutFromTrack = function (state, folks) {
+var validatePathOutFromTrack = exports.validatePathOutFromTrack = function (state, folks) {
   if (state.seenTracks.length === 1) {
     return true;
   }
@@ -531,6 +516,25 @@ exports.validatePathOutFromTrack = function (state, folks) {
   // ...unless this is the very first track in which case, pick anything and
   // get it in front of the user pronto.
   return contributorPool.length > 0;
+};
+
+exports.findTrackWithPathOut = function (state, tracks) {
+  return promiseUntil(
+    function() { return state.foundSomeoneElse || state.atDeadEnd; },
+    function() {
+      state.track = _.sample(tracks);
+      if (! state.track) {
+        state.atDeadEnd = true;
+        return Promise.reject();
+      }
+      state.seenTracks.push(state.track);
+      tracks = _.pull(tracks, state.track);
+
+      return routes.getArtistsAndContributorsFromTracks([state.track])
+        .then(validatePathOutFromTrack.bind(undefined, state))
+        .then(function (useIt) { state.foundSomeoneElse = useIt; });
+    }
+  );
 };
 
 exports.searchForVideoFromTrackDetails = function (trackDetails) {
