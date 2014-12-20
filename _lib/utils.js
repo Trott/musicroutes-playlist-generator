@@ -1,5 +1,7 @@
+/* global -Promise */
 var routes = require('./routes.js');
 var videos = require('./videos.js');
+var Promise = require('promise');
 var _ = require('lodash');
 
 var anchorFromMid = exports.anchorFromMid = function ($, mid, text) {
@@ -102,6 +104,17 @@ exports.renderConnector = function ($, details, state) {
 
 	state.previousConnector = details;
 	return p;
+};
+
+exports.promiseUntil = function(condition, action) {
+  var loop = function() {
+    if (condition()) {
+      return Promise.resolve();
+    }
+
+    return action().then(loop).catch(Promise.reject);
+  };
+  return loop();
 };
 
 exports.searchForVideoFromTrackDetails = function (trackDetails) {

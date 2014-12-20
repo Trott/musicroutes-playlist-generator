@@ -77,8 +77,6 @@ exports.track = function (domElem, $) {
 		state.atDeadEnd = false;
 		var notSeenTracks = _.difference(tracks, state.seenTracks);
 
-		// Promise returns nothing if a dead end, a track if a good one is found, else rejects
-		//    which basically means "try again"
 		if (notSeenTracks.length === 0) {
 			state.atDeadEnd = true;
 			return Promise.reject();
@@ -97,21 +95,7 @@ exports.track = function (domElem, $) {
 			return Promise.resolve();
 		};
 
-		var promiseUntil = function(condition, action) {
-  		var loop = function() {
-      	if (condition()) {
-					return Promise.resolve();
-				}
-
-      	return action().then(loop).catch(Promise.reject);
-  		};
-
-	    // var promise = process.nextTick(loop);
-
-	    return loop();
-		};
-
-		return promiseUntil(
+		return utils.promiseUntil(
 			function() { return foundSomeoneElse || state.atDeadEnd; },
 			function() { 
 				track = _.sample(notSeenTracks);
@@ -431,8 +415,10 @@ exports.getTrackDetails = function (mid) {
   });
 };
 },{"../.apikey":"/Users/richtrott/musicroutes-playlist-generator/.apikey","lodash":"/Users/richtrott/musicroutes-playlist-generator/node_modules/lodash/dist/lodash.js","mqlread":"/Users/richtrott/musicroutes-playlist-generator/node_modules/mqlread/index.js","promise":"/Users/richtrott/musicroutes-playlist-generator/node_modules/promise/index.js"}],"/Users/richtrott/musicroutes-playlist-generator/_lib/utils.js":[function(require,module,exports){
+/* global -Promise */
 var routes = require('./routes.js');
 var videos = require('./videos.js');
+var Promise = require('promise');
 var _ = require('lodash');
 
 var anchorFromMid = exports.anchorFromMid = function ($, mid, text) {
@@ -537,6 +523,17 @@ exports.renderConnector = function ($, details, state) {
 	return p;
 };
 
+exports.promiseUntil = function(condition, action) {
+  var loop = function() {
+    if (condition()) {
+      return Promise.resolve();
+    }
+
+    return action().then(loop).catch(Promise.reject);
+  };
+  return loop();
+};
+
 exports.searchForVideoFromTrackDetails = function (trackDetails) {
 	var q = '';
 
@@ -582,7 +579,7 @@ exports.wrapVideo = function (data) {
 	}
 	return embedCode;
 };
-},{"./routes.js":"/Users/richtrott/musicroutes-playlist-generator/_lib/routes.js","./videos.js":"/Users/richtrott/musicroutes-playlist-generator/_lib/videos.js","lodash":"/Users/richtrott/musicroutes-playlist-generator/node_modules/lodash/dist/lodash.js"}],"/Users/richtrott/musicroutes-playlist-generator/_lib/videos.js":[function(require,module,exports){
+},{"./routes.js":"/Users/richtrott/musicroutes-playlist-generator/_lib/routes.js","./videos.js":"/Users/richtrott/musicroutes-playlist-generator/_lib/videos.js","lodash":"/Users/richtrott/musicroutes-playlist-generator/node_modules/lodash/dist/lodash.js","promise":"/Users/richtrott/musicroutes-playlist-generator/node_modules/promise/index.js"}],"/Users/richtrott/musicroutes-playlist-generator/_lib/videos.js":[function(require,module,exports){
 /* global -Promise */
 var hyperquest = require('hyperquest');
 var querystring = require('querystring');

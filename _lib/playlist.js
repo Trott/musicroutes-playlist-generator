@@ -73,8 +73,6 @@ exports.track = function (domElem, $) {
 		state.atDeadEnd = false;
 		var notSeenTracks = _.difference(tracks, state.seenTracks);
 
-		// Promise returns nothing if a dead end, a track if a good one is found, else rejects
-		//    which basically means "try again"
 		if (notSeenTracks.length === 0) {
 			state.atDeadEnd = true;
 			return Promise.reject();
@@ -93,21 +91,7 @@ exports.track = function (domElem, $) {
 			return Promise.resolve();
 		};
 
-		var promiseUntil = function(condition, action) {
-  		var loop = function() {
-      	if (condition()) {
-					return Promise.resolve();
-				}
-
-      	return action().then(loop).catch(Promise.reject);
-  		};
-
-	    // var promise = process.nextTick(loop);
-
-	    return loop();
-		};
-
-		return promiseUntil(
+		return utils.promiseUntil(
 			function() { return foundSomeoneElse || state.atDeadEnd; },
 			function() { 
 				track = _.sample(notSeenTracks);

@@ -1,4 +1,5 @@
 /*jshint expr: true*/
+/* global -Promise */
 
 var rewire = require('rewire');
 var utils = rewire('../../_lib/utils.js');
@@ -13,6 +14,8 @@ var describe = lab.experiment;
 var it = lab.test;
 
 var $ = require('cheerio');
+
+var Promise = require('promise');
 
 describe('exports', function () {
 	utils.__set__({
@@ -204,6 +207,26 @@ describe('exports', function () {
 			var connector = utils.renderConnector($, details, state);
 			expect(connector.html()).to.equal('<b><a href="http://freebase.com/lorenzmagazineman" target="_blank">jake</a></b> recorded with <b><a href="http://freebase.com/fhqwhagads" target="_blank">joe</a></b><span> (jocking)</span> on:');
 			done();
+		});
+	});
+
+	describe('promiseUntil()', function () {
+		it('should resolve promise if condition is true', function (done) {
+			utils.promiseUntil(
+				function () { return true; }
+			).then(function () {
+				done();
+			});
+		});
+
+		it('should reject if actino rejects', function (done) {
+			utils.promiseUntil(
+				function () { return false; },
+				function () { return Promise.reject(Error('fhqwhagads'));}
+			).catch(function (err) {
+				expect(err.message).to.equal('fhqwhagads');
+				done();
+			});
 		});
 	});
 
