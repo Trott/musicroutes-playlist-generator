@@ -10,7 +10,8 @@ var state = {
 	seenArtists: [],
 	previousConnector: {},
 	sourceIndividual: {},
-	trackDetails: {}
+	trackDetails: {},
+	atDeadEnd: false
 };
 
 exports.clear = function () {
@@ -36,7 +37,7 @@ exports.track = function (domElem, $) {
 		resultsElem.append(elem);
 	};
 
-	var deadEnd = false;
+	state.atDeadEnd = false;
 
 	var track;
 
@@ -69,13 +70,13 @@ exports.track = function (domElem, $) {
 	var foundSomeoneElse;
 
 	var pickATrack = function (tracks) {
-		deadEnd = false;
+		state.atDeadEnd = false;
 		var notSeenTracks = _.difference(tracks, state.seenTracks);
 
 		// Promise returns nothing if a dead end, a track if a good one is found, else rejects
 		//    which basically means "try again"
 		if (notSeenTracks.length === 0) {
-			deadEnd = true;
+			state.atDeadEnd = true;
 			return Promise.reject();
 		}
 
@@ -107,11 +108,11 @@ exports.track = function (domElem, $) {
 		};
 
 		return promiseUntil(
-			function() { return foundSomeoneElse || deadEnd; },
+			function() { return foundSomeoneElse || state.atDeadEnd; },
 			function() { 
 				track = _.sample(notSeenTracks);
 				if (!track) {
-					deadEnd = true;
+					state.atDeadEnd = true;
 					return Promise.reject();
 				}
 				state.seenTracks.push(track);
@@ -204,7 +205,7 @@ exports.track = function (domElem, $) {
 		if (err) {
 			return Promise.reject(err);
 		}
-		deadEnd = true;
+		state.atDeadEnd = true;
 		var p = $('<p>')
 			.text('Playlist is at a dead end with ')
 			.append(utils.anchorFromMid($, state.previousConnector.mid, state.previousConnector.name))
