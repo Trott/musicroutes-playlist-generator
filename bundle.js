@@ -16,7 +16,8 @@ var state = {
 	sourceIndividual: {},
 	trackDetails: {},
 	atDeadEnd: false,
-	foundSomeoneElse: false
+	foundSomeoneElse: false,
+	track: undefined
 };
 
 exports.clear = function () {
@@ -44,8 +45,6 @@ exports.track = function (domElem, $) {
 
 	state.atDeadEnd = false;
 
-	var track;
-
 	var renderTrackDetails = function () {
 		var p = $('<p>').attr('class', 'track-details');
 		p.append(utils.trackAnchor($, state.trackDetails));
@@ -57,7 +56,7 @@ exports.track = function (domElem, $) {
 	};
 
 	var getContributors = function () {
-		return routes.getArtistsAndContributorsFromTracks([track]);
+		return routes.getArtistsAndContributorsFromTracks([state.track]);
 	};
 
 	var pickContributor = function (folks) {
@@ -81,15 +80,15 @@ exports.track = function (domElem, $) {
 		return utils.promiseUntil(
 			function() { return state.foundSomeoneElse || state.atDeadEnd; },
 			function() { 
-				track = _.sample(notSeenTracks);
-				if (!track) {
+				state.track = _.sample(notSeenTracks);
+				if (! state.track) {
 					state.atDeadEnd = true;
 					return Promise.reject();
 				}
-				state.seenTracks.push(track);
-				notSeenTracks = _.pull(notSeenTracks, track);
+				state.seenTracks.push(state.track);
+				notSeenTracks = _.pull(notSeenTracks, state.track);
 
-				return routes.getArtistsAndContributorsFromTracks([track])
+				return routes.getArtistsAndContributorsFromTracks([state.track])
 					.then(utils.validatePathOutFromTrack.bind(undefined, state))
 					.then(function (useIt) { state.foundSomeoneElse = useIt; });
 			}
@@ -107,10 +106,10 @@ exports.track = function (domElem, $) {
 		trackPicked = true;
 
 
-		var promise = routes.getTrackDetails(track)
+		var promise = routes.getTrackDetails(state.track)
 			.then(function (details) {
 				state.trackDetails = details || {};
-				state.trackDetails.mid = track;
+				state.trackDetails.mid = state.track;
 				state.trackDetails.release = _.sample(state.trackDetails.releases) || '';
 				return state.trackDetails;
 			})
