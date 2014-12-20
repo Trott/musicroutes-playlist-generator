@@ -84,7 +84,7 @@ exports.track = function (domElem, $) {
 			var myArtists = _.pluck(folks.artists, 'mid'); 
 			var myContributors = _.pluck(folks.contributors, 'mid');
 			folks = _.union(myArtists, myContributors);
-			var contributorPool = _.difference(folks, [individual]);
+			var contributorPool = _.difference(folks, [state.sourceIndividual.mid]);
 			// Only accept this track if there's someone else associated with it...
 			// ...unless this is the very first track in which case, pick anything and
 			// get it in front of the user pronto.				
