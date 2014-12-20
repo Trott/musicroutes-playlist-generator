@@ -78,11 +78,6 @@ exports.track = function (domElem, $) {
 		state.atDeadEnd = false;
 		var notSeenTracks = _.difference(tracks, state.seenTracks);
 
-		if (notSeenTracks.length === 0) {
-			state.atDeadEnd = true;
-			return Promise.reject();
-		}
-
 		return utils.promiseUntil(
 			function() { return state.foundSomeoneElse || state.atDeadEnd; },
 			function() { 
@@ -93,6 +88,7 @@ exports.track = function (domElem, $) {
 				}
 				state.seenTracks.push(track);
 				notSeenTracks = _.pull(notSeenTracks, track);
+
 				return routes.getArtistsAndContributorsFromTracks([track])
 					.then(utils.validatePathOutFromTrack.bind(undefined, state))
 					.then(function (useIt) { state.foundSomeoneElse = useIt; });
