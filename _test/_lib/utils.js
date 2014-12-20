@@ -28,6 +28,12 @@ describe('utils', function () {
 					artists:[{mid: '/fhqwhagads'}], 
 					contributors: [{mid: '/jake'}, {mid: '/joe'}]
 				}));}};
+			},
+			getTracksByArtists: function () {
+				return {then: function () { return 'getTracksByArtists'; }};
+			},
+			getTracksWithContributors: function () {
+				return {then: function () { return 'getTracksWithContributors'; }};
 			}
 		},
 		videos: {
@@ -225,7 +231,7 @@ describe('utils', function () {
 			});
 		});
 
-		it('should reject if actino rejects', function (done) {
+		it('should reject if action rejects', function (done) {
 			utils.promiseUntil(
 				function () { return false; },
 				function () { return Promise.reject(Error('fhqwhagads'));}
@@ -284,7 +290,7 @@ describe('utils', function () {
 		});
 	});
 
-	describe('findTrackWithPathOut()', function () {
+	describe('pickATrack()', function () {
 		it('should resolve if foundSomeoneElse', function (done) {
 			var state = {
 				foundSomeoneElse: true
@@ -294,20 +300,7 @@ describe('utils', function () {
 				done();
 			};
 
-			utils.findTrackWithPathOut(state).then(success);
-		});
-
-		it('should resolve if atDeadEnd', function (done) {
-			var state = {
-				foundSomeoneElse: false,
-				atDeadEnd: true
-			};
-
-			var success = function () {
-				done();
-			};
-
-			utils.findTrackWithPathOut(state).then(success);
+			utils.pickATrack(state).then(success);
 		});
 
 		it('should set atDeadEnd true and reject if no tracks', function (done) {
@@ -323,7 +316,7 @@ describe('utils', function () {
 				done();
 			};
 
-			utils.findTrackWithPathOut(state, tracks).catch(failure);
+			utils.pickATrack(state, tracks).catch(failure);
 		});
 
 		it('should call routes.getArtistsAndContributorsFromTracks() on tracks', function (done) {
@@ -341,7 +334,70 @@ describe('utils', function () {
 				done();
 			};
 
-			utils.findTrackWithPathOut(state, tracks).then(success);
+			utils.pickATrack(state, tracks).then(success);
+		});
+	});
+
+
+	describe('tracksByUnseenArtists()', function () {
+		it('should call routes.getTracksByArtists() if state.seenArtists is empty', function (done) {
+			var state = {
+				seenArtists: [],
+				sourceIndividual: {mid: '/fhqwhagads'}
+			};
+
+			expect(utils.tracksByUnseenArtists(state)).to.equal('getTracksByArtists');
+			done();
+		});
+
+		it('should call routes.getTracksWithContributors() if state.seenArtists is not empty', function (done) {
+			var state = {
+				seenArtists: ['/jake', '/joe'],
+				sourceIndividual: {mid: '/fhqwhagads'}
+			};
+
+			expect(utils.tracksByUnseenArtists(state)).to.equal('getTracksWithContributors');
+			done();
+		});
+	});
+
+	describe('tracksWithContributor()', function () {
+		it('should reject if error exists', function (done) {
+			var error = Error();
+			utils.tracksWithContributor({}, error)
+				.catch(function (err) {
+					expect(err).to.equal(error);
+					done();
+				});
+		});
+
+		it('should call routes.getTracksWithContributors()', function (done) {
+			var state = {
+				sourceIndividual: {mid: '/fhqwhagads'}
+			};
+
+			expect(utils.tracksWithContributor(state)).to.equal('getTracksWithContributors');
+			done();
+		});
+	});
+
+	describe('tracksWithArtist()', function () {
+		it('should reject if error exists', function (done) {
+			var error = Error();
+			utils.tracksWithArtist({}, error)
+				.catch(function (err) {
+					expect(err).to.equal(error);
+					done();
+				});
+		});
+
+		it('should call routes.getTracksWithArtists()', function (done) {
+			var state = {
+				sourceIndividual: {mid: '/fhqwhagads'}
+			};
+
+			expect(utils.tracksWithArtist(state)).to.equal('getTracksByArtists');
+			done();
 		});
 	});
 

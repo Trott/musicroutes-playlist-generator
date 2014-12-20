@@ -29,7 +29,6 @@ exports.setSource = function (source) {
 };
 
 exports.track = function (domElem, $) {
-	var individual = state.sourceIndividual.mid;
 	if (! state.previousConnector.mid) {
 		state.previousConnector = state.sourceIndividual;
 	}
@@ -69,13 +68,6 @@ exports.track = function (domElem, $) {
 
 	state.foundSomeoneElse = false;
 
-	var pickATrack = function (tracks) {
-		state.atDeadEnd = false;
-		var notSeenTracks = _.difference(tracks, state.seenTracks);
-
-		return utils.findTrackWithPathOut(state, notSeenTracks);
-	};
-
 	var trackPicked = false;
 
 	var processTracks = function () {
@@ -85,7 +77,6 @@ exports.track = function (domElem, $) {
 		}
 
 		trackPicked = true;
-
 
 		var promise = routes.getTrackDetails(state.track)
 			.then(utils.setTrackDetails.bind(undefined, state))
@@ -112,43 +103,6 @@ exports.track = function (domElem, $) {
 		return promise;
 	};
 
-	var tracksByUnseenArtists	= function () {
-		var promise;
-
-		var optionsNewArtistsOnly = {subquery: {
-			artist: [{
-				'mid|=': state.seenArtists,
-				optional: 'forbidden'
-			}]
-		}};
-
-		if (state.seenArtists.length === 0) {
- 			// If this is the first track, get one by this artist if we can.
- 			promise = routes.getTracksByArtists([individual]);
- 		}  else {
-			// Otherwise, get one by an artist we haven't seen yet
-			promise = routes.getTracksWithContributors([individual], optionsNewArtistsOnly);
-		}
-
-		return promise.then(pickATrack);
-	};
-
-	// Look for any track with this contributor credited as a contributor regardless if we've seen the artist already.
-	var tracksWithContributor =	function (err) {
-		if (err) {
-			return Promise.reject(err);
-		}
-		return routes.getTracksWithContributors([individual], {}).then(pickATrack);
-	};
-
-	// Look for any tracks actually credited to this contributor as the main artist. We are desperate!
-	var tracksWithArtist = function (err) {
-		if (err) {
-			return Promise.reject(err);
-		}
-		return routes.getTracksByArtists([individual]).then(pickATrack);
-	};
-
 	// Give up if we haven't found anything we can use yet
 	var giveUpIfNoTracks = function (err) {
 		if (err) {
@@ -168,10 +122,9 @@ exports.track = function (domElem, $) {
 
 	state.seenIndividuals.push(state.sourceIndividual.mid);
 
-	var promise = tracksByUnseenArtists()
-		.then(processTracks, tracksWithContributor)
-		.then(processTracks, tracksWithContributor)
-		.then(processTracks, tracksWithArtist)
+	var promise = utils.tracksByUnseenArtists(state)
+		.then(processTracks, utils.tracksWithContributor.bind(undefined, state))
+		.then(processTracks, utils.tracksWithArtist.bind(undefined, state))
 		.then(processTracks, giveUpIfNoTracks);
 
 	return promise;

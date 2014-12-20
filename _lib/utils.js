@@ -131,7 +131,7 @@ var validatePathOutFromTrack = exports.validatePathOutFromTrack = function (stat
   return contributorPool.length > 0;
 };
 
-exports.findTrackWithPathOut = function (state, tracks) {
+var findTrackWithPathOut = function (state, tracks) {
   return promiseUntil(
     function() { return state.foundSomeoneElse || state.atDeadEnd; },
     function() {
@@ -148,6 +148,52 @@ exports.findTrackWithPathOut = function (state, tracks) {
         .then(function (useIt) { state.foundSomeoneElse = useIt; });
     }
   );
+};
+
+var pickATrack = exports.pickATrack = function (state, tracks) {
+  state.atDeadEnd = false;
+  var notSeenTracks = _.difference(tracks, state.seenTracks);
+
+  return findTrackWithPathOut(state, notSeenTracks);
+};
+
+exports.tracksByUnseenArtists = function (state) {
+  var promise;
+
+  var optionsNewArtistsOnly = {subquery: {
+    artist: [{
+      'mid|=': state.seenArtists,
+      optional: 'forbidden'
+    }]
+  }};
+
+  if (state.seenArtists.length === 0) {
+    // If this is the first track, get one by this artist if we can.
+    promise = routes.getTracksByArtists([state.sourceIndividual.mid]);
+  }  else {
+    // Otherwise, get one by an artist we haven't seen yet
+    promise = routes.getTracksWithContributors([state.sourceIndividual.mid], optionsNewArtistsOnly);
+  }
+
+  return promise.then(pickATrack.bind(undefined, state));
+};
+
+// Look for any track with this contributor credited as a contributor regardless if we've seen the artist already.
+exports.tracksWithContributor = function (state, err) {
+  if (err) {
+    return Promise.reject(err);
+  }
+
+  return routes.getTracksWithContributors([state.sourceIndividual.mid], {}).then(pickATrack.bind(undefined, state));
+};
+
+// Look for any tracks actually credited to this contributor as the main artist. We are desperate!
+exports.tracksWithArtist = function (state, err) {
+  if (err) {
+    return Promise.reject(err);
+  }
+
+  return routes.getTracksByArtists([state.sourceIndividual.mid]).then(pickATrack.bind(undefined, state));
 };
 
 exports.setTrackDetails = function (state, details) {
