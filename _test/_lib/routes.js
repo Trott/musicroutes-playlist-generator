@@ -15,7 +15,7 @@ var beforeEach = lab.beforeEach;
 
 var nock = require('nock');
 
-describe('exports', function () {
+describe('routes', function () {
 	var TheBeatles = '/m/07c0j';
 	var PaulMcCartney = '/m/03j24kf';
 	var GeorgeHarrison = '/m/03bnv';

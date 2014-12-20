@@ -19,7 +19,7 @@ var $ = require('cheerio');
 
 var div;
 
-describe('exports', function () {
+describe('playlist', function () {
 	var revert;
 
 	var BobDylan = '/m/01vrncs';

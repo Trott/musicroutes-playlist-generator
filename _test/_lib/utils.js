@@ -17,7 +17,7 @@ var $ = require('cheerio');
 
 var Promise = require('promise');
 
-describe('exports', function () {
+describe('utils', function () {
 	utils.__set__({
 		routes: {
 			getArtistDetails: function () {

@@ -14,7 +14,7 @@ var beforeEach = lab.beforeEach;
 
 var nock = require('nock');
 
-describe('exports', function () {
+describe('videos', function () {
 
 	beforeEach(function (done) {
 		nock.cleanAll();
