@@ -13,26 +13,27 @@ var state = {
 	trackDetails: {},
 	atDeadEnd: false,
 	foundSomeoneElse: false,
-	track: undefined
+	track: undefined,
+  playlist: []
 };
 
-exports.clear = function () {
+var clear = function () {
 	state.seenIndividuals = [];
 	state.seenTracks = [];
 	state.seenArtists = [];
 	state.sourceIndividual = {};
 	state.previousConnector = {};
+  state.playlist = [];
 };
 
-exports.setSource = function (source) {
+var setSource = function (source) {
+  clear();
 	state.sourceIndividual.mid = source;
+  state.previousConnector.mid = source;
+  state.playlist = [{connectorToNext: source}];
 };
 
-exports.track = function (domElem, $) {
-	if (! state.previousConnector.mid) {
-		state.previousConnector = state.sourceIndividual;
-	}
-
+var track = function (domElem, $) {
 	var resultsElem = $(domElem);
 	var appendToResultsElem = function (elem) {
 		resultsElem.append(elem);
@@ -93,7 +94,13 @@ exports.track = function (domElem, $) {
 			.then(appendToResultsElem)
 			.then(renderTrackDetails)
 			.then(appendToResultsElem)
-			.then(function () { return state.trackDetails; })
+			.then(function () { 
+        state.playlist.push({
+          mid: state.trackDetails.mid,
+          release: _.result(state.trackDetails.release, 'mid'),
+          connectorToNext: state.sourceIndividual.mid
+        });
+        return state.trackDetails; })
 			.then(utils.searchForVideoFromTrackDetails)
 			.then(utils.extractVideoId)
 			.then(utils.getVideoEmbedCode)
@@ -111,4 +118,10 @@ exports.track = function (domElem, $) {
 		.then(processTracks, utils.giveUpIfNoTracks.bind(undefined, state, $));
 
 	return promise;
+};
+
+module.exports = {
+  clear: clear,
+  setSource: setSource,
+  track: track
 };
