@@ -401,6 +401,37 @@ describe('utils', function () {
 		});
 	});
 
+	describe('giveUpIfNoTracks()', function () {
+		it('should reject with error that is sent', function (done) {
+			var error = Error();
+
+			utils.giveUpIfNoTracks(null, null, error)
+				.catch(function (e) {
+					expect(e).to.equal(error);
+					done();
+				});
+		});
+
+		it('should reject with message constructed from state if no error sent', function (done) {
+			var state = {
+				previousConnector: {
+					mid: '/fhqwhagads',
+					name: 'Fhqwhagads'
+				}
+			};
+
+			var handler = function (msg) {
+				var msgTxt = msg.text();
+				expect(msgTxt).to.be.equal('Playlist is at a dead end with Fhqwhagads.');
+				expect(msg.deadEnd).to.be.true();
+				done();
+			};
+
+			utils.giveUpIfNoTracks(state, $)
+				.catch(handler);
+		});
+	});
+
 	describe('setTrackDetails()', function () {
 		it('should set defaults gracefully if null object sent for details', function (done) {
 			var state = {track: '/fhqwhagads'};

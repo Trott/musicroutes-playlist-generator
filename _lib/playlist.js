@@ -103,29 +103,12 @@ exports.track = function (domElem, $) {
 		return promise;
 	};
 
-	// Give up if we haven't found anything we can use yet
-	var giveUpIfNoTracks = function (err) {
-		if (err) {
-			return Promise.reject(err);
-		}
-		state.atDeadEnd = true;
-		var p = $('<p>')
-			.text('Playlist is at a dead end with ')
-			.append(utils.anchorFromMid($, state.previousConnector.mid, state.previousConnector.name))
-			.append('.');
-		var msg = $('<paper-shadow>')
-			.addClass('error')
-			.append(p);
-		msg.deadEnd = true;
-		return Promise.reject(msg);
-	};
-
 	state.seenIndividuals.push(state.sourceIndividual.mid);
 
 	var promise = utils.tracksByUnseenArtists(state)
 		.then(processTracks, utils.tracksWithContributor.bind(undefined, state))
 		.then(processTracks, utils.tracksWithArtist.bind(undefined, state))
-		.then(processTracks, giveUpIfNoTracks);
+		.then(processTracks, utils.giveUpIfNoTracks.bind(undefined, state, $));
 
 	return promise;
 };

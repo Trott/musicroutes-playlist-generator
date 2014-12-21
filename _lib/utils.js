@@ -196,6 +196,23 @@ exports.tracksWithArtist = function (state, err) {
   return routes.getTracksByArtists([state.sourceIndividual.mid]).then(pickATrack.bind(undefined, state));
 };
 
+// Give up if we haven't found anything we can use yet
+exports.giveUpIfNoTracks = function (state, $, err) {
+  if (err) {
+    return Promise.reject(err);
+  }
+  state.atDeadEnd = true;
+  var p = $('<p>')
+    .text('Playlist is at a dead end with ')
+    .append(anchorFromMid($, state.previousConnector.mid, state.previousConnector.name))
+    .append('.');
+  var msg = $('<paper-shadow>')
+    .addClass('error')
+    .append(p);
+  msg.deadEnd = true;
+  return Promise.reject(msg);
+};
+
 exports.setTrackDetails = function (state, details) {
   state.trackDetails = details || {};
   state.trackDetails.mid = state.track;
