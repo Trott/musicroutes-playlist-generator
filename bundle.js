@@ -22441,6 +22441,7 @@ var submit = $('#startPointSubmit');
 var input = $('#startPoint');
 var paperInput = $('#paperStartPoint');
 var continueButtons = $('.continue');
+var permalinkButtons = $('.permalink');
 var resetButtons = $('.reset');
 var startOverButtons = $('.startOver');
 var progress = $('#progress');
@@ -22462,6 +22463,7 @@ var error = function (err) {
 		startOverButtons.css('visibility', 'visible');
 		if (! err.deadEnd) {
 			continueButtons.css('visibility', 'visible');
+      permalinkButtons.css('visibility', 'visible');
 		}
 	}
 };
@@ -22472,6 +22474,7 @@ var go = function () {
 		return;
 	}
 	continueButtons.css('visibility', 'hidden');
+  permalinkButtons.css('visibility', 'hidden');
 	resetButtons.css('visibility', 'hidden');
 	startOverButtons.css('visibility', 'hidden');
 	progress.attr('active', 'active');
@@ -22488,6 +22491,7 @@ var go = function () {
 			error(err);
 			progress.removeAttr('active');
 			continueButtons.css('visibility', 'visible');
+      permalinkButtons.css('visibility', 'visible');
 			resetButtons.css('visibility', 'visible');
 			startOverButtons.css('visibility', 'visible');
 		}
@@ -22496,8 +22500,15 @@ var go = function () {
 
 continueButtons.on('click', go);
 
+var permalink = function () {
+  console.log('permalink!');
+};
+
+permalinkButtons.on('click', permalink);
+
 var resetForm = function () {
 	continueButtons.css('visibility', 'hidden');
+  permalinkButtons.css('visibility', 'hidden');
 	resetButtons.css('visibility', 'hidden');
 	startOverButtons.css('visibility', 'hidden');
 	submit.removeAttr('disabled');
