@@ -124,9 +124,19 @@ var getSerialized = function () {
   return JSON.stringify(_.first(state.playlist, 11));
 };
 
+var unserialize = function (data) {
+  var newState = {};
+  try {
+    newState.playlist = JSON.parse(data);
+  } catch (e) {
+    return Promise.reject(e);
+  }
+};
+
 module.exports = {
   clear: clear,
   setSource: setSource,
   track: track,
-  getSerialized: getSerialized
+  getSerialized: getSerialized,
+  unserialize: unserialize
 };

@@ -145,4 +145,16 @@ describe('playlist', function () {
 			done();
 		});
 	});
+
+	describe('unserialize()', function () {
+		it('should return an Error if badly formed JSON sent', function (done) {
+			var failure = function (err) {
+				expect(err instanceof Error).to.be.true();
+				done();
+			};
+
+			playlist.unserialize('fhqwhagads')
+				.catch(failure);
+		});
+	});
 });

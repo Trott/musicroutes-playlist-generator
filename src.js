@@ -136,4 +136,18 @@ $(document).ready(function () {
 		input.focus(); // Needed so paper elements floating label appears
 		form.trigger('submit');
 	}
+  if (urlParts.query.l) {
+    submit.attr('disabled', 'disabled');
+    input.attr('disabled', 'disabled');
+    paperInput.attr('disabled', 'disabled');
+    progress.attr('active', 'active');
+
+    playlist.unserialize(urlParts.query.l);
+    // set playlist so you can continue and so on
+    // it will need to update seenArtists and all that jazz
+    // look up initial connector and populate input box
+    // render remaining elements
+    // handle error/promise rejection
+    // re-enable buttons and turn of progress indicator
+  }
 });
