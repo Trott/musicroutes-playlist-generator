@@ -121,7 +121,7 @@ var track = function (domElem, $) {
 };
 
 var getSerialized = function () {
-  return JSON.stringify(state.playlist);
+  return JSON.stringify(_.first(state.playlist, 10));
 };
 
 module.exports = {

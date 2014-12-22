@@ -16,6 +16,7 @@ var beforeEach = lab.beforeEach;
 var nock = require('nock');
 
 var $ = require('cheerio');
+var _ = require('lodash');
 
 var div;
 
@@ -129,6 +130,18 @@ describe('playlist', function () {
 
 			var serialized = playlist.getSerialized();
 			expect(serialized).to.equal('[{"connectorToNext":"/fhqwhagads"},{"mid":"/everybody-to-the-limit","release":"/live-from-east-reykjavik","connectorToNext":"/jake"},{"mid":"/the-system-is-down","release":"/strong-bad-sings","connectorToNext":"/joe"}]');
+			done();
+		});
+
+		it('should truncate the playlist to first ten items before serializing', function (done) {
+			revert = playlist.__set__({
+				state: {
+					playlist: _.range(50)
+				}
+			});
+
+			var serialized = playlist.getSerialized();
+			expect(serialized).to.equal('[0,1,2,3,4,5,6,7,8,9]');
 			done();
 		});
 	});

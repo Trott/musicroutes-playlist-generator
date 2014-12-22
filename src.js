@@ -73,7 +73,7 @@ var go = function () {
 continueButtons.on('click', go);
 
 var permalink = function () {
-  console.log('permalink!');
+  console.log(playlist.getSerialized());
 };
 
 permalinkButtons.on('click', permalink);

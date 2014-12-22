@@ -125,7 +125,7 @@ var track = function (domElem, $) {
 };
 
 var getSerialized = function () {
-  return JSON.stringify(state.playlist);
+  return JSON.stringify(_.first(state.playlist, 10));
 };
 
 module.exports = {
@@ -22506,7 +22506,7 @@ var go = function () {
 continueButtons.on('click', go);
 
 var permalink = function () {
-  console.log('permalink!');
+  console.log(playlist.getSerialized());
 };
 
 permalinkButtons.on('click', permalink);
