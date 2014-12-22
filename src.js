@@ -13,12 +13,10 @@ var submit = $('#startPointSubmit');
 var input = $('#startPoint');
 var paperInput = $('#paperStartPoint');
 var continueButtons = $('.continue');
-var permalinkButtons = $('.permalink');
 var resetButtons = $('.reset');
 var startOverButtons = $('.startOver');
 var progress = $('#progress');
 var formInstructions = $('.form-instructions');
-var permalinkDialog = $('#permalink-dialog');
 
 var sourceIndividual;
 
@@ -37,7 +35,6 @@ var error = function (err) {
     window.history.replaceState({}, '', '?' + querystring.stringify({l: playlist.getSerialized()}));
 		if (! err.deadEnd) {
 			continueButtons.css('visibility', 'visible');
-      permalinkButtons.css('visibility', 'visible');
 		}
 	}
 };
@@ -48,7 +45,6 @@ var go = function () {
 		return;
 	}
 	continueButtons.css('visibility', 'hidden');
-  permalinkButtons.css('visibility', 'hidden');
 	resetButtons.css('visibility', 'hidden');
 	startOverButtons.css('visibility', 'hidden');
 	progress.attr('active', 'active');
@@ -65,7 +61,6 @@ var go = function () {
 			error(err);
 			progress.removeAttr('active');
 			continueButtons.css('visibility', 'visible');
-      permalinkButtons.css('visibility', 'visible');
 			resetButtons.css('visibility', 'visible');
 			startOverButtons.css('visibility', 'visible');
       window.history.replaceState({}, '', '?' + querystring.stringify({l: playlist.getSerialized()}));
@@ -75,29 +70,8 @@ var go = function () {
 
 continueButtons.on('click', go);
 
-var permalinkPreamble = $('<p>').text('Permalink for up to the first ten tracks: ');
-var permalink = function () {
-  permalinkDialog.empty();
-
-  var link = url.resolve(window.location.href, '?l=' + encodeURIComponent(playlist.getSerialized()));
-
-  var linkElement = $('<textarea>')
-    .attr('readonly', 'readonly')
-    .text(link);
-  linkElement.on('click', function () {
-    $(this).select();
-  });
-  permalinkDialog.append(permalinkPreamble).append(linkElement);
-  // Have to close it to re-open it if user clicks Permalink button later on
-  permalinkDialog.attr('opened', false);
-  permalinkDialog.attr('opened', true);
-};
-
-permalinkButtons.on('click', permalink);
-
 var resetForm = function () {
 	continueButtons.css('visibility', 'hidden');
-  permalinkButtons.css('visibility', 'hidden');
 	resetButtons.css('visibility', 'hidden');
 	startOverButtons.css('visibility', 'hidden');
 	submit.removeAttr('disabled');

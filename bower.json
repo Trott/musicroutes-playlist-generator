@@ -19,7 +19,6 @@
     "paper-button": "Polymer/paper-button#~0.5.1",
     "paper-fab": "Polymer/paper-fab#~0.5.1",
     "paper-spinner": "Polymer/paper-spinner#~0.5.1",
-    "paper-shadow": "Polymer/paper-shadow#~0.5.1",
-    "paper-dialog": "Polymer/paper-dialog#~0.5.2"
+    "paper-shadow": "Polymer/paper-shadow#~0.5.1"
   }
 }
