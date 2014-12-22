@@ -120,8 +120,13 @@ var track = function (domElem, $) {
 	return promise;
 };
 
+var getSerialized = function () {
+  return JSON.stringify(state.playlist);
+};
+
 module.exports = {
   clear: clear,
   setSource: setSource,
-  track: track
+  track: track,
+  getSerialized: getSerialized
 };

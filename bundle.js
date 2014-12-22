@@ -124,10 +124,15 @@ var track = function (domElem, $) {
 	return promise;
 };
 
+var getSerialized = function () {
+  return JSON.stringify(state.playlist);
+};
+
 module.exports = {
   clear: clear,
   setSource: setSource,
-  track: track
+  track: track,
+  getSerialized: getSerialized
 };
 },{"./routes.js":"/Users/richtrott/musicroutes-playlist-generator/_lib/routes.js","./utils.js":"/Users/richtrott/musicroutes-playlist-generator/_lib/utils.js","lodash":"/Users/richtrott/musicroutes-playlist-generator/node_modules/lodash/dist/lodash.js","promise":"/Users/richtrott/musicroutes-playlist-generator/node_modules/promise/index.js"}],"/Users/richtrott/musicroutes-playlist-generator/_lib/routes.js":[function(require,module,exports){
 /* global -Promise */

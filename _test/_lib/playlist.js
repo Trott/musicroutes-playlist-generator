@@ -104,4 +104,32 @@ describe('playlist', function () {
 			playlist.track(div, $).then(success);
 		});
 	});
+
+	describe('getSerialized()', function () {
+		it('should return the playlist serialized', function (done) {
+			revert = playlist.__set__({
+				state: {
+					playlist: [
+						{
+							connectorToNext: '/fhqwhagads'
+						},
+						{
+							mid: '/everybody-to-the-limit',
+							release:'/live-from-east-reykjavik',
+							connectorToNext: '/jake'
+						},
+						{
+							mid: '/the-system-is-down',
+							release:'/strong-bad-sings',
+							connectorToNext: '/joe'
+						}
+					]
+				}
+			});
+
+			var serialized = playlist.getSerialized();
+			expect(serialized).to.equal('[{"connectorToNext":"/fhqwhagads"},{"mid":"/everybody-to-the-limit","release":"/live-from-east-reykjavik","connectorToNext":"/jake"},{"mid":"/the-system-is-down","release":"/strong-bad-sings","connectorToNext":"/joe"}]');
+			done();
+		});
+	});
 });
