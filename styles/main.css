@@ -129,6 +129,11 @@ paper-input-decorator[disabled] {
   color: #c9c9c9;
 }
 
+html /deep/ paper-dialog textarea {
+  width: 100%;
+  font-size: xx-small;
+}
+
 .results {
   min-height: 1em;
 }

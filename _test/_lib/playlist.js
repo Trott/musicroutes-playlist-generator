@@ -133,7 +133,7 @@ describe('playlist', function () {
 			done();
 		});
 
-		it('should truncate the playlist to first ten items before serializing', function (done) {
+		it('should truncate the playlist to first eleven items (ten tracks) before serializing', function (done) {
 			revert = playlist.__set__({
 				state: {
 					playlist: _.range(50)
@@ -141,7 +141,7 @@ describe('playlist', function () {
 			});
 
 			var serialized = playlist.getSerialized();
-			expect(serialized).to.equal('[0,1,2,3,4,5,6,7,8,9]');
+			expect(serialized).to.equal('[0,1,2,3,4,5,6,7,8,9,10]');
 			done();
 		});
 	});

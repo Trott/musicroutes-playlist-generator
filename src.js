@@ -18,6 +18,7 @@ var resetButtons = $('.reset');
 var startOverButtons = $('.startOver');
 var progress = $('#progress');
 var formInstructions = $('.form-instructions');
+var permalinkDialog = $('#permalink-dialog');
 
 var sourceIndividual;
 
@@ -72,8 +73,22 @@ var go = function () {
 
 continueButtons.on('click', go);
 
+var permalinkPreamble = $('<p>').text('Permalink for up to the first ten tracks: ');
 var permalink = function () {
-  console.log(playlist.getSerialized());
+  permalinkDialog.empty();
+
+  var link = url.resolve(window.location.href, '?l=' + encodeURIComponent(playlist.getSerialized()));
+
+  var linkElement = $('<textarea>')
+    .attr('readonly', 'readonly')
+    .text(link);
+  linkElement.on('click', function () {
+    $(this).select();
+  });
+  permalinkDialog.append(permalinkPreamble).append(linkElement);
+  // Have to close it to re-open it if user clicks Permalink button later on
+  permalinkDialog.attr('opened', false);
+  permalinkDialog.attr('opened', true);
 };
 
 permalinkButtons.on('click', permalink);
