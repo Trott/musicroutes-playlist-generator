@@ -34,6 +34,7 @@ var error = function (err) {
 		progress.removeAttr('active');
 		resetButtons.css('visibility', 'visible');
 		startOverButtons.css('visibility', 'visible');
+    window.history.replaceState({}, '', '?' + querystring.stringify({l: playlist.getSerialized()}));
 		if (! err.deadEnd) {
 			continueButtons.css('visibility', 'visible');
       permalinkButtons.css('visibility', 'visible');
@@ -67,6 +68,7 @@ var go = function () {
       permalinkButtons.css('visibility', 'visible');
 			resetButtons.css('visibility', 'visible');
 			startOverButtons.css('visibility', 'visible');
+      window.history.replaceState({}, '', '?' + querystring.stringify({l: playlist.getSerialized()}));
 		}
 	);
 };
