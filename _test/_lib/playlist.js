@@ -129,7 +129,19 @@ describe('playlist', function () {
 			});
 
 			var serialized = playlist.getSerialized();
-			expect(serialized).to.equal('[{"connectorToNext":"/fhqwhagads"},{"mid":"/everybody-to-the-limit","release":"/live-from-east-reykjavik","connectorToNext":"/jake"},{"mid":"/the-system-is-down","release":"/strong-bad-sings","connectorToNext":"/joe"}]');
+			expect(JSON.parse(serialized)).to.deep.equal([
+				{
+					connectorToNext: "/fhqwhagads"
+				},{
+					mid: "/everybody-to-the-limit",
+					release: "/live-from-east-reykjavik",
+					connectorToNext: "/jake"
+				},{
+					mid: "/the-system-is-down",
+					release: "/strong-bad-sings",
+					connectorToNext: "/joe"
+				}
+			]);
 			done();
 		});
 
@@ -141,7 +153,27 @@ describe('playlist', function () {
 			});
 
 			var serialized = playlist.getSerialized();
-			expect(serialized).to.equal('[0,1,2,3,4,5,6,7,8,9,10]');
+			expect(serialized).to.equal('[{},{},{},{},{},{},{},{},{},{},{}]');
+			done();
+		});
+
+		it('should omit previousConnector details and just return the mid', function (done) {
+			revert = playlist.__set__({
+				state: {
+					playlist: [
+						{
+							connectorToNext: '/fhqwhagads',
+							connectorToNextDetails: {
+								name: 'Fhqwhagads',
+								mid: '/fhqwhagads'
+							}
+						}
+					]
+				}
+			});
+
+			var serialized = playlist.getSerialized();
+			expect(serialized).to.equal('[{"connectorToNext":"/fhqwhagads"}]');
 			done();
 		});
 	});

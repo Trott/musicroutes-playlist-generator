@@ -125,13 +125,23 @@ var track = function (domElem, $) {
 };
 
 var getSerialized = function () {
-  return JSON.stringify(_.first(state.playlist, 11));
+  var bareBones = _.map(state.playlist, function (value) {
+    var rv = {};
+    rv.connectorToNext = value.connectorToNext;
+    if (value.mid) {
+      rv.mid = value.mid;
+    }
+    if (value.release) {
+      rv.release = value.release
+    }
+    return rv;
+  });
+  return JSON.stringify(_.first(bareBones, 11));
 };
 
 var unserialize = function (data) {
-  var newState = {};
   try {
-    newState.playlist = JSON.parse(data);
+    state.playlist = JSON.parse(data);
   } catch (e) {
     return Promise.reject(e);
   }
