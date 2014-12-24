@@ -20,7 +20,8 @@ var formInstructions = $('.form-instructions');
 
 var sourceIndividual;
 
-var error = function (err) {
+var error = function (err, options) {
+  options = options || {};
   if (err) {
     if (err instanceof Error) {
       var p = $('<p>').text(err.message);
@@ -32,7 +33,9 @@ var error = function (err) {
     progress.removeAttr('active');
     resetButtons.css('visibility', 'visible');
     startOverButtons.css('visibility', 'visible');
-    window.history.replaceState({}, '', '?' + querystring.stringify({l: playlist.getSerialized()}));
+    if (! options.preserveUrl) {
+      window.history.replaceState({}, '', '?' + querystring.stringify({l: playlist.getSerialized()}));
+    }
     if (! err.deadEnd) {
       continueButtons.css('visibility', 'visible');
     }
@@ -146,7 +149,9 @@ $(document).ready(function () {
     progress.attr('active', 'active');
 
     playlist.unserialize(urlParts.query.l)
-      .catch(error);
+      .catch(function (err) {
+        error(Error('Playlist is invalid: ' + err.message), {preserveUrl: true});
+      });
     // it will need to update seenArtists and all that jazz
     // look up initial connector and populate input box
     // render remaining elements
