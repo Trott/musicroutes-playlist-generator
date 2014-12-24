@@ -22625,7 +22625,7 @@ $(document).ready(function () {
 
     playlist.unserialize(urlParts.query.l)
       .catch(function (err) {
-        error(Error('Playlist is invalid: ' + err.message), {preserveUrl: true});
+        error(Error('Could not restore playlist: ' + err.message), {preserveUrl: true});
       });
     // it will need to update seenArtists and all that jazz
     // look up initial connector and populate input box
