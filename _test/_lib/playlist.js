@@ -197,5 +197,15 @@ describe('playlist', function () {
 			playlist.unserialize('fhqwhagads')
 				.catch(failure);
 		});
+
+		it('should transform connectorToNext string property to an object with a mid property', function (done) {
+			var success = function (data) {
+				expect(data).to.deep.equal([{connectorToNext: {mid: '/fhqwhagads'}}]);
+				done();
+			};
+
+			playlist.unserialize('[{"connectorToNext": "/fhqwhagads"}]')
+				.then(success);
+		});
 	});
 });

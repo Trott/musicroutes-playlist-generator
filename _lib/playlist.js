@@ -141,6 +141,14 @@ var unserialize = function (data) {
   } catch (e) {
     return Promise.reject(e);
   }
+
+  _.map(state.playlist, function (value) {
+    value.connectorToNext = {
+      mid: value.connectorToNext
+    };
+  });
+
+  return Promise.resolve(state.playlist);
 };
 
 module.exports = {
