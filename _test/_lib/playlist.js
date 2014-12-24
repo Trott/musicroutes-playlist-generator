@@ -207,5 +207,18 @@ describe('playlist', function () {
 			playlist.unserialize('[{"connectorToNext": "/fhqwhagads"}]')
 				.then(success);
 		});
+
+		it('should transform release string property to an object with a mid property', function (done) {
+			var success = function (data) {
+				expect(data).to.deep.equal([{
+					connectorToNext: {mid: '/fhqwhagads'}, 
+					release: {mid: '/live-from-east-reykjavik'}
+				}]);
+				done();
+			};
+
+			playlist.unserialize('[{"connectorToNext": "/fhqwhagads", "release": "/live-from-east-reykjavik"}]')
+				.then(success);
+		});
 	});
 });

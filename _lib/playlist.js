@@ -147,6 +147,11 @@ var unserialize = function (data) {
     value.connectorToNext = {
       mid: value.connectorToNext
     };
+    if (value.release) {
+      value.release = {
+        mid: value.release
+      };
+    }
   });
 
   return Promise.resolve(state.playlist);
