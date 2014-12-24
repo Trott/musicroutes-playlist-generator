@@ -97,7 +97,7 @@ var track = function (domElem, $) {
 			.then(function () {
         state.playlist.push({
           mid: state.trackDetails.mid,
-          release: {mid: state.trackDetails.release},
+          release: state.trackDetails.release,
           connectorToNext: state.connectorToNext
         });
         return state.trackDetails; })
@@ -132,6 +132,7 @@ var getSerialized = function () {
     }
     return rv;
   });
+
   return JSON.stringify(_.first(bareBones, 11));
 };
 
