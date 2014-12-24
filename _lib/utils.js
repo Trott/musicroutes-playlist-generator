@@ -49,20 +49,26 @@ exports.formatPreviousConnectorName = function (state) {
 	// we want to render it as 'Janelle Monae'. Ditto for missing umlauts and whatnot.
 	// So just pull from state.trackDetails if it's there.
 
-	if (! state.previousConnector.name) {
-		var matching = _.where(state.trackDetails.artists, {mid: state.previousConnector.mid});
+	var lastIndex = state.playlist.length - 1;
+	var connector = state.playlist[lastIndex].connectorToNext;
+	if (! connector.name) {
+		var matching = _.where(state.trackDetails.artists, {mid: connector.mid});
 		if (matching[0]) {
-			state.previousConnector.name = matching[0].name;
+			connector.name = matching[0].name;
+			state.playlist[lastIndex].connectorToNext = connector;
 		}
 	}
 
 	// If they are a contributor and not the artist, we have to go out and fetch their details.
 	// This will happen on the first track if the user searches for, say, 'berry oakley'.
-	if (! state.previousConnector.name) {
-		return routes.getArtistDetails(state.previousConnector.mid)
-		.then(function (value) {state.previousConnector.name = value.name;});
+	if (! connector.name) {
+		return routes.getArtistDetails(connector.mid)
+		.then(function (value) {
+			connector.name = value.name;
+			state.playlist[lastIndex].connectorToNext = connector;
+		});
 	}
-	return state.previousConnector.name;
+	return connector.name;
 };
 
 exports.mergeArtistsAndContributors = function (artists, contributors) {
@@ -88,10 +94,11 @@ exports.renderConnector = function ($, details, state) {
 
 	var p = $('<p>');
 
-	previous = $('<b>').append(renderNameOrMid(state.previousConnector));
+	var previousConnector = _.last(state.playlist).connectorToNext;
+	previous = $('<b>').append(renderNameOrMid(previousConnector));
 	p.append(previous);
 	
-	if (state.previousConnector.mid !== details.mid) {
+	if (previousConnector.mid !== details.mid) {
 		current = $('<b>').append(renderNameOrMid(details));
 		p.append(' recorded with ').append(current);
 		if (state.sourceIndividual.roles) {
@@ -102,7 +109,7 @@ exports.renderConnector = function ($, details, state) {
 		p.append(' appeared on:');
 	}
 
-	state.previousConnector = details;
+	previousConnector = details;
 	return p;
 };
 
@@ -202,9 +209,10 @@ exports.giveUpIfNoTracks = function (state, $, err) {
     return Promise.reject(err);
   }
   state.atDeadEnd = true;
+  var previousConnector = _.last(state.playlist).connectorToNext;
   var p = $('<p>')
     .text('Playlist is at a dead end with ')
-    .append(anchorFromMid($, state.previousConnector.mid, state.previousConnector.name))
+    .append(anchorFromMid($, previousConnector.mid, previousConnector.name))
     .append('.');
   var msg = $('<paper-shadow>')
     .addClass('error')

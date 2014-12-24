@@ -8,7 +8,6 @@ var state = {
 	seenIndividuals: [],
 	seenTracks: [],
 	seenArtists: [],
-	previousConnector: {},
 	sourceIndividual: {},
 	trackDetails: {},
 	atDeadEnd: false,
@@ -22,15 +21,13 @@ var clear = function () {
 	state.seenTracks = [];
 	state.seenArtists = [];
 	state.sourceIndividual = {};
-	state.previousConnector = {};
   state.playlist = [];
 };
 
 var setSource = function (source) {
   clear();
 	state.sourceIndividual.mid = source;
-  state.previousConnector.mid = source;
-  state.playlist = [{connectorToNext: source}];
+  state.playlist = [{connectorToNext: {mid: source}}];
 };
 
 var track = function (domElem, $) {
@@ -90,15 +87,18 @@ var track = function (domElem, $) {
 			.then(getContributors)
 			.then(pickContributor)
 			.then(routes.getArtistDetails)
-			.then(function (details) { return utils.renderConnector($, details, state); })
+			.then(function (details) {
+        state.connectorToNext = details;
+        return utils.renderConnector($, details, state);
+      })
 			.then(appendToResultsElem)
 			.then(renderTrackDetails)
 			.then(appendToResultsElem)
-			.then(function () { 
+			.then(function () {
         state.playlist.push({
           mid: state.trackDetails.mid,
-          release: _.result(state.trackDetails.release, 'mid'),
-          connectorToNext: state.sourceIndividual.mid
+          release: {mid: state.trackDetails.release},
+          connectorToNext: state.connectorToNext
         });
         return state.trackDetails; })
 			.then(utils.searchForVideoFromTrackDetails)
@@ -123,12 +123,12 @@ var track = function (domElem, $) {
 var getSerialized = function () {
   var bareBones = _.map(state.playlist, function (value) {
     var rv = {};
-    rv.connectorToNext = value.connectorToNext;
+    rv.connectorToNext = _.result(value.connectorToNext, 'mid');
     if (value.mid) {
       rv.mid = value.mid;
     }
     if (value.release) {
-      rv.release = value.release
+      rv.release = _.result(value.release, 'mid');
     }
     return rv;
   });

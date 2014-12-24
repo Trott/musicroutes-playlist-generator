@@ -64,13 +64,6 @@ describe('playlist', function () {
 			expect(playlist.__get__('state.sourceIndividual')).to.deep.equal({});
 			done();
 		});
-
-		it('should reset previousConnector', function (done) {
-			revert = playlist.__set__({state: {previousConnector: {mid: 'fhqwhagads'}}});
-			playlist.clear();
-			expect(playlist.__get__('state.previousConnector')).to.deep.equal({});
-			done();
-		});
 	});
 
 	describe('setSource()', function () {
@@ -112,17 +105,27 @@ describe('playlist', function () {
 				state: {
 					playlist: [
 						{
-							connectorToNext: '/fhqwhagads'
+							connectorToNext: {
+								mid: '/fhqwhagads'
+							}
 						},
 						{
 							mid: '/everybody-to-the-limit',
-							release:'/live-from-east-reykjavik',
-							connectorToNext: '/jake'
+							release: {
+								mid: '/live-from-east-reykjavik'
+							},
+							connectorToNext: {
+								mid: '/jake'
+							}
 						},
 						{
 							mid: '/the-system-is-down',
-							release:'/strong-bad-sings',
-							connectorToNext: '/joe'
+							release: {
+								mid: '/strong-bad-sings'
+							},
+							connectorToNext: {
+								mid: '/joe'
+							}
 						}
 					]
 				}
@@ -131,15 +134,15 @@ describe('playlist', function () {
 			var serialized = playlist.getSerialized();
 			expect(JSON.parse(serialized)).to.deep.equal([
 				{
-					connectorToNext: "/fhqwhagads"
+					connectorToNext: '/fhqwhagads'
 				},{
-					mid: "/everybody-to-the-limit",
-					release: "/live-from-east-reykjavik",
-					connectorToNext: "/jake"
+					mid: '/everybody-to-the-limit',
+					release: '/live-from-east-reykjavik',
+					connectorToNext: '/jake'
 				},{
-					mid: "/the-system-is-down",
-					release: "/strong-bad-sings",
-					connectorToNext: "/joe"
+					mid: '/the-system-is-down',
+					release: '/strong-bad-sings',
+					connectorToNext: '/joe'
 				}
 			]);
 			done();
@@ -157,15 +160,18 @@ describe('playlist', function () {
 			done();
 		});
 
-		it('should omit previousConnector details and just return the mid', function (done) {
+		it('should omit details and just return the mids', function (done) {
 			revert = playlist.__set__({
 				state: {
 					playlist: [
 						{
-							connectorToNext: '/fhqwhagads',
-							connectorToNextDetails: {
-								name: 'Fhqwhagads',
-								mid: '/fhqwhagads'
+							connectorToNext: {
+								mid: '/fhqwhagads',
+								name: 'Fhqwhagads'
+							},
+							release: {
+								mid: '/everybody-to-the-limit',
+								name: 'Everybody To The Limit!'
 							}
 						}
 					]
@@ -173,7 +179,10 @@ describe('playlist', function () {
 			});
 
 			var serialized = playlist.getSerialized();
-			expect(serialized).to.equal('[{"connectorToNext":"/fhqwhagads"}]');
+			expect(JSON.parse(serialized)).to.deep.equal([{
+				connectorToNext: '/fhqwhagads',
+				release: '/everybody-to-the-limit'
+			}]);
 			done();
 		});
 	});

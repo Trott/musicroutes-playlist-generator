@@ -136,25 +136,26 @@ describe('utils', function () {
 		});
 	});
 
-	describe('fomatPreviousConnector()', function () {
+	describe('fomatPreviousConnectorName()', function () {
 		it('should do nothing if there is already a previousConnector.name', function (done) {
-			var state = {previousConnector: {name: 'fhqwhagads'}};
+			var state = {playlist: [{connectorToNext: {name: 'fhqwhagads'}}]};
 			utils.formatPreviousConnectorName(state);
-			expect(state.previousConnector.name).to.equal('fhqwhagads');
+			expect(state.playlist[0].connectorToNext.name).to.equal('fhqwhagads');
 			done();
 		});
 
 		it('should use the artist name if the mid matches', function (done) {
-			var state = {previousConnector: {mid: '/fhqwhagads'}, trackDetails: {artists: [{mid: '/fhqwhagads', name: 'Strong Bad'}]}};
+			var state = {playlist: [{connectorToNext: {mid: '/fhqwhagads'}}], trackDetails: {artists: [{mid: '/fhqwhagads', name: 'Strong Bad'}]}};
 			utils.formatPreviousConnectorName(state);
-			expect(state.previousConnector.name).to.equal('Strong Bad');
+			expect(state.playlist[0].connectorToNext.name).to.equal('Strong Bad');
 			done();
 		});
 
-		it('should query Freebase for the connector details if not mid is not in artists', function (done) {
-			var state = {previousConnector: {mid: '/fhqwhagads'}, trackDetails: {artists:[]}};
+		it('should query Freebase for the connector details if mid is not in artists', function (done) {
+			var state = {playlist: [{connectorToNext: {mid: '/fhqwhagads'}}], trackDetails: {artists: []}};
+
 			utils.formatPreviousConnectorName(state);
-			expect(state.previousConnector.name).to.equal('Strong Bad');
+			expect(state.playlist[0].connectorToNext.name).to.equal('Strong Bad');
 			done();
 		});
 	});
@@ -196,7 +197,7 @@ describe('utils', function () {
 	describe('renderConnector()', function () {
 		it('should render name and anchor just once when mids match', function (done) {
 			var details = {mid: '/fhqwhagads', name: 'jake'};
-			var state = { previousConnector: {mid: '/fhqwhagads', name: 'joe'}};
+			var state = { playlist: [{connectorToNext: {mid: '/fhqwhagads', name: 'joe'}}]};
 
 			var connector = utils.renderConnector($, details, state);
 			expect(connector.html()).to.equal('<b><a href="http://freebase.com/fhqwhagads" target="_blank">joe</a></b> appeared on:');
@@ -205,7 +206,7 @@ describe('utils', function () {
 
 		it('should render name and anchor for each entity when mids are different', function (done) {
 			var details = {mid: '/fhqwhagads', name: 'joe'};
-			var state = { previousConnector: {mid: '/lorenzmagazineman', name: 'jake'}, sourceIndividual: {}};
+			var state = { playlist: [{connectorToNext: {mid: '/lorenzmagazineman', name: 'jake'}}], sourceIndividual: {}};
 
 			var connector = utils.renderConnector($, details, state);
 			expect(connector.html()).to.equal('<b><a href="http://freebase.com/lorenzmagazineman" target="_blank">jake</a></b> recorded with <b><a href="http://freebase.com/fhqwhagads" target="_blank">joe</a></b> on:');
@@ -214,7 +215,7 @@ describe('utils', function () {
 
 		it('should render roles from sourceIndividual if present', function (done) {
 			var details = {mid: '/fhqwhagads', name: 'joe'};
-			var state = { previousConnector: {mid: '/lorenzmagazineman', name: 'jake'}, sourceIndividual: {roles: [{name: 'jocking'}]}};
+			var state = { playlist: [{connectorToNext: {mid: '/lorenzmagazineman', name: 'jake'}}], sourceIndividual: {roles: [{name: 'jocking'}]}};
 
 			var connector = utils.renderConnector($, details, state);
 			expect(connector.html()).to.equal('<b><a href="http://freebase.com/lorenzmagazineman" target="_blank">jake</a></b> recorded with <b><a href="http://freebase.com/fhqwhagads" target="_blank">joe</a></b><span> (jocking)</span> on:');
@@ -414,10 +415,12 @@ describe('utils', function () {
 
 		it('should reject with message constructed from state if no error sent', function (done) {
 			var state = {
-				previousConnector: {
-					mid: '/fhqwhagads',
-					name: 'Fhqwhagads'
-				}
+				playlist: [{
+					connectorToNext: {
+						mid: '/fhqwhagads',
+						name: 'Fhqwhagads'
+					}
+				}]
 			};
 
 			var handler = function (msg) {
