@@ -22620,12 +22620,11 @@ $(document).ready(function () {
     paperInput.attr('disabled', 'disabled');
     progress.attr('active', 'active');
 
-    playlist.unserialize(urlParts.query.l);
-    // set playlist so you can continue and so on
+    playlist.unserialize(urlParts.query.l)
+      .catch(error);
     // it will need to update seenArtists and all that jazz
     // look up initial connector and populate input box
     // render remaining elements
-    // handle error/promise rejection
     // re-enable buttons and turn of progress indicator
   }
 });
