@@ -83,7 +83,7 @@ describe('playlist', function () {
 			};
 
 			playlist.setSource(BobDylan);
-			playlist.track(div, $).catch(failure);
+			playlist.fetchNewTrack(div, $).catch(failure);
 		});
 
 		it('should return a track if given a valid start point', function (done) {
@@ -95,7 +95,7 @@ describe('playlist', function () {
 			};
 
 			playlist.setSource(BobDylan);
-			playlist.track(div, $).then(success);
+			playlist.fetchNewTrack(div, $).then(success);
 		});
 	});
 

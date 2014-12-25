@@ -58,7 +58,7 @@ var go = function () {
     },
     function (next) {
       loopCount = loopCount + 1;
-      playlist.track(resultsElem, $).then(next, next);
+      playlist.fetchNewTrack(resultsElem, $).then(next, next);
     },
     function (err) {
       if (err) {

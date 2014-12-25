@@ -78,7 +78,7 @@ var setTrackDetails = function (details) {
   return state.playlist[index];
 };
 
-var track = function (domElem, $) {
+var fetchNewTrack = function (domElem, $) {
 	var resultsElem = $(domElem);
 	var appendToResultsElem = function (elem) {
 		resultsElem.append(elem);
@@ -208,7 +208,7 @@ var length = function () {
 module.exports = {
   clear: clear,
   setSource: setSource,
-  track: track,
+  fetchNewTrack: fetchNewTrack,
   getSerialized: getSerialized,
   unserialize: unserialize,
   fetchConnectorDetails: fetchConnectorDetails,
@@ -22547,7 +22547,7 @@ var go = function () {
     },
     function (next) {
       loopCount = loopCount + 1;
-      playlist.track(resultsElem, $).then(next, next);
+      playlist.fetchNewTrack(resultsElem, $).then(next, next);
     },
     function (err) {
       if (err) {
