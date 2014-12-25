@@ -2,6 +2,7 @@
 exports.key = "AIzaSyB3yM4RkyAqYVPAr6lQLfzp8H6yQrmmHCs";
 
 },{}],"/Users/richtrott/musicroutes-playlist-generator/_lib/playlist.js":[function(require,module,exports){
+(function (process){
 /* global -Promise */
 var routes = require('./routes.js');
 var utils = require('./utils.js');
@@ -58,9 +59,13 @@ var fetchConnectorDetails = function () {
     .then(function (value) {
       connector.name = value.name;
       state.playlist[prevIndex].connectorToNext = connector;
+      return Promise.resolve(connector);
     });
   }
-  return connector.name;
+  
+  return new Promise(function (resolve) {
+    process.nextTick(function () { resolve(connector); });
+  });
 };
 
 var setTrackDetails = function (details) {
@@ -204,7 +209,8 @@ module.exports = {
   fetchConnectorDetails: fetchConnectorDetails,
   setTrackDetails: setTrackDetails
 };
-},{"./routes.js":"/Users/richtrott/musicroutes-playlist-generator/_lib/routes.js","./utils.js":"/Users/richtrott/musicroutes-playlist-generator/_lib/utils.js","lodash":"/Users/richtrott/musicroutes-playlist-generator/node_modules/lodash/dist/lodash.js","promise":"/Users/richtrott/musicroutes-playlist-generator/node_modules/promise/index.js"}],"/Users/richtrott/musicroutes-playlist-generator/_lib/routes.js":[function(require,module,exports){
+}).call(this,require('_process'))
+},{"./routes.js":"/Users/richtrott/musicroutes-playlist-generator/_lib/routes.js","./utils.js":"/Users/richtrott/musicroutes-playlist-generator/_lib/utils.js","_process":"/usr/local/lib/node_modules/watchify/node_modules/browserify/node_modules/process/browser.js","lodash":"/Users/richtrott/musicroutes-playlist-generator/node_modules/lodash/dist/lodash.js","promise":"/Users/richtrott/musicroutes-playlist-generator/node_modules/promise/index.js"}],"/Users/richtrott/musicroutes-playlist-generator/_lib/routes.js":[function(require,module,exports){
 /* global -Promise */
 var freebase = require('mqlread');
 var Promise = require('promise');

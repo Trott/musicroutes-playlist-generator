@@ -54,9 +54,13 @@ var fetchConnectorDetails = function () {
     .then(function (value) {
       connector.name = value.name;
       state.playlist[prevIndex].connectorToNext = connector;
+      return Promise.resolve(connector);
     });
   }
-  return connector.name;
+  
+  return new Promise(function (resolve) {
+    process.nextTick(function () { resolve(connector); });
+  });
 };
 
 var setTrackDetails = function (details) {

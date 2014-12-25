@@ -232,9 +232,11 @@ describe('playlist', function () {
 					]
 				}
 			});
-			playlist.fetchConnectorDetails();
-			expect(playlist.__get__('state').playlist[0].connectorToNext.name).to.equal('fhqwhagads');
-			done();
+			playlist.fetchConnectorDetails()
+			.then(function (connector) {
+				expect(connector).to.deep.equal({name: 'fhqwhagads'});
+				done();
+			});
 		});
 
 		it('should use the artist name if the mid matches', function (done) {
@@ -246,9 +248,11 @@ describe('playlist', function () {
 					]
 				}
 			});
-			playlist.fetchConnectorDetails();
-			expect(playlist.__get__('state').playlist[0].connectorToNext.name).to.equal('Strong Bad');
-			done();
+			playlist.fetchConnectorDetails()
+			.then(function (connector) {
+				expect(connector).to.deep.equal({mid: '/fhqwhagads', name: 'Strong Bad'});
+				done();
+			});
 		});
 
 		it('should query Freebase for the connector details if mid is not in artists', function (done) {
