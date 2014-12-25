@@ -313,4 +313,19 @@ describe('playlist', function () {
 			done();
 		});
 	});
+
+	describe('length()', function () {
+		it('should return the number of tracks in the playlist', function (done) {
+			revert = playlist.__set__({
+				state: {
+					playlist: [
+						{}, {}, {}
+					]
+				}
+			});
+
+			expect(playlist.length()).to.equal(2);
+			done();
+		});
+	});
 });

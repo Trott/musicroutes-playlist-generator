@@ -195,6 +195,11 @@ var unserialize = function (data) {
   return Promise.resolve(state.playlist);
 };
 
+var length = function () {
+  // First item in playlist is just a connector, not a track, so subtract 1.
+  return state.playlist.length - 1;
+};
+
 module.exports = {
   clear: clear,
   setSource: setSource,
@@ -202,5 +207,6 @@ module.exports = {
   getSerialized: getSerialized,
   unserialize: unserialize,
   fetchConnectorDetails: fetchConnectorDetails,
-  setTrackDetails: setTrackDetails
+  setTrackDetails: setTrackDetails,
+  length: length
 };

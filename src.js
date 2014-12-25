@@ -149,10 +149,17 @@ $(document).ready(function () {
     progress.attr('active', 'active');
 
     playlist.unserialize(urlParts.query.l)
-      .catch(function (err) {
+    .then(
+      function () {
+        var l = playlist.length();
+        console.log(l);
+      },
+      function (err) {
+        playlist.clear();
         err.message = 'Could not restore playlist: ' + err.message;
         error(err, {preserveUrl: true});
-      });
+      }
+    );
     // it will need to update seenArtists and all that jazz
     // look up initial connector and populate input box
     // render remaining elements
