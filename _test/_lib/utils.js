@@ -408,34 +408,6 @@ describe('utils', function () {
 		});
 	});
 
-	describe('setTrackDetails()', function () {
-		it('should set defaults gracefully if null object sent for details', function (done) {
-			var state = {track: '/fhqwhagads'};
-			var trackDetails = utils.setTrackDetails(state, null);
-
-			var expectedResults = {
-				mid: '/fhqwhagads', 
-				release: ''
-			};
-			expect(trackDetails).to.deep.equal(expectedResults);
-			done();
-		});
-
-		it('should use details provided', function (done) {
-			var state = {track: '/fhqwhagads'};
-			var details = {releases: [{mid: '/live-from-east-reykjavik'}]};
-			var trackDetails = utils.setTrackDetails(state, details);
-
-			var expectedResults = {
-				mid: '/fhqwhagads',
-				releases: [{mid: '/live-from-east-reykjavik'}],
-				release: {mid: '/live-from-east-reykjavik'}
-			};
-			expect(trackDetails).to.deep.equal(expectedResults);
-			done();
-		});
-	});
-
 	describe('searchForVideoFromTrackDetails()', function () {
 		it('should assemble trackDetails with each entity surrounded by quotation marks', function (done) {
 			var trackDetails = {

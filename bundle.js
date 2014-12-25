@@ -63,6 +63,13 @@ var fetchConnectorDetails = function () {
   return connector.name;
 };
 
+var setTrackDetails = function (details) {
+  state.trackDetails = details || {};
+  state.trackDetails.mid = state.track;
+  state.trackDetails.release = _.sample(state.trackDetails.releases) || '';
+  return state.trackDetails;
+};
+
 var track = function (domElem, $) {
 	var resultsElem = $(domElem);
 	var appendToResultsElem = function (elem) {
@@ -110,7 +117,7 @@ var track = function (domElem, $) {
 		trackPicked = true;
 
 		var promise = routes.getTrackDetails(state.track)
-			.then(utils.setTrackDetails.bind(undefined, state))
+			.then(setTrackDetails)
 			.then(function (trackDetails) { return _.pluck(trackDetails.artists, 'mid');})
 			.then(function (currentArtists) { 
 				state.seenArtists = state.seenArtists.concat(_.difference(currentArtists, state.seenArtists));
@@ -195,7 +202,8 @@ module.exports = {
   track: track,
   getSerialized: getSerialized,
   unserialize: unserialize,
-  fetchConnectorDetails: fetchConnectorDetails
+  fetchConnectorDetails: fetchConnectorDetails,
+  setTrackDetails: setTrackDetails
 };
 },{"./routes.js":"/Users/richtrott/musicroutes-playlist-generator/_lib/routes.js","./utils.js":"/Users/richtrott/musicroutes-playlist-generator/_lib/utils.js","lodash":"/Users/richtrott/musicroutes-playlist-generator/node_modules/lodash/dist/lodash.js","promise":"/Users/richtrott/musicroutes-playlist-generator/node_modules/promise/index.js"}],"/Users/richtrott/musicroutes-playlist-generator/_lib/routes.js":[function(require,module,exports){
 /* global -Promise */
@@ -590,13 +598,6 @@ exports.giveUpIfNoTracks = function (state, $, err) {
     .append(p);
   msg.deadEnd = true;
   return Promise.reject(msg);
-};
-
-exports.setTrackDetails = function (state, details) {
-  state.trackDetails = details || {};
-  state.trackDetails.mid = state.track;
-  state.trackDetails.release = _.sample(state.trackDetails.releases) || '';
-  return state.trackDetails;
 };
 
 exports.searchForVideoFromTrackDetails = function (trackDetails) {

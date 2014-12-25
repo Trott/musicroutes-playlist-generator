@@ -265,4 +265,34 @@ describe('playlist', function () {
 
 		});
 	});
+
+	describe('setTrackDetails()', function () {
+		it('should set defaults gracefully if null object sent for details', function (done) {
+			revert = playlist.__set__({state: {track: '/fhqwhagads'}});
+			var trackDetails = playlist.setTrackDetails(null);
+
+			var expectedResults = {
+				mid: '/fhqwhagads', 
+				release: ''
+			};
+			expect(trackDetails).to.deep.equal(expectedResults);
+			done();
+		});
+
+		it('should use details provided', function (done) {
+			revert = playlist.__set__({
+				state: {track: '/fhqwhagads'}
+			});
+			var details =	{releases: [{mid: '/live-from-east-reykjavik'}]};
+			var trackDetails = playlist.setTrackDetails(details);
+
+			var expectedResults = {
+				mid: '/fhqwhagads',
+				releases: [{mid: '/live-from-east-reykjavik'}],
+				release: {mid: '/live-from-east-reykjavik'}
+			};
+			expect(trackDetails).to.deep.equal(expectedResults);
+			done();
+		});
+	});
 });
