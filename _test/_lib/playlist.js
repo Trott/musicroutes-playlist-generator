@@ -221,4 +221,48 @@ describe('playlist', function () {
 				.then(success);
 		});
 	});
+
+	describe('fetchConnectorDetails()', function () {
+		it('should do nothing if there is already a previousConnector.name', function (done) {
+			revert = playlist.__set__({
+				state: {
+					playlist: [{connectorToNext: {name: 'fhqwhagads'}}]
+				}
+			});
+			playlist.fetchConnectorDetails();
+			expect(playlist.__get__('state').playlist[0].connectorToNext.name).to.equal('fhqwhagads');
+			done();
+		});
+
+		it('should use the artist name if the mid matches', function (done) {
+			revert = playlist.__set__({
+				state: {
+					playlist: [{connectorToNext: {mid: '/fhqwhagads'}}], 
+					trackDetails: {artists: [{mid: '/fhqwhagads', name: 'Strong Bad'}]}
+				}
+			})	;
+			playlist.fetchConnectorDetails();
+			expect(playlist.__get__('state').playlist[0].connectorToNext.name).to.equal('Strong Bad');
+			done();
+		});
+
+		it('should query Freebase for the connector details if mid is not in artists', function (done) {
+			revert = playlist.__set__({
+				routes: {
+					getArtistDetails: function () {
+						return {then: function (cb) { cb({name: 'Strong Bad'}); }};
+					}
+				},
+				state: {
+					playlist: [{connectorToNext: {mid: '/fhqwhagads'}}], 
+					trackDetails: {artists: []}
+				}
+			});
+
+			playlist.fetchConnectorDetails();
+			expect(playlist.__get__('state').playlist[0].connectorToNext.name).to.equal('Strong Bad');
+			done();
+
+		});
+	});
 });

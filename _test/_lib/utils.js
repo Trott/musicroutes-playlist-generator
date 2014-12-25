@@ -20,9 +20,6 @@ var Promise = require('promise');
 describe('utils', function () {
 	utils.__set__({
 		routes: {
-			getArtistDetails: function () {
-				return {then: function (cb) { cb({name: 'Strong Bad'}); }};
-			},
 			getArtistsAndContributorsFromTracks: function () {
 				return {then: function (cb) { return Promise.resolve(cb({
 					artists:[{mid: '/fhqwhagads'}], 
@@ -132,30 +129,6 @@ describe('utils', function () {
 		it('should return empty element if no mid', function (done) {
 			var rv = utils.releaseAnchor($);
 			expect(rv).to.deep.equal($());
-			done();
-		});
-	});
-
-	describe('fomatPreviousConnectorName()', function () {
-		it('should do nothing if there is already a previousConnector.name', function (done) {
-			var state = {playlist: [{connectorToNext: {name: 'fhqwhagads'}}]};
-			utils.formatPreviousConnectorName(state);
-			expect(state.playlist[0].connectorToNext.name).to.equal('fhqwhagads');
-			done();
-		});
-
-		it('should use the artist name if the mid matches', function (done) {
-			var state = {playlist: [{connectorToNext: {mid: '/fhqwhagads'}}], trackDetails: {artists: [{mid: '/fhqwhagads', name: 'Strong Bad'}]}};
-			utils.formatPreviousConnectorName(state);
-			expect(state.playlist[0].connectorToNext.name).to.equal('Strong Bad');
-			done();
-		});
-
-		it('should query Freebase for the connector details if mid is not in artists', function (done) {
-			var state = {playlist: [{connectorToNext: {mid: '/fhqwhagads'}}], trackDetails: {artists: []}};
-
-			utils.formatPreviousConnectorName(state);
-			expect(state.playlist[0].connectorToNext.name).to.equal('Strong Bad');
 			done();
 		});
 	});

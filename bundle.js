@@ -34,6 +34,35 @@ var setSource = function (source) {
   state.playlist = [{connectorToNext: {mid: source}}];
 };
 
+var fetchConnectorDetails = function () {
+  // Get properly rendered name if we don't yet have one for the previous connector.
+  
+  // If this is the first connection and the user entered 'janelle monae'
+  // we want to render it as 'Janelle Monae'. Ditto for missing umlauts and whatnot.
+  // So just pull from state.trackDetails if it's there.
+
+  var lastIndex = state.playlist.length - 1;
+  var connector = state.playlist[lastIndex].connectorToNext;
+  if (! connector.name) {
+    var matching = _.where(state.trackDetails.artists, {mid: connector.mid});
+    if (matching[0]) {
+      connector.name = matching[0].name;
+      state.playlist[lastIndex].connectorToNext = connector;
+    }
+  }
+
+  // If they are a contributor and not the artist, we have to go out and fetch their details.
+  // This will happen on the first track if the user searches for, say, 'berry oakley'.
+  if (! connector.name) {
+    return routes.getArtistDetails(connector.mid)
+    .then(function (value) {
+      connector.name = value.name;
+      state.playlist[lastIndex].connectorToNext = connector;
+    });
+  }
+  return connector.name;
+};
+
 var track = function (domElem, $) {
 	var resultsElem = $(domElem);
 	var appendToResultsElem = function (elem) {
@@ -85,9 +114,8 @@ var track = function (domElem, $) {
 			.then(function (trackDetails) { return _.pluck(trackDetails.artists, 'mid');})
 			.then(function (currentArtists) { 
 				state.seenArtists = state.seenArtists.concat(_.difference(currentArtists, state.seenArtists));
-				return state;
 			})
-			.then(utils.formatPreviousConnectorName)
+			.then(fetchConnectorDetails)
 			.then(getContributors)
 			.then(pickContributor)
 			.then(routes.getArtistDetails)
@@ -166,7 +194,8 @@ module.exports = {
   setSource: setSource,
   track: track,
   getSerialized: getSerialized,
-  unserialize: unserialize
+  unserialize: unserialize,
+  fetchConnectorDetails: fetchConnectorDetails
 };
 },{"./routes.js":"/Users/richtrott/musicroutes-playlist-generator/_lib/routes.js","./utils.js":"/Users/richtrott/musicroutes-playlist-generator/_lib/utils.js","lodash":"/Users/richtrott/musicroutes-playlist-generator/node_modules/lodash/dist/lodash.js","promise":"/Users/richtrott/musicroutes-playlist-generator/node_modules/promise/index.js"}],"/Users/richtrott/musicroutes-playlist-generator/_lib/routes.js":[function(require,module,exports){
 /* global -Promise */
@@ -411,34 +440,6 @@ exports.releaseAnchor = function ($, release) {
 	}
 	
 	return anchorFromMid($, _.result(release, 'mid'));
-};
-
-exports.formatPreviousConnectorName = function (state) {
-	// Get properly rendered name if we don't yet have one for the previous connector.
-	// Basically, if this is the first connection and the user entered 'janelle monae'
-	// we want to render it as 'Janelle Monae'. Ditto for missing umlauts and whatnot.
-	// So just pull from state.trackDetails if it's there.
-
-	var lastIndex = state.playlist.length - 1;
-	var connector = state.playlist[lastIndex].connectorToNext;
-	if (! connector.name) {
-		var matching = _.where(state.trackDetails.artists, {mid: connector.mid});
-		if (matching[0]) {
-			connector.name = matching[0].name;
-			state.playlist[lastIndex].connectorToNext = connector;
-		}
-	}
-
-	// If they are a contributor and not the artist, we have to go out and fetch their details.
-	// This will happen on the first track if the user searches for, say, 'berry oakley'.
-	if (! connector.name) {
-		return routes.getArtistDetails(connector.mid)
-		.then(function (value) {
-			connector.name = value.name;
-			state.playlist[lastIndex].connectorToNext = connector;
-		});
-	}
-	return connector.name;
 };
 
 exports.mergeArtistsAndContributors = function (artists, contributors) {
