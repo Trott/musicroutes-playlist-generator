@@ -226,7 +226,10 @@ describe('playlist', function () {
 		it('should do nothing if there is already a previousConnector.name', function (done) {
 			revert = playlist.__set__({
 				state: {
-					playlist: [{connectorToNext: {name: 'fhqwhagads'}}]
+					playlist: [
+						{connectorToNext: {name: 'fhqwhagads'}},
+						{}
+					]
 				}
 			});
 			playlist.fetchConnectorDetails();
@@ -237,10 +240,12 @@ describe('playlist', function () {
 		it('should use the artist name if the mid matches', function (done) {
 			revert = playlist.__set__({
 				state: {
-					playlist: [{connectorToNext: {mid: '/fhqwhagads'}}], 
-					trackDetails: {artists: [{mid: '/fhqwhagads', name: 'Strong Bad'}]}
+					playlist: [
+						{connectorToNext: {mid: '/fhqwhagads'}, artists: [{mid: '/fhqwhagads', name: 'Strong Bad'}]},
+						{}	
+					]
 				}
-			})	;
+			});
 			playlist.fetchConnectorDetails();
 			expect(playlist.__get__('state').playlist[0].connectorToNext.name).to.equal('Strong Bad');
 			done();
@@ -254,7 +259,10 @@ describe('playlist', function () {
 					}
 				},
 				state: {
-					playlist: [{connectorToNext: {mid: '/fhqwhagads'}}], 
+					playlist: [
+						{connectorToNext: {mid: '/fhqwhagads'}},
+						{}
+					], 
 					trackDetails: {artists: []}
 				}
 			});
@@ -268,7 +276,10 @@ describe('playlist', function () {
 
 	describe('setTrackDetails()', function () {
 		it('should set defaults gracefully if null object sent for details', function (done) {
-			revert = playlist.__set__({state: {track: '/fhqwhagads'}});
+			revert = playlist.__set__({state: {
+				track: '/fhqwhagads',
+				playlist: []
+			}});
 			var trackDetails = playlist.setTrackDetails(null);
 
 			var expectedResults = {
@@ -281,7 +292,10 @@ describe('playlist', function () {
 
 		it('should use details provided', function (done) {
 			revert = playlist.__set__({
-				state: {track: '/fhqwhagads'}
+				state: {
+					track: '/fhqwhagads',
+					playlist: []
+				}
 			});
 			var details =	{releases: [{mid: '/live-from-east-reykjavik'}]};
 			var trackDetails = playlist.setTrackDetails(details);

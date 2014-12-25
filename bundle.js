@@ -39,15 +39,15 @@ var fetchConnectorDetails = function () {
   
   // If this is the first connection and the user entered 'janelle monae'
   // we want to render it as 'Janelle Monae'. Ditto for missing umlauts and whatnot.
-  // So just pull from state.trackDetails if it's there.
+  // So just pull from the track details if it's there.
 
-  var lastIndex = state.playlist.length - 1;
-  var connector = state.playlist[lastIndex].connectorToNext;
+  var prevIndex = state.playlist.length - 2;
+  var connector = state.playlist[prevIndex].connectorToNext;
   if (! connector.name) {
-    var matching = _.where(state.trackDetails.artists, {mid: connector.mid});
+    var matching = _.where(state.playlist[prevIndex].artists, {mid: connector.mid});
     if (matching[0]) {
       connector.name = matching[0].name;
-      state.playlist[lastIndex].connectorToNext = connector;
+      state.playlist[prevIndex].connectorToNext = connector;
     }
   }
 
@@ -57,17 +57,20 @@ var fetchConnectorDetails = function () {
     return routes.getArtistDetails(connector.mid)
     .then(function (value) {
       connector.name = value.name;
-      state.playlist[lastIndex].connectorToNext = connector;
+      state.playlist[prevIndex].connectorToNext = connector;
     });
   }
   return connector.name;
 };
 
 var setTrackDetails = function (details) {
-  state.trackDetails = details || {};
-  state.trackDetails.mid = state.track;
-  state.trackDetails.release = _.sample(state.trackDetails.releases) || '';
-  return state.trackDetails;
+  if (! _.isPlainObject(details)) {
+    details = {};
+  }
+  var index = state.playlist.push(details) - 1;
+  state.playlist[index].release = _.sample(state.playlist[index].releases) || '';
+  state.playlist[index].mid = state.track;
+  return state.playlist[index];
 };
 
 var track = function (domElem, $) {
@@ -79,12 +82,13 @@ var track = function (domElem, $) {
 	state.atDeadEnd = false;
 
 	var renderTrackDetails = function () {
+    var index = state.playlist.length - 1;
 		var p = $('<p>').attr('class', 'track-details');
-		p.append(utils.trackAnchor($, state.trackDetails));
+		p.append(utils.trackAnchor($, state.playlist[index]));
 		p.append($('<br>'));
-		p.append(utils.artistAnchors($, state.trackDetails.artists));
+		p.append(utils.artistAnchors($, state.playlist[index].artists));
 		p.append($('<br>'));
-		p.append(utils.releaseAnchor($, state.trackDetails.release));
+		p.append(utils.releaseAnchor($, state.playlist[index].release));
 		return p;
 	};
 
@@ -127,19 +131,14 @@ var track = function (domElem, $) {
 			.then(pickContributor)
 			.then(routes.getArtistDetails)
 			.then(function (details) {
-        state.connectorToNext = details;
+        var index = state.playlist.length - 1;
+        state.playlist[index].connectorToNext = details;
         return utils.renderConnector($, details, state);
       })
 			.then(appendToResultsElem)
 			.then(renderTrackDetails)
 			.then(appendToResultsElem)
-			.then(function () {
-        state.playlist.push({
-          mid: state.trackDetails.mid,
-          release: state.trackDetails.release,
-          connectorToNext: state.connectorToNext
-        });
-        return state.trackDetails; })
+			.then(function () { return _.last(state.playlist); })
 			.then(utils.searchForVideoFromTrackDetails)
 			.then(utils.extractVideoId)
 			.then(utils.getVideoEmbedCode)
@@ -473,7 +472,8 @@ exports.renderConnector = function ($, details, state) {
 
 	var p = $('<p>');
 
-	var previousConnector = _.last(state.playlist).connectorToNext;
+	var lastIndex = state.playlist.length - 1;
+	var previousConnector = state.playlist[lastIndex - 1].connectorToNext;
 	previous = $('<b>').append(renderNameOrMid(previousConnector));
 	p.append(previous);
 	

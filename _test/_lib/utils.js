@@ -170,7 +170,10 @@ describe('utils', function () {
 	describe('renderConnector()', function () {
 		it('should render name and anchor just once when mids match', function (done) {
 			var details = {mid: '/fhqwhagads', name: 'jake'};
-			var state = { playlist: [{connectorToNext: {mid: '/fhqwhagads', name: 'joe'}}]};
+			var state = { playlist: [
+				{connectorToNext: {mid: '/fhqwhagads', name: 'joe'}},
+				{}
+			]};
 
 			var connector = utils.renderConnector($, details, state);
 			expect(connector.html()).to.equal('<b><a href="http://freebase.com/fhqwhagads" target="_blank">joe</a></b> appeared on:');
@@ -179,7 +182,13 @@ describe('utils', function () {
 
 		it('should render name and anchor for each entity when mids are different', function (done) {
 			var details = {mid: '/fhqwhagads', name: 'joe'};
-			var state = { playlist: [{connectorToNext: {mid: '/lorenzmagazineman', name: 'jake'}}], sourceIndividual: {}};
+			var state = {
+				playlist: [
+					{connectorToNext: {mid: '/lorenzmagazineman', name: 'jake'}},
+					{}
+				], 
+				sourceIndividual: {}
+			};
 
 			var connector = utils.renderConnector($, details, state);
 			expect(connector.html()).to.equal('<b><a href="http://freebase.com/lorenzmagazineman" target="_blank">jake</a></b> recorded with <b><a href="http://freebase.com/fhqwhagads" target="_blank">joe</a></b> on:');
@@ -188,7 +197,13 @@ describe('utils', function () {
 
 		it('should render roles from sourceIndividual if present', function (done) {
 			var details = {mid: '/fhqwhagads', name: 'joe'};
-			var state = { playlist: [{connectorToNext: {mid: '/lorenzmagazineman', name: 'jake'}}], sourceIndividual: {roles: [{name: 'jocking'}]}};
+			var state = { 
+				playlist: [
+					{connectorToNext: {mid: '/lorenzmagazineman', name: 'jake'}},
+					{}
+				],
+				sourceIndividual: {roles: [{name: 'jocking'}]}
+			};
 
 			var connector = utils.renderConnector($, details, state);
 			expect(connector.html()).to.equal('<b><a href="http://freebase.com/lorenzmagazineman" target="_blank">jake</a></b> recorded with <b><a href="http://freebase.com/fhqwhagads" target="_blank">joe</a></b><span> (jocking)</span> on:');

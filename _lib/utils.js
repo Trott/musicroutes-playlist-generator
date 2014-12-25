@@ -66,7 +66,8 @@ exports.renderConnector = function ($, details, state) {
 
 	var p = $('<p>');
 
-	var previousConnector = _.last(state.playlist).connectorToNext;
+	var lastIndex = state.playlist.length - 1;
+	var previousConnector = state.playlist[lastIndex - 1].connectorToNext;
 	previous = $('<b>').append(renderNameOrMid(previousConnector));
 	p.append(previous);
 	
