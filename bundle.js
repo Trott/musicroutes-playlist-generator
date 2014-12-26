@@ -14,7 +14,6 @@ var state = {
 	seenTracks: [],
 	seenArtists: [],
 	sourceIndividual: {},
-	trackDetails: {},
 	atDeadEnd: false,
 	foundSomeoneElse: false,
 	track: undefined,
@@ -42,7 +41,6 @@ var fetchConnectorDetails = function (index) {
   // we want to render it as 'Janelle Monae'. Ditto for missing umlauts and whatnot.
   // So just pull from the track details if it's there.
 
-  // Operate on connector to track specified in index else most recent track.
   // Since it's connector *to*, we actually want the prior index.
   index = index - 1;
   var connector = state.playlist[index].connectorToNext;
