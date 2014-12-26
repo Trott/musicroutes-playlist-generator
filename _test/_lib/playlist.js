@@ -230,7 +230,7 @@ describe('playlist', function () {
 	});
 
 	describe('fetchConnectorDetails()', function () {
-		it('should do nothing if there is already a previousConnector.name', function (done) {
+		it('should do nothing if there is already a connectorToNext.name', function (done) {
 			revert = playlist.__set__({
 				state: {
 					playlist: [
@@ -239,7 +239,7 @@ describe('playlist', function () {
 					]
 				}
 			});
-			playlist.fetchConnectorDetails()
+			playlist.fetchConnectorDetails(1)
 			.then(function (connector) {
 				expect(connector).to.deep.equal({name: 'fhqwhagads'});
 				done();
@@ -255,7 +255,7 @@ describe('playlist', function () {
 					]
 				}
 			});
-			playlist.fetchConnectorDetails()
+			playlist.fetchConnectorDetails(1)
 			.then(function (connector) {
 				expect(connector).to.deep.equal({mid: '/fhqwhagads', name: 'Strong Bad'});
 				done();
@@ -273,15 +273,34 @@ describe('playlist', function () {
 					playlist: [
 						{connectorToNext: {mid: '/fhqwhagads'}},
 						{}
-					], 
-					trackDetails: {artists: []}
+					]
 				}
 			});
-
-			playlist.fetchConnectorDetails();
+			playlist.fetchConnectorDetails(1);
 			expect(playlist.__get__('state').playlist[0].connectorToNext.name).to.equal('Strong Bad');
 			done();
+		});
 
+		it('should accept an index to select an arbitrary playlist entry', function (done) {
+			revert = playlist.__set__({
+				routes: {
+					getArtistDetails: function () {
+						return {then: function (cb) { cb({name: 'Strong Bad'}); }};
+					}
+				},
+				state: {
+					playlist: [
+						{},
+						{connectorToNext: {mid: '/fhqwhagads'}},
+						{},
+						{},
+						{}
+					]
+				}
+			});
+			playlist.fetchConnectorDetails(2);
+			expect(playlist.__get__('state').playlist[1].connectorToNext.name).to.equal('Strong Bad');
+			done();
 		});
 	});
 
@@ -317,21 +336,6 @@ describe('playlist', function () {
 				release: {mid: '/live-from-east-reykjavik'}
 			};
 			expect(trackDetails).to.deep.equal(expectedResults);
-			done();
-		});
-	});
-
-	describe('length()', function () {
-		it('should return the number of tracks in the playlist', function (done) {
-			revert = playlist.__set__({
-				state: {
-					playlist: [
-						{}, {}, {}
-					]
-				}
-			});
-
-			expect(playlist.length()).to.equal(2);
 			done();
 		});
 	});

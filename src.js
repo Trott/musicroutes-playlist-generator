@@ -207,7 +207,7 @@ $(document).ready(function () {
 
     playlist.deserialize(urlParts.query.l)
     .then(
-      function () {},
+      playlist.hydrate,
       function (err) {
         playlist.clear();
         err.message = 'Could not restore playlist: ' + err.message;

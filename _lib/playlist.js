@@ -30,20 +30,22 @@ var setSource = function (source) {
   state.playlist = [{connectorToNext: {mid: source}}];
 };
 
-var fetchConnectorDetails = function () {
+var fetchConnectorDetails = function (index) {
   // Get properly rendered name if we don't yet have one for the previous connector.
   
   // If this is the first connection and the user entered 'janelle monae'
   // we want to render it as 'Janelle Monae'. Ditto for missing umlauts and whatnot.
   // So just pull from the track details if it's there.
 
-  var prevIndex = state.playlist.length - 2;
-  var connector = state.playlist[prevIndex].connectorToNext;
+  // Operate on connector to track specified in index else most recent track.
+  // Since it's connector *to*, we actually want the prior index.
+  index = index - 1;
+  var connector = state.playlist[index].connectorToNext;
   if (! connector.name) {
-    var matching = _.where(state.playlist[prevIndex].artists, {mid: connector.mid});
+    var matching = _.where(state.playlist[index].artists, {mid: connector.mid});
     if (matching[0]) {
       connector.name = matching[0].name;
-      state.playlist[prevIndex].connectorToNext = connector;
+      state.playlist[index].connectorToNext = connector;
     }
   }
 
@@ -53,7 +55,7 @@ var fetchConnectorDetails = function () {
     return routes.getArtistDetails(connector.mid)
     .then(function (value) {
       connector.name = value.name;
-      state.playlist[prevIndex].connectorToNext = connector;
+      state.playlist[index].connectorToNext = connector;
       return Promise.resolve(connector);
     });
   }
@@ -109,6 +111,7 @@ var fetchNewTrack = function () {
 			.then(function (trackDetails) { 
         var currentArtists = _.pluck(trackDetails.artists, 'mid');
 				state.seenArtists = state.seenArtists.concat(_.difference(currentArtists, state.seenArtists));
+        return state.playlist.length - 1;
 			})
 			.then(fetchConnectorDetails)
 			.then(getContributors)
@@ -170,9 +173,8 @@ var deserialize = function (data) {
   return Promise.resolve(state.playlist);
 };
 
-var length = function () {
-  // First item in playlist is just a connector, not a track, so subtract 1.
-  return state.playlist.length - 1;
+var hydrate = function () {
+
 };
 
 module.exports = {
@@ -183,5 +185,5 @@ module.exports = {
   deserialize: deserialize,
   fetchConnectorDetails: fetchConnectorDetails,
   setTrackDetails: setTrackDetails,
-  length: length
+  hydrate: hydrate
 };
