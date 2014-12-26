@@ -63,12 +63,16 @@ var setSource = function (source) {
   return fetchConnectorDetails(1);
 };
 
-var setTrackDetails = function (details) {
+var setTrackDetails = function (options, details) {
   if (! _.isPlainObject(details)) {
     details = {};
   }
   var index = state.playlist.push(details) - 1;
-  state.playlist[index].release = _.sample(state.playlist[index].releases) || '';
+  if (options.release) {
+    state.playlist[index].release = _.find(state.playlist[index].releases, options.release);
+  } else {
+    state.playlist[index].release = _.sample(state.playlist[index].releases) || '';
+  }
   return state.playlist[index];
 };
 
@@ -104,7 +108,7 @@ var fetchNewTrack = function () {
 		trackPicked = true;
 
 		var promise = routes.getTrackDetails(mid)
-			.then(setTrackDetails)
+			.then(setTrackDetails.bind(null, {}))
 			.then(function (trackDetails) { 
         var currentArtists = _.pluck(trackDetails.artists, 'mid');
 				state.seenArtists = state.seenArtists.concat(_.difference(currentArtists, state.seenArtists));
@@ -175,7 +179,7 @@ var hydrate = function (data) {
     _.map(data, function (value) {
       if (value.mid) {
         return routes.getTrackDetails(value.mid)
-          .then(setTrackDetails);
+          .then(setTrackDetails.bind(null, {release: value.release}));
       }
       return value;
     })

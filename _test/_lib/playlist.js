@@ -317,7 +317,7 @@ describe('playlist', function () {
 				track: '/fhqwhagads',
 				playlist: []
 			}});
-			var trackDetails = playlist.setTrackDetails(null);
+			var trackDetails = playlist.setTrackDetails({}, null);
 
 			var expectedResults = {
 				mid: '/fhqwhagads', 
@@ -335,7 +335,7 @@ describe('playlist', function () {
 				}
 			});
 			var details =	{releases: [{mid: '/live-from-east-reykjavik'}]};
-			var trackDetails = playlist.setTrackDetails(details);
+			var trackDetails = playlist.setTrackDetails({}, details);
 
 			var expectedResults = {
 				mid: '/fhqwhagads',
@@ -380,6 +380,24 @@ describe('playlist', function () {
 				var artist = artists[0];
 				expect(artist.mid).to.equal('/m/0dl567');
 				expect(artist.name).to.equal('Taylor Swift');
+				done();
+			};
+
+			playlist.hydrate(initial)
+			.then(success);
+		});
+
+		it('should use the release provided', function (done) {
+			nock.enableNetConnect();
+
+			var initial = [
+				{connectorToNext: {mid: '/m/0dl567'}},
+				{mid: '/m/0g6vkcm', release: {mid: '/m/0g7z202'}}
+			];
+
+			var success = function (data) {
+				expect(data[1].release.mid).to.equal('/m/0g7z202');
+				expect('Speak Now').to.equal('Speak Now');
 				done();
 			};
 
