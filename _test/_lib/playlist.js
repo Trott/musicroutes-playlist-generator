@@ -346,4 +346,45 @@ describe('playlist', function () {
 			done();
 		});
 	});
+
+	describe('hydrate()', function () {
+		it('should restore track title', function (done) {
+			nock.enableNetConnect();
+
+			var initial = [
+				{connectorToNext: {mid: '/m/0dl567'}},
+				{mid: '/m/0g6vkcm'}
+			];
+
+			var success = function (data) {
+				expect(data[1].mid).to.equal('/m/0g6vkcm');
+				expect(data[1].name).to.equal('Mean');
+				done();
+			};
+
+			playlist.hydrate(initial)
+			.then(success);
+		});
+
+		it('should restore artists', function (done) {
+			nock.enableNetConnect();
+
+			var initial = [
+				{connectorToNext: {mid: '/m/0dl567'}},
+				{mid: '/m/0g6vkcm'}
+			];
+
+			var success = function (data) {
+				var artists = data[1].artists;
+				expect(artists.length).to.equal(1);
+				var artist = artists[0];
+				expect(artist.mid).to.equal('/m/0dl567');
+				expect(artist.name).to.equal('Taylor Swift');
+				done();
+			};
+
+			playlist.hydrate(initial)
+			.then(success);
+		});
+	});
 });

@@ -149,13 +149,14 @@ var serialize = function () {
 };
 
 var deserialize = function (data) {
+  var playlist;
   try {
-    state.playlist = JSON.parse(data);
+    playlist = JSON.parse(data);
   } catch (e) {
     return Promise.reject(e);
   }
 
-  _.map(state.playlist, function (value) {
+  _.map(playlist, function (value) {
     value.connectorToNext = {
       mid: value.connectorToNext
     };
@@ -166,11 +167,19 @@ var deserialize = function (data) {
     }
   });
 
-  return Promise.resolve(state.playlist);
+  return Promise.resolve(playlist);
 };
 
-var hydrate = function () {
-
+var hydrate = function (data) {
+  return Promise.all(
+    _.map(data, function (value) {
+      if (value.mid) {
+        return routes.getTrackDetails(value.mid)
+          .then(setTrackDetails);
+      }
+      return value;
+    })
+  );
 };
 
 module.exports = {

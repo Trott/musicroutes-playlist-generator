@@ -154,13 +154,14 @@ var serialize = function () {
 };
 
 var deserialize = function (data) {
+  var playlist;
   try {
-    state.playlist = JSON.parse(data);
+    playlist = JSON.parse(data);
   } catch (e) {
     return Promise.reject(e);
   }
 
-  _.map(state.playlist, function (value) {
+  _.map(playlist, function (value) {
     value.connectorToNext = {
       mid: value.connectorToNext
     };
@@ -171,11 +172,19 @@ var deserialize = function (data) {
     }
   });
 
-  return Promise.resolve(state.playlist);
+  return Promise.resolve(playlist);
 };
 
-var hydrate = function () {
-
+var hydrate = function (data) {
+  return Promise.all(
+    _.map(data, function (value) {
+      if (value.mid) {
+        return routes.getTrackDetails(value.mid)
+          .then(setTrackDetails);
+      }
+      return value;
+    })
+  );
 };
 
 module.exports = {
@@ -22646,16 +22655,18 @@ $(document).ready(function () {
     progress.attr('active', 'active');
 
     playlist.deserialize(urlParts.query.l)
-    .then(
-      playlist.hydrate,
-      function (err) {
-        playlist.clear();
-        err.message = 'Could not restore playlist: ' + err.message;
-        error(err, {preserveUrl: true});
-      }
-    );
+    .then(playlist.hydrate)
+    .then(function (data) {console.log(data);})
+    .catch(function (err) {
+      playlist.clear();
+      err.message = 'Could not restore playlist: ' + err.message;
+      error(err, {preserveUrl: true});
+    });
+
     // it will need to update seenArtists and all that jazz
     // look up initial connector and populate input box
+    // should preserve release rather than selecxt a new one
+    // preserve remaining connectors and look up details
     // render remaining elements
     // re-enable buttons and turn of progress indicator
   }
