@@ -2,6 +2,7 @@
 /*global window*/
 var routes = require('./_lib/routes.js');
 var playlist = require('./_lib/playlist.js');
+var utils = require('./_lib/utils.js');
 var async = require('async');
 var $ = require('jquery');
 var url = require('url');
@@ -42,6 +43,14 @@ var error = function (err, options) {
   }
 };
 
+var videoBlock = function (trackData) {
+  return utils.searchForVideoFromTrackDetails(trackData)
+    .then(utils.extractVideoId)
+    .then(utils.getVideoEmbedCode)
+    .then(utils.wrapVideo)
+    .then(function (embedCode) { resultsElem.append(embedCode); });
+};
+
 var go = function () {
   // If lookupUserInput() didn't find an individual, don't do anything.
   if (!sourceIndividual) {
@@ -59,9 +68,7 @@ var go = function () {
     function (next) {
       loopCount = loopCount + 1;
       playlist.fetchNewTrack(resultsElem, $)
-      .then(function (videoBlock) {
-        resultsElem.append(videoBlock);
-      })
+      .then(videoBlock)
       .then(next, next);
     },
     function (err) {
