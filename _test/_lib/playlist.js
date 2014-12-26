@@ -75,7 +75,7 @@ describe('playlist', function () {
 		});
 	});
 
-	describe('track()', function () {
+	describe('fetchNewTrack()', function () {
 		it('should return an error if there is no network', function (done) {
 			var failure = function (err) {
 				expect(err instanceof Error).to.be.true();
@@ -83,19 +83,26 @@ describe('playlist', function () {
 			};
 
 			playlist.setSource(BobDylan);
-			playlist.fetchNewTrack(div, $).catch(failure);
+			playlist.fetchNewTrack($).catch(failure);
 		});
 
 		it('should return a track if given a valid start point', function (done) {
 			nock.enableNetConnect();
 
-			var success = function () {
-				expect(div.text()).to.contain('Bob Dylan appeared on:');
+			var success = function (data) {
+				expect(data[0]).to.deep.equal(
+					{
+  					connectorToNext: {
+   						mid: '/m/01vrncs',
+   						name: 'Bob Dylan'
+  					}
+ 					}
+ 				);
 				done();
 			};
 
 			playlist.setSource(BobDylan);
-			playlist.fetchNewTrack(div, $).then(success);
+			playlist.fetchNewTrack($).then(success);
 		});
 	});
 

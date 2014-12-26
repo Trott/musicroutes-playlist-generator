@@ -73,12 +73,7 @@ var setTrackDetails = function (details) {
   return state.playlist[index];
 };
 
-var fetchNewTrack = function (domElem, $) {
-	var resultsElem = $(domElem);
-	var appendToResultsElem = function (elem) {
-		resultsElem.append(elem);
-	};
-
+var fetchNewTrack = function ($) {
 	state.atDeadEnd = false;
 
 	var getContributors = function () {
@@ -120,11 +115,10 @@ var fetchNewTrack = function (domElem, $) {
 			.then(pickContributor)
 			.then(routes.getArtistDetails)
 			.then(function (details) {
+        details.roles = state.sourceIndividual.roles;
         _.last(state.playlist).connectorToNext = details;
-        return utils.renderConnector($, details, state);
-      })
-			.then(appendToResultsElem)
-			.then(function () { return _.last(state.playlist); });
+        return state.playlist;
+      });
 
 		return promise;
 	};

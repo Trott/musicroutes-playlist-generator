@@ -78,12 +78,7 @@ var setTrackDetails = function (details) {
   return state.playlist[index];
 };
 
-var fetchNewTrack = function (domElem, $) {
-	var resultsElem = $(domElem);
-	var appendToResultsElem = function (elem) {
-		resultsElem.append(elem);
-	};
-
+var fetchNewTrack = function ($) {
 	state.atDeadEnd = false;
 
 	var getContributors = function () {
@@ -125,11 +120,10 @@ var fetchNewTrack = function (domElem, $) {
 			.then(pickContributor)
 			.then(routes.getArtistDetails)
 			.then(function (details) {
+        details.roles = state.sourceIndividual.roles;
         _.last(state.playlist).connectorToNext = details;
-        return utils.renderConnector($, details, state);
-      })
-			.then(appendToResultsElem)
-			.then(function () { return _.last(state.playlist); });
+        return state.playlist;
+      });
 
 		return promise;
 	};
@@ -22475,6 +22469,7 @@ var playlist = require('./_lib/playlist.js');
 var utils = require('./_lib/utils.js');
 var async = require('async');
 var $ = require('jquery');
+var _ = require('lodash');
 var url = require('url');
 var querystring = require('querystring');
 
@@ -22513,7 +22508,8 @@ var error = function (err, options) {
   }
 };
 
-var renderTrackDetails = function (trackDetails) {
+var renderTrackDetails = function (playlist) {
+  var trackDetails = _.last(playlist);
   var p = $('<p>').attr('class', 'track-details');
   p.append(utils.trackAnchor($, trackDetails));
   p.append($('<br>'));
@@ -22532,6 +22528,37 @@ var videoBlock = function (trackData) {
     .then(function (embedCode) { resultsElem.append(embedCode); });
 };
 
+var renderConnector = function (playlistData) {
+  var previous;
+  var current;
+
+  var renderNameOrMid = function (details) {
+    return utils.anchorFromMid($, details.mid, details.name);
+  };
+
+  var p = $('<p>');
+
+  var previousConnector = playlistData[playlistData.length - 2].connectorToNext;
+  previous = $('<b>').append(renderNameOrMid(previousConnector));
+  p.append(previous);
+
+  var currentConnector = _.last(playlistData).connectorToNext;
+
+  if (previousConnector.mid !== currentConnector.mid) {
+    current = $('<b>').append(renderNameOrMid(currentConnector));
+    p.append(' recorded with ').append(current);
+    if (currentConnector.roles) {
+      p.append($('<span>').text(' (' + _.pluck(currentConnector.roles, 'name').join(', ') + ')'));
+    }
+    p.append(' on:');
+  } else {
+    p.append(' appeared on:');
+  }
+
+  resultsElem.append(p);
+  return playlistData;
+};
+
 var go = function () {
   // If lookupUserInput() didn't find an individual, don't do anything.
   if (!sourceIndividual) {
@@ -22548,7 +22575,8 @@ var go = function () {
     },
     function (next) {
       loopCount = loopCount + 1;
-      playlist.fetchNewTrack(resultsElem, $)
+      playlist.fetchNewTrack($)
+      .then(renderConnector)
       .then(renderTrackDetails)
       .then(videoBlock)
       .then(next, next);
@@ -22660,7 +22688,7 @@ $(document).ready(function () {
   }
 });
 
-},{"./_lib/playlist.js":"/Users/richtrott/musicroutes-playlist-generator/_lib/playlist.js","./_lib/routes.js":"/Users/richtrott/musicroutes-playlist-generator/_lib/routes.js","./_lib/utils.js":"/Users/richtrott/musicroutes-playlist-generator/_lib/utils.js","async":"/Users/richtrott/musicroutes-playlist-generator/node_modules/async/lib/async.js","jquery":"/Users/richtrott/musicroutes-playlist-generator/node_modules/jquery/dist/jquery.js","querystring":"/usr/local/lib/node_modules/watchify/node_modules/browserify/node_modules/querystring-es3/index.js","url":"/usr/local/lib/node_modules/watchify/node_modules/browserify/node_modules/url/url.js"}],"/usr/local/lib/node_modules/watchify/node_modules/browserify/node_modules/browser-resolve/empty.js":[function(require,module,exports){
+},{"./_lib/playlist.js":"/Users/richtrott/musicroutes-playlist-generator/_lib/playlist.js","./_lib/routes.js":"/Users/richtrott/musicroutes-playlist-generator/_lib/routes.js","./_lib/utils.js":"/Users/richtrott/musicroutes-playlist-generator/_lib/utils.js","async":"/Users/richtrott/musicroutes-playlist-generator/node_modules/async/lib/async.js","jquery":"/Users/richtrott/musicroutes-playlist-generator/node_modules/jquery/dist/jquery.js","lodash":"/Users/richtrott/musicroutes-playlist-generator/node_modules/lodash/dist/lodash.js","querystring":"/usr/local/lib/node_modules/watchify/node_modules/browserify/node_modules/querystring-es3/index.js","url":"/usr/local/lib/node_modules/watchify/node_modules/browserify/node_modules/url/url.js"}],"/usr/local/lib/node_modules/watchify/node_modules/browserify/node_modules/browser-resolve/empty.js":[function(require,module,exports){
 
 },{}],"/usr/local/lib/node_modules/watchify/node_modules/browserify/node_modules/buffer/index.js":[function(require,module,exports){
 /*!

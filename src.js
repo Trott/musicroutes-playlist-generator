@@ -5,6 +5,7 @@ var playlist = require('./_lib/playlist.js');
 var utils = require('./_lib/utils.js');
 var async = require('async');
 var $ = require('jquery');
+var _ = require('lodash');
 var url = require('url');
 var querystring = require('querystring');
 
@@ -43,7 +44,8 @@ var error = function (err, options) {
   }
 };
 
-var renderTrackDetails = function (trackDetails) {
+var renderTrackDetails = function (playlist) {
+  var trackDetails = _.last(playlist);
   var p = $('<p>').attr('class', 'track-details');
   p.append(utils.trackAnchor($, trackDetails));
   p.append($('<br>'));
@@ -62,6 +64,37 @@ var videoBlock = function (trackData) {
     .then(function (embedCode) { resultsElem.append(embedCode); });
 };
 
+var renderConnector = function (playlistData) {
+  var previous;
+  var current;
+
+  var renderNameOrMid = function (details) {
+    return utils.anchorFromMid($, details.mid, details.name);
+  };
+
+  var p = $('<p>');
+
+  var previousConnector = playlistData[playlistData.length - 2].connectorToNext;
+  previous = $('<b>').append(renderNameOrMid(previousConnector));
+  p.append(previous);
+
+  var currentConnector = _.last(playlistData).connectorToNext;
+
+  if (previousConnector.mid !== currentConnector.mid) {
+    current = $('<b>').append(renderNameOrMid(currentConnector));
+    p.append(' recorded with ').append(current);
+    if (currentConnector.roles) {
+      p.append($('<span>').text(' (' + _.pluck(currentConnector.roles, 'name').join(', ') + ')'));
+    }
+    p.append(' on:');
+  } else {
+    p.append(' appeared on:');
+  }
+
+  resultsElem.append(p);
+  return playlistData;
+};
+
 var go = function () {
   // If lookupUserInput() didn't find an individual, don't do anything.
   if (!sourceIndividual) {
@@ -78,7 +111,8 @@ var go = function () {
     },
     function (next) {
       loopCount = loopCount + 1;
-      playlist.fetchNewTrack(resultsElem, $)
+      playlist.fetchNewTrack($)
+      .then(renderConnector)
       .then(renderTrackDetails)
       .then(videoBlock)
       .then(next, next);
