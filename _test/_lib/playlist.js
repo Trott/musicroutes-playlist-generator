@@ -106,7 +106,7 @@ describe('playlist', function () {
 		});
 	});
 
-	describe('getSerialized()', function () {
+	describe('serialize()', function () {
 		it('should return the playlist serialized', function (done) {
 			revert = playlist.__set__({
 				state: {
@@ -138,7 +138,7 @@ describe('playlist', function () {
 				}
 			});
 
-			var serialized = playlist.getSerialized();
+			var serialized = playlist.serialize();
 			expect(JSON.parse(serialized)).to.deep.equal([
 				{
 					connectorToNext: '/fhqwhagads'
@@ -162,7 +162,7 @@ describe('playlist', function () {
 				}
 			});
 
-			var serialized = playlist.getSerialized();
+			var serialized = playlist.serialize();
 			expect(serialized).to.equal('[{},{},{},{},{},{},{},{},{},{},{}]');
 			done();
 		});
@@ -185,7 +185,7 @@ describe('playlist', function () {
 				}
 			});
 
-			var serialized = playlist.getSerialized();
+			var serialized = playlist.serialize();
 			expect(JSON.parse(serialized)).to.deep.equal([{
 				connectorToNext: '/fhqwhagads',
 				release: '/everybody-to-the-limit'

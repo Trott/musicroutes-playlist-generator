@@ -36,7 +36,7 @@ var error = function (err, options) {
     resetButtons.css('visibility', 'visible');
     startOverButtons.css('visibility', 'visible');
     if (! options.preserveUrl) {
-      window.history.replaceState({}, '', '?' + querystring.stringify({l: playlist.getSerialized()}));
+      window.history.replaceState({}, '', '?' + querystring.stringify({l: playlist.serialize()}));
     }
     if (! err.deadEnd) {
       continueButtons.css('visibility', 'visible');
@@ -125,7 +125,7 @@ var go = function () {
         continueButtons.css('visibility', 'visible');
         resetButtons.css('visibility', 'visible');
         startOverButtons.css('visibility', 'visible');
-        window.history.replaceState({}, '', '?' + querystring.stringify({l: playlist.getSerialized()}));
+        window.history.replaceState({}, '', '?' + querystring.stringify({l: playlist.serialize()}));
       }
     }
   );

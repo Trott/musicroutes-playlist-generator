@@ -138,7 +138,7 @@ var fetchNewTrack = function () {
 	return promise;
 };
 
-var getSerialized = function () {
+var serialize = function () {
   var bareBones = _.map(state.playlist, function (value) {
     var rv = {};
     rv.connectorToNext = _.result(value.connectorToNext, 'mid');
@@ -184,7 +184,7 @@ module.exports = {
   clear: clear,
   setSource: setSource,
   fetchNewTrack: fetchNewTrack,
-  getSerialized: getSerialized,
+  serialize: serialize,
   deserialize: deserialize,
   fetchConnectorDetails: fetchConnectorDetails,
   setTrackDetails: setTrackDetails,
@@ -22471,7 +22471,7 @@ var error = function (err, options) {
     resetButtons.css('visibility', 'visible');
     startOverButtons.css('visibility', 'visible');
     if (! options.preserveUrl) {
-      window.history.replaceState({}, '', '?' + querystring.stringify({l: playlist.getSerialized()}));
+      window.history.replaceState({}, '', '?' + querystring.stringify({l: playlist.serialize()}));
     }
     if (! err.deadEnd) {
       continueButtons.css('visibility', 'visible');
@@ -22560,7 +22560,7 @@ var go = function () {
         continueButtons.css('visibility', 'visible');
         resetButtons.css('visibility', 'visible');
         startOverButtons.css('visibility', 'visible');
-        window.history.replaceState({}, '', '?' + querystring.stringify({l: playlist.getSerialized()}));
+        window.history.replaceState({}, '', '?' + querystring.stringify({l: playlist.serialize()}));
       }
     }
   );

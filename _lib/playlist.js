@@ -133,7 +133,7 @@ var fetchNewTrack = function () {
 	return promise;
 };
 
-var getSerialized = function () {
+var serialize = function () {
   var bareBones = _.map(state.playlist, function (value) {
     var rv = {};
     rv.connectorToNext = _.result(value.connectorToNext, 'mid');
@@ -179,7 +179,7 @@ module.exports = {
   clear: clear,
   setSource: setSource,
   fetchNewTrack: fetchNewTrack,
-  getSerialized: getSerialized,
+  serialize: serialize,
   deserialize: deserialize,
   fetchConnectorDetails: fetchConnectorDetails,
   setTrackDetails: setTrackDetails,
