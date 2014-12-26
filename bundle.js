@@ -125,8 +125,7 @@ var fetchNewTrack = function (domElem, $) {
 			.then(pickContributor)
 			.then(routes.getArtistDetails)
 			.then(function (details) {
-        var index = state.playlist.length - 1;
-        state.playlist[index].connectorToNext = details;
+        _.last(state.playlist).connectorToNext = details;
         return utils.renderConnector($, details, state);
       })
 			.then(appendToResultsElem)
