@@ -167,50 +167,6 @@ describe('utils', function () {
 		});
 	});
 
-	describe('renderConnector()', function () {
-		it('should render name and anchor just once when mids match', function (done) {
-			var details = {mid: '/fhqwhagads', name: 'jake'};
-			var state = { playlist: [
-				{connectorToNext: {mid: '/fhqwhagads', name: 'joe'}},
-				{}
-			]};
-
-			var connector = utils.renderConnector($, details, state);
-			expect(connector.html()).to.equal('<b><a href="http://freebase.com/fhqwhagads" target="_blank">joe</a></b> appeared on:');
-			done();
-		});
-
-		it('should render name and anchor for each entity when mids are different', function (done) {
-			var details = {mid: '/fhqwhagads', name: 'joe'};
-			var state = {
-				playlist: [
-					{connectorToNext: {mid: '/lorenzmagazineman', name: 'jake'}},
-					{}
-				], 
-				sourceIndividual: {}
-			};
-
-			var connector = utils.renderConnector($, details, state);
-			expect(connector.html()).to.equal('<b><a href="http://freebase.com/lorenzmagazineman" target="_blank">jake</a></b> recorded with <b><a href="http://freebase.com/fhqwhagads" target="_blank">joe</a></b> on:');
-			done();
-		});
-
-		it('should render roles from sourceIndividual if present', function (done) {
-			var details = {mid: '/fhqwhagads', name: 'joe'};
-			var state = { 
-				playlist: [
-					{connectorToNext: {mid: '/lorenzmagazineman', name: 'jake'}},
-					{}
-				],
-				sourceIndividual: {roles: [{name: 'jocking'}]}
-			};
-
-			var connector = utils.renderConnector($, details, state);
-			expect(connector.html()).to.equal('<b><a href="http://freebase.com/lorenzmagazineman" target="_blank">jake</a></b> recorded with <b><a href="http://freebase.com/fhqwhagads" target="_blank">joe</a></b><span> (jocking)</span> on:');
-			done();
-		});
-	});
-
 	describe('promiseUntil()', function () {
 		it('should resolve promise if condition is true', function (done) {
 			utils.promiseUntil(
@@ -394,9 +350,10 @@ describe('utils', function () {
 		it('should reject with error that is sent', function (done) {
 			var error = Error();
 
-			utils.giveUpIfNoTracks(null, null, error)
+			utils.giveUpIfNoTracks(null, error)
 				.catch(function (e) {
 					expect(e).to.equal(error);
+					expect(e.deadEnd).to.be.undefined();
 					done();
 				});
 		});
@@ -411,14 +368,34 @@ describe('utils', function () {
 				}]
 			};
 
-			var handler = function (msg) {
-				var msgTxt = msg.text();
-				expect(msgTxt).to.be.equal('Playlist is at a dead end with Fhqwhagads.');
-				expect(msg.deadEnd).to.be.true();
+			var handler = function (err) {
+				var errTxt = err.message;
+				expect(errTxt).to.equal('Playlist is at a dead end with Fhqwhagads.');
+				expect(err.deadEnd).to.be.true();
 				done();
 			};
 
-			utils.giveUpIfNoTracks(state, $)
+			utils.giveUpIfNoTracks(state)
+				.catch(handler);
+		});
+
+		it('should use mid if name not present', function (done) {
+			var state = {
+				playlist: [{
+					connectorToNext: {
+						mid: '/fhqwhagads'
+					}
+				}]
+			};
+
+			var handler = function (err) {
+				var errTxt = err.message;
+				expect(errTxt).to.equal('Playlist is at a dead end with /fhqwhagads.');
+				expect(err.deadEnd).to.be.true();
+				done();
+			};
+
+			utils.giveUpIfNoTracks(state)
 				.catch(handler);
 		});
 	});

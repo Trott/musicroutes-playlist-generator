@@ -78,7 +78,7 @@ var setTrackDetails = function (details) {
   return state.playlist[index];
 };
 
-var fetchNewTrack = function ($) {
+var fetchNewTrack = function () {
 	state.atDeadEnd = false;
 
 	var getContributors = function () {
@@ -133,7 +133,7 @@ var fetchNewTrack = function ($) {
 	var promise = utils.tracksByUnseenArtists(state)
 		.then(processTracks, utils.tracksWithContributor.bind(undefined, state))
 		.then(processTracks, utils.tracksWithArtist.bind(undefined, state))
-		.then(processTracks, utils.giveUpIfNoTracks.bind(undefined, state, $));
+		.then(processTracks, utils.giveUpIfNoTracks.bind(undefined, state));
 
 	return promise;
 };
@@ -449,36 +449,6 @@ exports.pickContributor = function (newCandidates, allCandidates, sourceIndividu
 	return _.sample(_.without(allCandidates, sourceIndividual)) || sourceIndividual;
 };
 
-exports.renderConnector = function ($, details, state) {
-	var previous;
-	var current;
-
-	var renderNameOrMid = function (details) {
-		return anchorFromMid($, details.mid, details.name);
-	};
-
-	var p = $('<p>');
-
-	var lastIndex = state.playlist.length - 1;
-	var previousConnector = state.playlist[lastIndex - 1].connectorToNext;
-	previous = $('<b>').append(renderNameOrMid(previousConnector));
-	p.append(previous);
-	
-	if (previousConnector.mid !== details.mid) {
-		current = $('<b>').append(renderNameOrMid(details));
-		p.append(' recorded with ').append(current);
-		if (state.sourceIndividual.roles) {
-			p.append($('<span>').text(' (' + _.pluck(state.sourceIndividual.roles, 'name').join(', ') + ')'));
-		}
-		p.append(' on:');
-	} else {
-		p.append(' appeared on:');
-	}
-
-	previousConnector = details;
-	return p;
-};
-
 var promiseUntil = exports.promiseUntil = function(condition, action) {
   var loop = function() {
     if (condition()) {
@@ -570,21 +540,22 @@ exports.tracksWithArtist = function (state, err) {
 };
 
 // Give up if we haven't found anything we can use yet
-exports.giveUpIfNoTracks = function (state, $, err) {
+exports.giveUpIfNoTracks = function (state, err) {
   if (err) {
     return Promise.reject(err);
   }
   state.atDeadEnd = true;
   var previousConnector = _.last(state.playlist).connectorToNext;
-  var p = $('<p>')
-    .text('Playlist is at a dead end with ')
-    .append(anchorFromMid($, previousConnector.mid, previousConnector.name))
-    .append('.');
-  var msg = $('<paper-shadow>')
-    .addClass('error')
-    .append(p);
-  msg.deadEnd = true;
-  return Promise.reject(msg);
+  var msg = 'Playlist is at a dead end with ';
+  if (previousConnector.name) {
+  	msg = msg + previousConnector.name;
+  } else {
+  	msg = msg + previousConnector.mid;
+  }
+  msg = msg + '.';
+  var myError = Error(msg);
+  myError.deadEnd = true;
+  return Promise.reject(myError);
 };
 
 exports.searchForVideoFromTrackDetails = function (trackDetails) {

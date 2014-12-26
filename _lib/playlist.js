@@ -73,7 +73,7 @@ var setTrackDetails = function (details) {
   return state.playlist[index];
 };
 
-var fetchNewTrack = function ($) {
+var fetchNewTrack = function () {
 	state.atDeadEnd = false;
 
 	var getContributors = function () {
@@ -128,7 +128,7 @@ var fetchNewTrack = function ($) {
 	var promise = utils.tracksByUnseenArtists(state)
 		.then(processTracks, utils.tracksWithContributor.bind(undefined, state))
 		.then(processTracks, utils.tracksWithArtist.bind(undefined, state))
-		.then(processTracks, utils.giveUpIfNoTracks.bind(undefined, state, $));
+		.then(processTracks, utils.giveUpIfNoTracks.bind(undefined, state));
 
 	return promise;
 };
