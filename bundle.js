@@ -86,17 +86,6 @@ var fetchNewTrack = function (domElem, $) {
 
 	state.atDeadEnd = false;
 
-	var renderTrackDetails = function () {
-    var index = state.playlist.length - 1;
-		var p = $('<p>').attr('class', 'track-details');
-		p.append(utils.trackAnchor($, state.playlist[index]));
-		p.append($('<br>'));
-		p.append(utils.artistAnchors($, state.playlist[index].artists));
-		p.append($('<br>'));
-		p.append(utils.releaseAnchor($, state.playlist[index].release));
-		return p;
-	};
-
 	var getContributors = function () {
 		return routes.getArtistsAndContributorsFromTracks([state.track]);
 	};
@@ -140,8 +129,6 @@ var fetchNewTrack = function (domElem, $) {
         state.playlist[index].connectorToNext = details;
         return utils.renderConnector($, details, state);
       })
-			.then(appendToResultsElem)
-			.then(renderTrackDetails)
 			.then(appendToResultsElem)
 			.then(function () { return _.last(state.playlist); });
 
@@ -22527,6 +22514,17 @@ var error = function (err, options) {
   }
 };
 
+var renderTrackDetails = function (trackDetails) {
+  var p = $('<p>').attr('class', 'track-details');
+  p.append(utils.trackAnchor($, trackDetails));
+  p.append($('<br>'));
+  p.append(utils.artistAnchors($, trackDetails.artists));
+  p.append($('<br>'));
+  p.append(utils.releaseAnchor($, trackDetails.release));
+  resultsElem.append(p);
+  return trackDetails;
+};
+
 var videoBlock = function (trackData) {
   return utils.searchForVideoFromTrackDetails(trackData)
     .then(utils.extractVideoId)
@@ -22552,6 +22550,7 @@ var go = function () {
     function (next) {
       loopCount = loopCount + 1;
       playlist.fetchNewTrack(resultsElem, $)
+      .then(renderTrackDetails)
       .then(videoBlock)
       .then(next, next);
     },

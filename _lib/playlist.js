@@ -81,17 +81,6 @@ var fetchNewTrack = function (domElem, $) {
 
 	state.atDeadEnd = false;
 
-	var renderTrackDetails = function () {
-    var index = state.playlist.length - 1;
-		var p = $('<p>').attr('class', 'track-details');
-		p.append(utils.trackAnchor($, state.playlist[index]));
-		p.append($('<br>'));
-		p.append(utils.artistAnchors($, state.playlist[index].artists));
-		p.append($('<br>'));
-		p.append(utils.releaseAnchor($, state.playlist[index].release));
-		return p;
-	};
-
 	var getContributors = function () {
 		return routes.getArtistsAndContributorsFromTracks([state.track]);
 	};
@@ -135,8 +124,6 @@ var fetchNewTrack = function (domElem, $) {
         state.playlist[index].connectorToNext = details;
         return utils.renderConnector($, details, state);
       })
-			.then(appendToResultsElem)
-			.then(renderTrackDetails)
 			.then(appendToResultsElem)
 			.then(function () { return _.last(state.playlist); });
 

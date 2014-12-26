@@ -43,6 +43,17 @@ var error = function (err, options) {
   }
 };
 
+var renderTrackDetails = function (trackDetails) {
+  var p = $('<p>').attr('class', 'track-details');
+  p.append(utils.trackAnchor($, trackDetails));
+  p.append($('<br>'));
+  p.append(utils.artistAnchors($, trackDetails.artists));
+  p.append($('<br>'));
+  p.append(utils.releaseAnchor($, trackDetails.release));
+  resultsElem.append(p);
+  return trackDetails;
+};
+
 var videoBlock = function (trackData) {
   return utils.searchForVideoFromTrackDetails(trackData)
     .then(utils.extractVideoId)
@@ -68,6 +79,7 @@ var go = function () {
     function (next) {
       loopCount = loopCount + 1;
       playlist.fetchNewTrack(resultsElem, $)
+      .then(renderTrackDetails)
       .then(videoBlock)
       .then(next, next);
     },
