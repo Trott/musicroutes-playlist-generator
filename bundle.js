@@ -117,7 +117,6 @@ var fetchNewTrack = function () {
 				state.seenArtists = state.seenArtists.concat(_.difference(currentArtists, state.seenArtists));
         return state.playlist.length - 1;
 			})
-			.then(fetchConnectorDetails)
 			.then(getContributors)
 			.then(pickContributor)
 			.then(routes.getArtistDetails)
