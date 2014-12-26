@@ -58,7 +58,11 @@ var go = function () {
     },
     function (next) {
       loopCount = loopCount + 1;
-      playlist.fetchNewTrack(resultsElem, $).then(next, next);
+      playlist.fetchNewTrack(resultsElem, $)
+      .then(function (videoBlock) {
+        resultsElem.append(videoBlock);
+      })
+      .then(next, next);
     },
     function (err) {
       if (err) {

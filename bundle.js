@@ -117,10 +117,10 @@ var fetchNewTrack = function (domElem, $) {
 
 	var trackPicked = false;
 
-	var processTracks = function () {
+	var processTracks = function (passItOn) {
 		// If a previous step picked a track, just pass on through.
 		if (trackPicked) {
-			return Promise.resolve();
+			return Promise.resolve(passItOn);
 		}
 
 		trackPicked = true;
@@ -147,8 +147,7 @@ var fetchNewTrack = function (domElem, $) {
 			.then(utils.searchForVideoFromTrackDetails)
 			.then(utils.extractVideoId)
 			.then(utils.getVideoEmbedCode)
-			.then(utils.wrapVideo)
-			.then(appendToResultsElem);
+			.then(utils.wrapVideo);
 
 		return promise;
 	};
@@ -22547,7 +22546,11 @@ var go = function () {
     },
     function (next) {
       loopCount = loopCount + 1;
-      playlist.fetchNewTrack(resultsElem, $).then(next, next);
+      playlist.fetchNewTrack(resultsElem, $)
+      .then(function (videoBlock) {
+        resultsElem.append(videoBlock);
+      })
+      .then(next, next);
     },
     function (err) {
       if (err) {
