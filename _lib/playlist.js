@@ -138,11 +138,7 @@ var fetchNewTrack = function (domElem, $) {
 			.then(appendToResultsElem)
 			.then(renderTrackDetails)
 			.then(appendToResultsElem)
-			.then(function () { return _.last(state.playlist); })
-			.then(utils.searchForVideoFromTrackDetails)
-			.then(utils.extractVideoId)
-			.then(utils.getVideoEmbedCode)
-			.then(utils.wrapVideo);
+			.then(function () { return _.last(state.playlist); });
 
 		return promise;
 	};
