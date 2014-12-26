@@ -82,22 +82,28 @@ var validatePathOutFromTrack = exports.validatePathOutFromTrack = function (stat
 };
 
 var findTrackWithPathOut = function (state, tracks) {
+	var track; 
+
   return promiseUntil(
     function() { return state.foundSomeoneElse || state.atDeadEnd; },
     function() {
-      state.track = _.sample(tracks);
-      if (! state.track) {
+      track = _.sample(tracks);
+      if (! track) {
         state.atDeadEnd = true;
         return Promise.reject();
       }
-      state.seenTracks.push(state.track);
-      tracks = _.pull(tracks, state.track);
+      state.seenTracks.push(track);
+      tracks = _.pull(tracks, track);
 
-      return routes.getArtistsAndContributorsFromTracks([state.track])
+      return routes.getArtistsAndContributorsFromTracks([track])
         .then(validatePathOutFromTrack.bind(undefined, state))
-        .then(function (useIt) { state.foundSomeoneElse = useIt; });
+        .then(function (useIt) { 
+        	state.foundSomeoneElse = useIt;
+        });
     }
-  );
+  ).then(function () {
+  	return track;
+  });
 };
 
 var pickATrack = exports.pickATrack = function (state, tracks) {

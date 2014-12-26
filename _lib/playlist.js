@@ -11,7 +11,6 @@ var state = {
 	sourceIndividual: {},
 	atDeadEnd: false,
 	foundSomeoneElse: false,
-	track: undefined,
   playlist: []
 };
 
@@ -70,15 +69,14 @@ var setTrackDetails = function (details) {
   }
   var index = state.playlist.push(details) - 1;
   state.playlist[index].release = _.sample(state.playlist[index].releases) || '';
-  state.playlist[index].mid = state.track;
   return state.playlist[index];
 };
 
 var fetchNewTrack = function () {
 	state.atDeadEnd = false;
 
-	var getContributors = function () {
-		return routes.getArtistsAndContributorsFromTracks([state.track]);
+	var getContributors = function (trackMid) {
+		return routes.getArtistsAndContributorsFromTracks([trackMid]);
 	};
 
 	var pickContributor = function (folks) {
@@ -97,20 +95,20 @@ var fetchNewTrack = function () {
 
 	var trackPicked = false;
 
-	var processTracks = function (passItOn) {
+	var processTracks = function (mid) {
 		// If a previous step picked a track, just pass on through.
 		if (trackPicked) {
-			return Promise.resolve(passItOn);
+			return Promise.resolve(mid);
 		}
 
 		trackPicked = true;
 
-		var promise = routes.getTrackDetails(state.track)
+		var promise = routes.getTrackDetails(mid)
 			.then(setTrackDetails)
 			.then(function (trackDetails) { 
         var currentArtists = _.pluck(trackDetails.artists, 'mid');
 				state.seenArtists = state.seenArtists.concat(_.difference(currentArtists, state.seenArtists));
-        return state.playlist.length - 1;
+        return trackDetails.mid;
 			})
 			.then(getContributors)
 			.then(pickContributor)

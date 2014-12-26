@@ -16,7 +16,6 @@ var state = {
 	sourceIndividual: {},
 	atDeadEnd: false,
 	foundSomeoneElse: false,
-	track: undefined,
   playlist: []
 };
 
@@ -75,15 +74,14 @@ var setTrackDetails = function (details) {
   }
   var index = state.playlist.push(details) - 1;
   state.playlist[index].release = _.sample(state.playlist[index].releases) || '';
-  state.playlist[index].mid = state.track;
   return state.playlist[index];
 };
 
 var fetchNewTrack = function () {
 	state.atDeadEnd = false;
 
-	var getContributors = function () {
-		return routes.getArtistsAndContributorsFromTracks([state.track]);
+	var getContributors = function (trackMid) {
+		return routes.getArtistsAndContributorsFromTracks([trackMid]);
 	};
 
 	var pickContributor = function (folks) {
@@ -102,20 +100,20 @@ var fetchNewTrack = function () {
 
 	var trackPicked = false;
 
-	var processTracks = function (passItOn) {
+	var processTracks = function (mid) {
 		// If a previous step picked a track, just pass on through.
 		if (trackPicked) {
-			return Promise.resolve(passItOn);
+			return Promise.resolve(mid);
 		}
 
 		trackPicked = true;
 
-		var promise = routes.getTrackDetails(state.track)
+		var promise = routes.getTrackDetails(mid)
 			.then(setTrackDetails)
 			.then(function (trackDetails) { 
         var currentArtists = _.pluck(trackDetails.artists, 'mid');
 				state.seenArtists = state.seenArtists.concat(_.difference(currentArtists, state.seenArtists));
-        return state.playlist.length - 1;
+        return trackDetails.mid;
 			})
 			.then(getContributors)
 			.then(pickContributor)
@@ -377,6 +375,7 @@ exports.getTrackDetails = function (mid) {
       var rv = null;
       if (data && data.result) {
         rv = {};
+        rv.mid = mid;
         rv.name = data.result.name;
         rv.artists = data.result.artist;
         rv.releases = [];
@@ -475,22 +474,28 @@ var validatePathOutFromTrack = exports.validatePathOutFromTrack = function (stat
 };
 
 var findTrackWithPathOut = function (state, tracks) {
+	var track; 
+
   return promiseUntil(
     function() { return state.foundSomeoneElse || state.atDeadEnd; },
     function() {
-      state.track = _.sample(tracks);
-      if (! state.track) {
+      track = _.sample(tracks);
+      if (! track) {
         state.atDeadEnd = true;
         return Promise.reject();
       }
-      state.seenTracks.push(state.track);
-      tracks = _.pull(tracks, state.track);
+      state.seenTracks.push(track);
+      tracks = _.pull(tracks, track);
 
-      return routes.getArtistsAndContributorsFromTracks([state.track])
+      return routes.getArtistsAndContributorsFromTracks([track])
         .then(validatePathOutFromTrack.bind(undefined, state))
-        .then(function (useIt) { state.foundSomeoneElse = useIt; });
+        .then(function (useIt) { 
+        	state.foundSomeoneElse = useIt;
+        });
     }
-  );
+  ).then(function () {
+  	return track;
+  });
 };
 
 var pickATrack = exports.pickATrack = function (state, tracks) {
@@ -22546,7 +22551,7 @@ var go = function () {
     },
     function (next) {
       loopCount = loopCount + 1;
-      playlist.fetchNewTrack($)
+      playlist.fetchNewTrack()
       .then(renderConnector)
       .then(renderTrackDetails)
       .then(videoBlock)

@@ -111,7 +111,7 @@ var go = function () {
     },
     function (next) {
       loopCount = loopCount + 1;
-      playlist.fetchNewTrack($)
+      playlist.fetchNewTrack()
       .then(renderConnector)
       .then(renderTrackDetails)
       .then(videoBlock)
