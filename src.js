@@ -182,7 +182,7 @@ var formHandler = function (evt) {
       resetForm();
       return;
     }
-    playlist.setSource(sourceIndividual);
+    return playlist.setSource(sourceIndividual);
   };
 
   routes.getMids(startingPoint, '/music/artist').then(lookupUserInput).then(go).catch(error);

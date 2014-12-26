@@ -68,10 +68,17 @@ describe('playlist', function () {
 
 	describe('setSource()', function () {
 		it('should set the source Individual', function (done) {
-			revert = playlist.__set__({state: {sourceIndividual: {mid: 'jake'}}});
-			playlist.setSource('joe');
-			expect(playlist.__get__('state.sourceIndividual.mid')).to.equal('joe');
-			done();
+			nock.enableNetConnect();
+
+			revert = playlist.__set__({state: {sourceIndividual: {mid: '/fhqwhagads'}}});
+			playlist.setSource(BobDylan)
+			.then(function () {
+				var resultPlaylist = playlist.__get__('state.playlist');
+				var source = resultPlaylist[0].connectorToNext;
+				expect(source.mid).to.equal(BobDylan);
+				expect(source.name).to.equal('Bob Dylan');
+				done();
+			});
 		});
 	});
 

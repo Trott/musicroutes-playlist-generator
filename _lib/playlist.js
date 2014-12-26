@@ -23,12 +23,6 @@ var clear = function () {
   state.playlist = [];
 };
 
-var setSource = function (source) {
-  clear();
-	state.sourceIndividual.mid = source;
-  state.playlist = [{connectorToNext: {mid: source}}];
-};
-
 var fetchConnectorDetails = function (index) {
   // Get properly rendered name if we don't yet have one for the previous connector.
   
@@ -61,6 +55,13 @@ var fetchConnectorDetails = function (index) {
   return new Promise(function (resolve) {
     process.nextTick(function () { resolve(connector); });
   });
+};
+
+var setSource = function (source) {
+  clear();
+  state.sourceIndividual.mid = source;
+  state.playlist = [{connectorToNext: {mid: source}}];
+  return fetchConnectorDetails(1);
 };
 
 var setTrackDetails = function (details) {
