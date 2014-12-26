@@ -149,7 +149,7 @@ var getSerialized = function () {
   return JSON.stringify(_.first(bareBones, 11));
 };
 
-var unserialize = function (data) {
+var deserialize = function (data) {
   try {
     state.playlist = JSON.parse(data);
   } catch (e) {
@@ -180,7 +180,7 @@ module.exports = {
   setSource: setSource,
   fetchNewTrack: fetchNewTrack,
   getSerialized: getSerialized,
-  unserialize: unserialize,
+  deserialize: deserialize,
   fetchConnectorDetails: fetchConnectorDetails,
   setTrackDetails: setTrackDetails,
   length: length

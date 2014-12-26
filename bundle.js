@@ -154,7 +154,7 @@ var getSerialized = function () {
   return JSON.stringify(_.first(bareBones, 11));
 };
 
-var unserialize = function (data) {
+var deserialize = function (data) {
   try {
     state.playlist = JSON.parse(data);
   } catch (e) {
@@ -185,7 +185,7 @@ module.exports = {
   setSource: setSource,
   fetchNewTrack: fetchNewTrack,
   getSerialized: getSerialized,
-  unserialize: unserialize,
+  deserialize: deserialize,
   fetchConnectorDetails: fetchConnectorDetails,
   setTrackDetails: setTrackDetails,
   length: length
@@ -22640,12 +22640,9 @@ $(document).ready(function () {
     paperInput.attr('disabled', 'disabled');
     progress.attr('active', 'active');
 
-    playlist.unserialize(urlParts.query.l)
+    playlist.deserialize(urlParts.query.l)
     .then(
-      function () {
-        var l = playlist.length();
-        console.log(l);
-      },
+      function () {},
       function (err) {
         playlist.clear();
         err.message = 'Could not restore playlist: ' + err.message;

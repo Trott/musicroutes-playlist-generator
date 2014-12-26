@@ -194,14 +194,14 @@ describe('playlist', function () {
 		});
 	});
 
-	describe('unserialize()', function () {
+	describe('deserialize()', function () {
 		it('should return an Error if badly formed JSON sent', function (done) {
 			var failure = function (err) {
 				expect(err instanceof Error).to.be.true();
 				done();
 			};
 
-			playlist.unserialize('fhqwhagads')
+			playlist.deserialize('fhqwhagads')
 				.catch(failure);
 		});
 
@@ -211,7 +211,7 @@ describe('playlist', function () {
 				done();
 			};
 
-			playlist.unserialize('[{"connectorToNext": "/fhqwhagads"}]')
+			playlist.deserialize('[{"connectorToNext": "/fhqwhagads"}]')
 				.then(success);
 		});
 
@@ -224,7 +224,7 @@ describe('playlist', function () {
 				done();
 			};
 
-			playlist.unserialize('[{"connectorToNext": "/fhqwhagads", "release": "/live-from-east-reykjavik"}]')
+			playlist.deserialize('[{"connectorToNext": "/fhqwhagads", "release": "/live-from-east-reykjavik"}]')
 				.then(success);
 		});
 	});

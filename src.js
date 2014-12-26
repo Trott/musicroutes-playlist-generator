@@ -205,12 +205,9 @@ $(document).ready(function () {
     paperInput.attr('disabled', 'disabled');
     progress.attr('active', 'active');
 
-    playlist.unserialize(urlParts.query.l)
+    playlist.deserialize(urlParts.query.l)
     .then(
-      function () {
-        var l = playlist.length();
-        console.log(l);
-      },
+      function () {},
       function (err) {
         playlist.clear();
         err.message = 'Could not restore playlist: ' + err.message;
