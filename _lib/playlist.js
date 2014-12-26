@@ -122,8 +122,8 @@ var fetchNewTrack = function (domElem, $) {
 
 		var promise = routes.getTrackDetails(state.track)
 			.then(setTrackDetails)
-			.then(function (trackDetails) { return _.pluck(trackDetails.artists, 'mid');})
-			.then(function (currentArtists) { 
+			.then(function (trackDetails) { 
+        var currentArtists = _.pluck(trackDetails.artists, 'mid');
 				state.seenArtists = state.seenArtists.concat(_.difference(currentArtists, state.seenArtists));
 			})
 			.then(fetchConnectorDetails)
