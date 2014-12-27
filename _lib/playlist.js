@@ -198,9 +198,7 @@ var fetchNewTrack = function () {
 
 		var allFolksDetails = folks.contributors.concat(folks.artists); // Do contributors first because they have roles
 
-		state.sourceIndividual = _.find(allFolksDetails, {mid: contributor});
-
-		return contributor;
+		return _.find(allFolksDetails, {mid: contributor});
 	};
 
 	foundSomeoneElse = false;
@@ -224,11 +222,13 @@ var fetchNewTrack = function () {
 			})
 			.then(getContributors)
 			.then(pickContributor)
-			.then(routes.getArtistDetails)
 			.then(function (details) {
-        details.roles = state.sourceIndividual.roles;
-        _.last(state.playlist).connectorToNext = details;
-        return state.playlist;
+        return routes.getArtistDetails(details.mid)
+          .then(function (newDetails) {
+            newDetails.roles = details.roles;
+            _.last(state.playlist).connectorToNext = newDetails;
+            return state.playlist;
+          });
       });
 
 		return promise;

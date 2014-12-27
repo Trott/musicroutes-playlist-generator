@@ -107,7 +107,7 @@ describe('playlist', function () {
 			};
 
 			playlist.setSource(BobDylan);
-			playlist.fetchNewTrack().then(success);
+			playlist.fetchNewTrack().done(success);
 		});
 	});
 
