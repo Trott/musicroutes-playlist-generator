@@ -297,7 +297,8 @@ var recalcSeenIndividuals = function () {
 var recalcSeenArtists = function () {
   var seenArtists = _.pluck(state.playlist, 'artists');
   seenArtists = _.compact(_.flatten(seenArtists));
-  state.seenArtists = _.pluck(seenArtists, 'mid');
+  seenArtists = _.pluck(seenArtists, 'mid');
+  state.seenArtists = _.uniq(seenArtists);
   return state.playlist;
 };
 
