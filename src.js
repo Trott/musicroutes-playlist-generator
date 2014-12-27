@@ -15,12 +15,16 @@ var submit = $('#startPointSubmit');
 var input = $('#startPoint');
 var paperInput = $('#paperStartPoint');
 var continueButtons = $('.continue');
-var resetButtons = $('.reset');
-var startOverButtons = $('.startOver');
 var progress = $('#progress');
 var formInstructions = $('.form-instructions');
 
 var sourceIndividual;
+
+var enableForm = function () {
+  submit.removeAttr('disabled');
+  input.removeAttr('disabled');
+  paperInput.removeAttr('disabled');
+};
 
 var error = function (err, options) {
   options = options || {};
@@ -33,8 +37,7 @@ var error = function (err, options) {
       resultsElem.append(err);
     }
     progress.removeAttr('active');
-    resetButtons.css('visibility', 'visible');
-    startOverButtons.css('visibility', 'visible');
+    enableForm();
     if (! options.preserveUrl) {
       window.history.replaceState({}, '', '?' + querystring.stringify({l: playlist.serialize()}));
     }
@@ -100,8 +103,6 @@ var go = function () {
     return;
   }
   continueButtons.css('visibility', 'hidden');
-  resetButtons.css('visibility', 'hidden');
-  startOverButtons.css('visibility', 'hidden');
   progress.attr('active', 'active');
   var loopCount = 0;
   async.until(
@@ -122,8 +123,7 @@ var go = function () {
       } else {
         progress.removeAttr('active');
         continueButtons.css('visibility', 'visible');
-        resetButtons.css('visibility', 'visible');
-        startOverButtons.css('visibility', 'visible');
+        enableForm();
         window.history.replaceState({}, '', '?' + querystring.stringify({l: playlist.serialize()}));
       }
     }
@@ -132,36 +132,9 @@ var go = function () {
 
 continueButtons.on('click', go);
 
-var resetForm = function () {
-  continueButtons.css('visibility', 'hidden');
-  resetButtons.css('visibility', 'hidden');
-  startOverButtons.css('visibility', 'hidden');
-  submit.removeAttr('disabled');
-  input.removeAttr('disabled');
-  paperInput.removeAttr('disabled');
-  input.val('');
-  input.focus();
-};
-
-var clearRoute = function () {
-  playlist.clear();
-  resultsElem.empty();
-};
-
-resetButtons.on('click', function () {
-  clearRoute();
-  window.history.replaceState({}, '', '?');
-  resetForm();
-});
-
-startOverButtons.on('click', function () {
-  clearRoute();
-  form.trigger('submit');
-});
-
 var formHandler = function (evt) {
   evt.preventDefault();
-  
+
   var startingPoint = input.val().trim();
   if (! startingPoint) {
     return;
@@ -173,12 +146,14 @@ var formHandler = function (evt) {
   resultsElem.empty();
   progress.attr('active', 'active');
   window.history.replaceState({}, '', '?' + querystring.stringify({q: startingPoint}));
+  playlist.clear();
   var lookupUserInput = function(mids) {
     sourceIndividual = mids[0];
     if (! sourceIndividual) {
       resultsElem.text('Could not find an artist named ' + startingPoint);
       progress.removeAttr('active');
-      resetForm();
+      continueButtons.css('visibility', 'hidden');
+      input.focus();
       return;
     }
     return playlist.setSource(sourceIndividual);
@@ -227,8 +202,7 @@ $(document).ready(function () {
       .then(function () {
         progress.removeAttr('active');
         continueButtons.css('visibility', 'visible');
-        resetButtons.css('visibility', 'visible');
-        startOverButtons.css('visibility', 'visible');
+        enableForm();
       });
     })
     .catch(function (err) {
