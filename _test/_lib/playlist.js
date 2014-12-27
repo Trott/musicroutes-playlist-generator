@@ -747,7 +747,7 @@ describe('playlist', function () {
 			var joe = {mid: '/joe'};
 			playlist.__set__({
 				state: {
-					playlist: [fhqwhagads, jake, joe]
+					playlist: [{}, fhqwhagads, jake, joe]
 				}
 			});
 
@@ -763,7 +763,7 @@ describe('playlist', function () {
 			var jakeAndJoe = {artists: [{mid: '/jake'}, {mid: '/joe'}]};
 			playlist.__set__({
 				state: {
-					playlist: [fhqwhagads, jakeAndJoe]
+					playlist: [{}, fhqwhagads, jakeAndJoe]
 				}
 			});
 

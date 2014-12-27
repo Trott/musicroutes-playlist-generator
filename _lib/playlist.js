@@ -287,20 +287,20 @@ var deserialize = function (data) {
 
 var recalcSeenIndividuals = function () {
   state.seenIndividuals = _.map(state.playlist, function (value) { 
-    return value.connectorToNext.mid; 
+    return _.result(value.connectorToNext, 'mid'); 
   });
   return state.playlist;
 };
 
 var recalcSeenArtists = function () {
-  var seenArtists = _.map(state.playlist, 'artists');
-  seenArtists = _.flatten(seenArtists);
-  state.seenArtists = _.map(seenArtists, 'mid');
+  var seenArtists = _.pluck(state.playlist, 'artists');
+  seenArtists = _.compact(_.flatten(seenArtists));
+  state.seenArtists = _.pluck(seenArtists, 'mid');
   return state.playlist;
 };
 
 var recalcSeenTracks = function () {
-  state.seenTracks = _.pluck(state.playlist, 'mid');
+  state.seenTracks = _.compact(_.pluck(state.playlist, 'mid'));
   return state.playlist;
 };
 
@@ -324,7 +324,10 @@ var hydrate = function (data) {
         return Promise.resolve(state.playlist[index]);
       });
     })
-  );
+  )
+  .then(recalcSeenTracks)
+  .then(recalcSeenIndividuals)
+  .then(recalcSeenArtists);
 };
 
 module.exports = {
