@@ -197,7 +197,9 @@ var fetchNewTrack = function () {
 	var pickContributor = function (folks) {
 		var contributors = utils.mergeArtistsAndContributors(folks.artists, folks.contributors);
 		var notSeen = _.difference(contributors, state.seenIndividuals);
-		var contributor = utils.pickContributor(notSeen, contributors, state.sourceIndividual.mid);
+    // .slice(-2, -1)[0] = second-to-last element
+    var connectorFromPrevious = state.playlist.slice(-2, -1)[0].connectorToNext.mid;
+		var contributor = utils.pickContributor(notSeen, contributors, connectorFromPrevious);
 
 		var allFolksDetails = folks.contributors.concat(folks.artists); // Do contributors first because they have roles
 
