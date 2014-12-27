@@ -29,8 +29,6 @@ var fetchConnectorDetails = function (index) {
   // we want to render it as 'Janelle Monae'. Ditto for missing umlauts and whatnot.
   // So just pull from the track details if it's there.
 
-  // Since it's connector *to*, we actually want the prior index.
-  index = index - 1;
   var connector = state.playlist[index].connectorToNext;
   if (! connector.name) {
     var matching = _.where(state.playlist[index].artists, {mid: connector.mid});
@@ -47,12 +45,12 @@ var fetchConnectorDetails = function (index) {
     .then(function (value) {
       connector.name = value.name;
       state.playlist[index].connectorToNext = connector;
-      return Promise.resolve(connector);
+      return Promise.resolve(state.playlist[index]);
     });
   }
   
   return new Promise(function (resolve) {
-    process.nextTick(function () { resolve(connector); });
+    process.nextTick(function () { resolve(state.playlist[index]); });
   });
 };
 
@@ -60,20 +58,23 @@ var setSource = function (source) {
   clear();
   state.sourceIndividual.mid = source;
   state.playlist = [{connectorToNext: {mid: source}}];
-  return fetchConnectorDetails(1);
+  return fetchConnectorDetails(0);
 };
 
 var setTrackDetails = function (options, details) {
   if (! _.isPlainObject(details)) {
     details = {};
   }
-  var index = state.playlist.push(details) - 1;
+
+  // Use specified options, else append to end of playlist.
+  var index = options.index || state.playlist.length;
+  state.playlist[index] = details;
   if (options.release) {
     state.playlist[index].release = _.find(state.playlist[index].releases, options.release);
   } else {
     state.playlist[index].release = _.sample(state.playlist[index].releases) || '';
   }
-  return state.playlist[index];
+  return Promise.resolve(state.playlist[index]);
 };
 
 var fetchNewTrack = function () {
@@ -176,12 +177,23 @@ var deserialize = function (data) {
 
 var hydrate = function (data) {
   return Promise.all(
-    _.map(data, function (value) {
-      if (value.mid) {
-        return routes.getTrackDetails(value.mid)
-          .then(setTrackDetails.bind(null, {release: value.release}));
-      }
-      return value;
+    _.map(data, function (value, index) {
+      state.playlist[index] = state.playlist[index] || {};
+      return Promise.resolve()
+      .then(function () {
+        if (value.mid) {
+          return routes.getTrackDetails(value.mid)
+            .then(setTrackDetails.bind(null, {release: value.release, index: index}));
+        }
+        return Promise.resolve(state.playlist[index]);
+      })
+      .then(function () {
+        if (value.connectorToNext) {
+          state.playlist[index].connectorToNext = value.connectorToNext;
+          return fetchConnectorDetails(index);
+        }
+        return Promise.resolve(state.playlist[index]);
+      });
     })
   );
 };

@@ -1,4 +1,5 @@
 /*jshint expr: true*/
+/* global -Promise */
 
 var rewire = require('rewire');
 var playlist = rewire('../../_lib/playlist.js');
@@ -17,6 +18,7 @@ var nock = require('nock');
 
 var $ = require('cheerio');
 var _ = require('lodash');
+var Promise = require('promise');
 
 var div;
 
@@ -246,9 +248,9 @@ describe('playlist', function () {
 					]
 				}
 			});
-			playlist.fetchConnectorDetails(1)
-			.then(function (connector) {
-				expect(connector).to.deep.equal({name: 'fhqwhagads'});
+			playlist.fetchConnectorDetails(0)
+			.done(function (result) {
+				expect(result.connectorToNext.name).to.equal('fhqwhagads');
 				done();
 			});
 		});
@@ -262,9 +264,9 @@ describe('playlist', function () {
 					]
 				}
 			});
-			playlist.fetchConnectorDetails(1)
-			.then(function (connector) {
-				expect(connector).to.deep.equal({mid: '/fhqwhagads', name: 'Strong Bad'});
+			playlist.fetchConnectorDetails(0)
+			.done(function (result) {
+				expect(result.connectorToNext).to.deep.equal({mid: '/fhqwhagads', name: 'Strong Bad'});
 				done();
 			});
 		});
@@ -273,7 +275,7 @@ describe('playlist', function () {
 			revert = playlist.__set__({
 				routes: {
 					getArtistDetails: function () {
-						return {then: function (cb) { cb({name: 'Strong Bad'}); }};
+						return Promise.resolve({name: 'Strong Bad'});
 					}
 				},
 				state: {
@@ -283,16 +285,18 @@ describe('playlist', function () {
 					]
 				}
 			});
-			playlist.fetchConnectorDetails(1);
-			expect(playlist.__get__('state').playlist[0].connectorToNext.name).to.equal('Strong Bad');
-			done();
+			playlist.fetchConnectorDetails(0)
+			.done(function () {
+				expect(playlist.__get__('state').playlist[0].connectorToNext.name).to.equal('Strong Bad');
+				done();
+			});
 		});
 
 		it('should accept an index to select an arbitrary playlist entry', function (done) {
 			revert = playlist.__set__({
 				routes: {
 					getArtistDetails: function () {
-						return {then: function (cb) { cb({name: 'Strong Bad'}); }};
+						return Promise.resolve({name: 'Strong Bad'});
 					}
 				},
 				state: {
@@ -305,9 +309,11 @@ describe('playlist', function () {
 					]
 				}
 			});
-			playlist.fetchConnectorDetails(2);
-			expect(playlist.__get__('state').playlist[1].connectorToNext.name).to.equal('Strong Bad');
-			done();
+			playlist.fetchConnectorDetails(1)
+			.done(function () {
+				expect(playlist.__get__('state').playlist[1].connectorToNext.name).to.equal('Strong Bad');
+				done();
+			});
 		});
 	});
 
@@ -317,14 +323,16 @@ describe('playlist', function () {
 				track: '/fhqwhagads',
 				playlist: []
 			}});
-			var trackDetails = playlist.setTrackDetails({}, null);
 
 			var expectedResults = {
 				mid: '/fhqwhagads', 
 				release: ''
 			};
-			expect(trackDetails).to.deep.equal(expectedResults);
-			done();
+			playlist.setTrackDetails({}, null)
+			.done(function (trackDetails) {
+				expect(trackDetails).to.deep.equal(expectedResults);
+				done();
+			});
 		});
 
 		it('should use details provided', function (done) {
@@ -335,15 +343,17 @@ describe('playlist', function () {
 				}
 			});
 			var details =	{releases: [{mid: '/live-from-east-reykjavik'}]};
-			var trackDetails = playlist.setTrackDetails({}, details);
 
 			var expectedResults = {
 				mid: '/fhqwhagads',
 				releases: [{mid: '/live-from-east-reykjavik'}],
 				release: {mid: '/live-from-east-reykjavik'}
 			};
-			expect(trackDetails).to.deep.equal(expectedResults);
-			done();
+			playlist.setTrackDetails({}, details)
+			.done(function (trackDetails) {
+				expect(trackDetails).to.deep.equal(expectedResults);
+				done();				
+			});
 		});
 	});
 
@@ -363,7 +373,7 @@ describe('playlist', function () {
 			};
 
 			playlist.hydrate(initial)
-			.then(success);
+			.done(success);
 		});
 
 		it('should restore artists', function (done) {
@@ -384,7 +394,7 @@ describe('playlist', function () {
 			};
 
 			playlist.hydrate(initial)
-			.then(success);
+			.done(success);
 		});
 
 		it('should use the release provided', function (done) {
@@ -402,7 +412,44 @@ describe('playlist', function () {
 			};
 
 			playlist.hydrate(initial)
-			.then(success);
+			.done(success);
+		});
+
+		it('should hydrate connectorToNext properties', function (done) {
+			nock.enableNetConnect();
+
+			var initial = [
+				{connectorToNext: {mid: '/m/0dl567'}}
+			];
+
+			var success = function (data) {
+				var connector = data[0].connectorToNext;
+				expect(connector.mid).to.equal('/m/0dl567');
+				expect(connector.name).to.equal('Taylor Swift');
+				done();
+			};
+
+			playlist.hydrate(initial)
+			.done(success);
+		});
+
+		it('should hydrate even if state.playlist is empty', function (done) {
+			nock.enableNetConnect();
+
+			var initial = [
+				{connectorToNext: {mid: '/m/0dl567'}}
+			];
+
+			var success = function (data) {
+				var connector = data[0].connectorToNext;
+				expect(connector.mid).to.equal('/m/0dl567');
+				expect(connector.name).to.equal('Taylor Swift');
+				done();
+			};
+
+			playlist.clear();
+			playlist.hydrate(initial)
+			.done(success);
 		});
 	});
 });
