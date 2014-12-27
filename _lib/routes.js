@@ -183,6 +183,7 @@ exports.getTrackDetails = function (mid) {
       var rv = null;
       if (data && data.result) {
         rv = {};
+        rv.mid = mid;
         rv.name = data.result.name;
         rv.artists = data.result.artist;
         rv.releases = [];
