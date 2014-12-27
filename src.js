@@ -214,9 +214,7 @@ $(document).ready(function () {
       error(err, {preserveUrl: true});
     });
 
-    // it will need to update seenArtists and all that jazz
     // look up initial connector and populate input box
-    // roles
     // render remaining elements
     // re-enable buttons and turn of progress indicator
   }
