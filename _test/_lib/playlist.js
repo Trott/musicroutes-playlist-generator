@@ -722,4 +722,54 @@ describe('playlist', function () {
 			done();
 		});
 	});
+
+	describe('recalcSeenIndividuals()', function () {
+		it('should create set state.seenIndividuals to array of connectorToNext mids plucked from playlist', function (done) {
+			var fhqwhagads = {connectorToNext: {mid: '/fhqwhagads'}};
+			var jake = {connectorToNext: {mid: '/jake'}};
+			var joe = {connectorToNext: {mid: '/joe'}};
+			playlist.__set__({
+				state: {
+					playlist: [fhqwhagads, jake, joe]
+				}
+			});
+
+			playlist.recalcSeenIndividuals();
+			expect(playlist.__get__('state').seenIndividuals).to.deep.equal(['/fhqwhagads', '/jake', '/joe']);
+			done();
+		});
+	});
+
+	describe('recalcSeenTracks()', function () {
+		it('should set state.seenTracks to array of mids plucked from playlist', function (done) {
+			var fhqwhagads = {mid: '/fhqwhagads'};
+			var jake = {mid: '/jake'};
+			var joe = {mid: '/joe'};
+			playlist.__set__({
+				state: {
+					playlist: [fhqwhagads, jake, joe]
+				}
+			});
+
+			playlist.recalcSeenTracks();
+			expect(playlist.__get__('state').seenTracks).to.deep.equal(['/fhqwhagads', '/jake', '/joe']);
+			done();
+		});
+	});
+
+	describe('recalcSeenArtists()', function () {
+		it('should set state.seenArtists to array of artist mids plucked from playlist', function (done) {
+			var fhqwhagads = {artists: [{mid: '/fhqwhagads'}]};
+			var jakeAndJoe = {artists: [{mid: '/jake'}, {mid: '/joe'}]};
+			playlist.__set__({
+				state: {
+					playlist: [fhqwhagads, jakeAndJoe]
+				}
+			});
+
+			playlist.recalcSeenArtists();
+			expect(playlist.__get__('state').seenArtists).to.deep.equal(['/fhqwhagads', '/jake', '/joe']);
+			done();
+		});
+	});
 });

@@ -285,6 +285,25 @@ var deserialize = function (data) {
   return Promise.resolve(playlist);
 };
 
+var recalcSeenIndividuals = function () {
+  state.seenIndividuals = _.map(state.playlist, function (value) { 
+    return value.connectorToNext.mid; 
+  });
+  return state.playlist;
+};
+
+var recalcSeenArtists = function () {
+  var seenArtists = _.map(state.playlist, 'artists');
+  seenArtists = _.flatten(seenArtists);
+  state.seenArtists = _.map(seenArtists, 'mid');
+  return state.playlist;
+};
+
+var recalcSeenTracks = function () {
+  state.seenTracks = _.pluck(state.playlist, 'mid');
+  return state.playlist;
+};
+
 var hydrate = function (data) {
   return Promise.all(
     _.map(data, function (value, index) {
@@ -323,5 +342,8 @@ module.exports = {
   tracksWithArtist: tracksWithArtist,
   tracksWithContributor: tracksWithContributor,
   giveUpIfNoTracks: giveUpIfNoTracks,
-  addToSeenIndividuals: addToSeenIndividuals
+  addToSeenIndividuals: addToSeenIndividuals,
+  recalcSeenTracks: recalcSeenTracks,
+  recalcSeenArtists: recalcSeenArtists,
+  recalcSeenIndividuals: recalcSeenIndividuals
 };

@@ -290,6 +290,25 @@ var deserialize = function (data) {
   return Promise.resolve(playlist);
 };
 
+var recalcSeenIndividuals = function () {
+  state.seenIndividuals = _.map(state.playlist, function (value) { 
+    return value.connectorToNext.mid; 
+  });
+  return state.playlist;
+};
+
+var recalcSeenArtists = function () {
+  var seenArtists = _.map(state.playlist, 'artists');
+  seenArtists = _.flatten(seenArtists);
+  state.seenArtists = _.map(seenArtists, 'mid');
+  return state.playlist;
+};
+
+var recalcSeenTracks = function () {
+  state.seenTracks = _.pluck(state.playlist, 'mid');
+  return state.playlist;
+};
+
 var hydrate = function (data) {
   return Promise.all(
     _.map(data, function (value, index) {
@@ -328,7 +347,10 @@ module.exports = {
   tracksWithArtist: tracksWithArtist,
   tracksWithContributor: tracksWithContributor,
   giveUpIfNoTracks: giveUpIfNoTracks,
-  addToSeenIndividuals: addToSeenIndividuals
+  addToSeenIndividuals: addToSeenIndividuals,
+  recalcSeenTracks: recalcSeenTracks,
+  recalcSeenArtists: recalcSeenArtists,
+  recalcSeenIndividuals: recalcSeenIndividuals
 };
 }).call(this,require('_process'))
 },{"./routes.js":"/Users/richtrott/musicroutes-playlist-generator/_lib/routes.js","./utils.js":"/Users/richtrott/musicroutes-playlist-generator/_lib/utils.js","_process":"/usr/local/lib/node_modules/watchify/node_modules/browserify/node_modules/process/browser.js","lodash":"/Users/richtrott/musicroutes-playlist-generator/node_modules/lodash/dist/lodash.js","promise":"/Users/richtrott/musicroutes-playlist-generator/node_modules/promise/index.js"}],"/Users/richtrott/musicroutes-playlist-generator/_lib/routes.js":[function(require,module,exports){
