@@ -9,10 +9,11 @@ var state = {
 	seenTracks: [],
 	seenArtists: [],
 	sourceIndividual: {},
-	atDeadEnd: false,
-	foundSomeoneElse: false,
   playlist: []
 };
+
+var atDeadEnd = false;
+var foundSomeoneElse = false;
 
 var clear = function () {
 	state.seenIndividuals = [];
@@ -95,11 +96,11 @@ var findTrackWithPathOut = function (tracks) {
   var track; 
 
   return utils.promiseUntil(
-    function() { return state.foundSomeoneElse || state.atDeadEnd; },
+    function() { return foundSomeoneElse || atDeadEnd; },
     function() {
       track = _.sample(tracks);
       if (! track) {
-        state.atDeadEnd = true;
+        atDeadEnd = true;
         return Promise.reject();
       }
       state.seenTracks.push(track);
@@ -108,7 +109,7 @@ var findTrackWithPathOut = function (tracks) {
       return routes.getArtistsAndContributorsFromTracks([track])
         .then(validatePathOutFromTrack)
         .then(function (useIt) { 
-          state.foundSomeoneElse = useIt;
+          foundSomeoneElse = useIt;
         });
     }
   ).then(function () {
@@ -117,7 +118,7 @@ var findTrackWithPathOut = function (tracks) {
 };
 
 var pickATrack = function (tracks) {
-  state.atDeadEnd = false;
+  atDeadEnd = false;
   var notSeenTracks = _.difference(tracks, state.seenTracks);
 
   return findTrackWithPathOut(notSeenTracks);
@@ -167,7 +168,7 @@ var giveUpIfNoTracks = function (err) {
   if (err) {
     return Promise.reject(err);
   }
-  state.atDeadEnd = true;
+  atDeadEnd = true;
   var previousConnector = _.last(state.playlist).connectorToNext;
   var msg = 'Playlist is at a dead end with ';
   if (previousConnector.name) {
@@ -182,7 +183,7 @@ var giveUpIfNoTracks = function (err) {
 };
 
 var fetchNewTrack = function () {
-	state.atDeadEnd = false;
+	atDeadEnd = false;
 
 	var getContributors = function (trackMid) {
 		return routes.getArtistsAndContributorsFromTracks([trackMid]);
@@ -200,7 +201,7 @@ var fetchNewTrack = function () {
 		return contributor;
 	};
 
-	state.foundSomeoneElse = false;
+	foundSomeoneElse = false;
 
 	var trackPicked = false;
 

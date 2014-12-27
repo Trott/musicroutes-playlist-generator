@@ -520,16 +520,14 @@ describe('playlist', function () {
 
 		it('should set atDeadEnd true and reject if no tracks', function (done) {
 			revert = playlist.__set__({
-				state: {
-					foundSomeoneElse: false,
-					atDeadEnd: false
-				}
+				foundSomeoneElse: false,
+				atDeadEnd: false
 			});
 
 			var tracks = [];
 
 			var failure = function () {
-				expect(playlist.__get__('state').atDeadEnd).to.be.true();
+				expect(playlist.__get__('atDeadEnd')).to.be.true();
 				done();
 			};
 
@@ -538,9 +536,9 @@ describe('playlist', function () {
 
 		it('should call routes.getArtistsAndContributorsFromTracks() on tracks', function (done) {
 			revert = playlist.__set__({
+				foundSomeoneElse: false,
+				atDeadEnd: false,
 				state: {
-					foundSomeoneElse: false,
-					atDeadEnd: false,
 					seenTracks: [{mid: '/the-system-is-down'}, {mid: '/trogdor-the-burninator'}],
 					sourceIndividual: {mid: '/fhqwhagads'}
 				},
@@ -561,7 +559,7 @@ describe('playlist', function () {
 			var tracks = [{mid: '/everybody-to-the-limit'}];
 
 			var success = function () {
-				expect(playlist.__get__('state').foundSomeoneElse).to.be.true();
+				expect(playlist.__get__('foundSomeoneElse')).to.be.true();
 				done();
 			};
 
