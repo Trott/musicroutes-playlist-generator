@@ -16,11 +16,8 @@ var beforeEach = lab.beforeEach;
 
 var nock = require('nock');
 
-var $ = require('cheerio');
 var _ = require('lodash');
 var Promise = require('promise');
-
-var div;
 
 describe('playlist', function () {
 	var revert;
@@ -34,7 +31,6 @@ describe('playlist', function () {
 		}
 		nock.cleanAll();
 		nock.disableNetConnect();
-		div = $('<div>');
 		done();
 	});
 
@@ -450,6 +446,274 @@ describe('playlist', function () {
 			playlist.clear();
 			playlist.hydrate(initial)
 			.done(success);
+		});
+	});
+
+	describe('validatePathOutForTrack()', function () {
+		it('should return true if there is someone on the track other than the source individual', function (done) {
+			revert = playlist.__set__({
+				state: {
+					foundSomeoneElse: false,
+					sourceIndividual: {mid: '/fhqwhagads'},
+					seenTracks: ['/everybody-to-the-limit', '/the-system-is-down']
+				}
+			});
+
+			var folks = {
+				artists: [{mid: '/jake'}],
+				contributors: [{mid: '/joe'}, {mid: '/fhqwhagads'}]
+			};
+
+			expect(playlist.validatePathOutFromTrack(folks)).to.be.true();
+			done();
+		});
+
+		it('should return false if there is only the source individual on the track', function (done) {
+			revert = playlist.__set__({
+				state: {
+					foundSomeoneElse: false,
+					sourceIndividual: {mid: '/fhqwhagads'},
+					seenTracks: ['/everybody-to-the-limit', '/the-system-is-down']
+				}
+			});
+
+			var folks = {
+				artists: [{mid: '/fhqwhagads'}]
+			};
+
+			expect(playlist.validatePathOutFromTrack(folks)).to.be.false();
+			done();
+		});
+
+		it('should return true no matter what if this is the only track we have seen', function (done) {
+			revert = playlist.__set__({
+				state: {
+					foundSomeoneElse: false,
+					sourceIndividual: {mid: '/fhqwhagads'},
+					seenTracks: ['/everybody-to-the-limit']
+				}
+			});
+
+			var folks = {
+				artists: [{mid: '/fhqwhagads'}]
+			};
+
+			expect(playlist.validatePathOutFromTrack(folks)).to.be.true();
+			done();			
+		});
+	});
+
+	describe('pickATrack()', function () {
+		it('should resolve if foundSomeoneElse', function (done) {
+			revert = playlist.__set__({
+				state: {
+					foundSomeoneElse: true
+				}
+			});
+
+			var success = function () {
+				done();
+			};
+
+			playlist.pickATrack().then(success);
+		});
+
+		it('should set atDeadEnd true and reject if no tracks', function (done) {
+			revert = playlist.__set__({
+				state: {
+					foundSomeoneElse: false,
+					atDeadEnd: false
+				}
+			});
+
+			var tracks = [];
+
+			var failure = function () {
+				expect(playlist.__get__('state').atDeadEnd).to.be.true();
+				done();
+			};
+
+			playlist.pickATrack(tracks).done(null, failure);
+		});
+
+		it('should call routes.getArtistsAndContributorsFromTracks() on tracks', function (done) {
+			revert = playlist.__set__({
+				state: {
+					foundSomeoneElse: false,
+					atDeadEnd: false,
+					seenTracks: [{mid: '/the-system-is-down'}, {mid: '/trogdor-the-burninator'}],
+					sourceIndividual: {mid: '/fhqwhagads'}
+				},
+				routes: {
+					getArtistsAndContributorsFromTracks: function () {
+						return {then: function (cb) { 
+							return Promise.resolve(
+								cb({
+									artists:[{mid: '/fhqwhagads'}], 
+									contributors: [{mid: '/jake'}, {mid: '/joe'}]
+								})
+							);
+						}};
+					}
+				}
+			});
+
+			var tracks = [{mid: '/everybody-to-the-limit'}];
+
+			var success = function () {
+				expect(playlist.__get__('state').foundSomeoneElse).to.be.true();
+				done();
+			};
+
+			playlist.pickATrack(tracks).done(success);
+		});
+	});
+
+	describe('tracksByUnseenArtists()', function () {
+		it('should call routes.getTracksByArtists() if state.seenArtists is empty', function (done) {
+			revert = playlist.__set__({
+				state: {
+					seenArtists: [],
+					sourceIndividual: {mid: '/fhqwhagads'}
+				},
+				routes: {
+					getTracksByArtists: function () {
+						return {then: function () { return 'getTracksByArtists'; }};
+					}
+				}
+			});
+
+			expect(playlist.tracksByUnseenArtists()).to.equal('getTracksByArtists');
+			done();
+		});
+
+		it('should call routes.getTracksWithContributors() if state.seenArtists is not empty', function (done) {
+			revert = playlist.__set__({
+				state: {
+					seenArtists: ['/jake', '/joe'],
+					sourceIndividual: {mid: '/fhqwhagads'}
+				},
+				routes: {
+					getTracksWithContributors: function () {
+						return {then: function () { return 'getTracksWithContributors'; }};
+					}
+				}
+			});
+
+			expect(playlist.tracksByUnseenArtists()).to.equal('getTracksWithContributors');
+			done();
+		});
+	});
+
+	describe('tracksWithContributor()', function () {
+		it('should reject if error exists', function (done) {
+			var error = Error();
+			playlist.tracksWithContributor(error)
+				.catch(function (err) {
+					expect(err).to.equal(error);
+					done();
+				});
+		});
+
+		it('should call routes.getTracksWithContributors()', function (done) {
+			revert = playlist.__set__({
+				state: {
+					sourceIndividual: {mid: '/fhqwhagads'}
+				},
+				routes: {
+					getTracksWithContributors: function () {
+						return {then: function () { return 'getTracksWithContributors'; }};
+					}
+				}
+			});
+
+			expect(playlist.tracksWithContributor()).to.equal('getTracksWithContributors');
+			done();
+		});
+	});
+
+	describe('tracksWithArtist()', function () {
+		it('should reject if error exists', function (done) {
+			var error = Error();
+			playlist.tracksWithArtist(error)
+				.catch(function (err) {
+					expect(err).to.equal(error);
+					done();
+				});
+		});
+
+		it('should call routes.getTracksWithArtists()', function (done) {
+			playlist.__set__({
+				state: {
+					sourceIndividual: {mid: '/fhqwhagads'}
+				},
+				routes: {
+					getTracksByArtists: function () {
+						return {then: function () { return 'getTracksByArtists'; }};
+					}
+				}
+			});
+
+			expect(playlist.tracksWithArtist()).to.equal('getTracksByArtists');
+			done();
+		});
+	});
+
+	describe('giveUpIfNoTracks()', function () {
+		it('should reject with error that is sent', function (done) {
+			var error = Error();
+
+			playlist.giveUpIfNoTracks(error)
+				.catch(function (e) {
+					expect(e).to.equal(error);
+					expect(e.deadEnd).to.be.undefined();
+					done();
+				});
+		});
+
+		it('should reject with message constructed from state if no error sent', function (done) {
+			revert = playlist.__set__({
+				state: {
+					playlist: [{
+						connectorToNext: {
+							mid: '/fhqwhagads',
+							name: 'Fhqwhagads'
+						}
+					}]
+				}
+			});
+
+			var handler = function (err) {
+				var errTxt = err.message;
+				expect(errTxt).to.equal('Playlist is at a dead end with Fhqwhagads.');
+				expect(err.deadEnd).to.be.true();
+				done();
+			};
+
+			playlist.giveUpIfNoTracks()
+				.catch(handler);
+		});
+
+		it('should use mid if name not present', function (done) {
+			revert = playlist.__set__({
+				state: {
+					playlist: [{
+						connectorToNext: {
+							mid: '/fhqwhagads'
+						}
+					}]
+				}
+			});
+
+			var handler = function (err) {
+				var errTxt = err.message;
+				expect(errTxt).to.equal('Playlist is at a dead end with /fhqwhagads.');
+				expect(err.deadEnd).to.be.true();
+				done();
+			};
+
+			playlist.giveUpIfNoTracks()
+				.catch(handler);
 		});
 	});
 });

@@ -77,6 +77,110 @@ var setTrackDetails = function (options, details) {
   return Promise.resolve(state.playlist[index]);
 };
 
+var validatePathOutFromTrack = function (folks) {
+  if (state.seenTracks.length === 1) {
+    return true;
+  }
+  var myArtists = _.pluck(folks.artists, 'mid'); 
+  var myContributors = _.pluck(folks.contributors, 'mid');
+  folks = _.union(myArtists, myContributors);
+  var contributorPool = _.difference(folks, [state.sourceIndividual.mid]);
+  // Only accept this track if there's someone else associated with it...
+  // ...unless this is the very first track in which case, pick anything and
+  // get it in front of the user pronto.
+  return contributorPool.length > 0;
+};
+
+var findTrackWithPathOut = function (tracks) {
+  var track; 
+
+  return utils.promiseUntil(
+    function() { return state.foundSomeoneElse || state.atDeadEnd; },
+    function() {
+      track = _.sample(tracks);
+      if (! track) {
+        state.atDeadEnd = true;
+        return Promise.reject();
+      }
+      state.seenTracks.push(track);
+      tracks = _.pull(tracks, track);
+
+      return routes.getArtistsAndContributorsFromTracks([track])
+        .then(validatePathOutFromTrack)
+        .then(function (useIt) { 
+          state.foundSomeoneElse = useIt;
+        });
+    }
+  ).then(function () {
+    return track;
+  });
+};
+
+var pickATrack = function (tracks) {
+  state.atDeadEnd = false;
+  var notSeenTracks = _.difference(tracks, state.seenTracks);
+
+  return findTrackWithPathOut(notSeenTracks);
+};
+
+var tracksByUnseenArtists = function () {
+  var promise;
+
+  var optionsNewArtistsOnly = {subquery: {
+    artist: [{
+      'mid|=': state.seenArtists,
+      optional: 'forbidden'
+    }]
+  }};
+
+  if (state.seenArtists.length === 0) {
+    // If this is the first track, get one by this artist if we can.
+    promise = routes.getTracksByArtists([state.sourceIndividual.mid]);
+  }  else {
+    // Otherwise, get one by an artist we haven't seen yet
+    promise = routes.getTracksWithContributors([state.sourceIndividual.mid], optionsNewArtistsOnly);
+  }
+
+  return promise.then(pickATrack);
+};
+
+// Look for any track with this contributor credited as a contributor regardless if we've seen the artist already.
+var tracksWithContributor = function (err) {
+  if (err) {
+    return Promise.reject(err);
+  }
+
+  return routes.getTracksWithContributors([state.sourceIndividual.mid], {}).then(pickATrack);
+};
+
+// Look for any tracks actually credited to this contributor as the main artist. We are desperate!
+var tracksWithArtist = function (err) {
+  if (err) {
+    return Promise.reject(err);
+  }
+
+  return routes.getTracksByArtists([state.sourceIndividual.mid]).then(pickATrack);
+};
+
+// Give up if we haven't found anything we can use yet
+var giveUpIfNoTracks = function (err) {
+  if (err) {
+    return Promise.reject(err);
+  }
+  state.atDeadEnd = true;
+  var previousConnector = _.last(state.playlist).connectorToNext;
+  var msg = 'Playlist is at a dead end with ';
+  if (previousConnector.name) {
+    msg = msg + previousConnector.name;
+  } else {
+    msg = msg + previousConnector.mid;
+  }
+  msg = msg + '.';
+  var myError = Error(msg);
+  myError.deadEnd = true;
+  return Promise.reject(myError);
+};
+
 var fetchNewTrack = function () {
 	state.atDeadEnd = false;
 
@@ -129,10 +233,10 @@ var fetchNewTrack = function () {
 
 	state.seenIndividuals.push(state.sourceIndividual.mid);
 
-	var promise = utils.tracksByUnseenArtists(state)
-		.then(processTracks, utils.tracksWithContributor.bind(undefined, state))
-		.then(processTracks, utils.tracksWithArtist.bind(undefined, state))
-		.then(processTracks, utils.giveUpIfNoTracks.bind(undefined, state));
+	var promise = tracksByUnseenArtists()
+		.then(processTracks, tracksWithContributor)
+		.then(processTracks, tracksWithArtist)
+		.then(processTracks, giveUpIfNoTracks);
 
 	return promise;
 };
@@ -206,5 +310,11 @@ module.exports = {
   deserialize: deserialize,
   fetchConnectorDetails: fetchConnectorDetails,
   setTrackDetails: setTrackDetails,
-  hydrate: hydrate
+  hydrate: hydrate,
+  validatePathOutFromTrack: validatePathOutFromTrack,
+  pickATrack: pickATrack,
+  tracksByUnseenArtists: tracksByUnseenArtists,
+  tracksWithArtist: tracksWithArtist,
+  tracksWithContributor: tracksWithContributor,
+  giveUpIfNoTracks: giveUpIfNoTracks
 };
