@@ -291,9 +291,11 @@ var deserialize = function (data) {
 };
 
 var recalcSeenIndividuals = function () {
-  state.seenIndividuals = _.map(state.playlist, function (value) { 
+  var seenIndividuals = _.map(state.playlist, function (value) { 
     return _.result(value.connectorToNext, 'mid'); 
   });
+  state.seenIndividuals = _.uniq(seenIndividuals);
+
   return state.playlist;
 };
 

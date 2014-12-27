@@ -738,6 +738,20 @@ describe('playlist', function () {
 			expect(playlist.__get__('state').seenIndividuals).to.deep.equal(['/fhqwhagads', '/jake', '/joe']);
 			done();
 		});
+
+		it('should not create duplicate entries', function (done) {
+			var fhqwhagads = {connectorToNext: {mid: '/fhqwhagads'}};
+
+			playlist.__set__({
+				state: {
+					playlist: [fhqwhagads, fhqwhagads]
+				}
+			});
+
+			playlist.recalcSeenIndividuals();
+			expect(playlist.__get__('state').seenIndividuals).to.deep.equal(['/fhqwhagads']);
+			done();
+		});
 	});
 
 	describe('recalcSeenTracks()', function () {
