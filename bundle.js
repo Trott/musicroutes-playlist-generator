@@ -22683,8 +22683,7 @@ $(document).ready(function () {
 
     // it will need to update seenArtists and all that jazz
     // look up initial connector and populate input box
-    // should preserve release rather than selecxt a new one
-    // preserve remaining connectors and look up details
+    // roles
     // render remaining elements
     // re-enable buttons and turn of progress indicator
   }
