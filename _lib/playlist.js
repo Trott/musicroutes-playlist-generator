@@ -136,7 +136,7 @@ var tracksByUnseenArtists = function () {
 
   if (state.seenArtists.length === 0) {
     // If this is the first track, get one by this artist if we can.
-    promise = routes.getTracksByArtists([state.sourceIndividual.mid]);
+    promise = routes.getTracksByArtists([_.last(state.playlist).connectorToNext.mid]);
   }  else {
     // Otherwise, get one by an artist we haven't seen yet
     promise = routes.getTracksWithContributors([state.sourceIndividual.mid], optionsNewArtistsOnly);
