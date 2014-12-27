@@ -55,20 +55,12 @@ describe('playlist', function () {
 			expect(playlist.__get__('state.seenArtists')).to.deep.equal([]);
 			done();
 		});
-
-		it('should reset sourceIndividual', function (done) {
-			revert = playlist.__set__({state: {sourceIndividual: 'fhqwhagads'}});
-			playlist.clear();
-			expect(playlist.__get__('state.sourceIndividual')).to.deep.equal({});
-			done();
-		});
 	});
 
 	describe('setSource()', function () {
 		it('should set the source Individual', function (done) {
 			nock.enableNetConnect();
 
-			revert = playlist.__set__({state: {sourceIndividual: {mid: '/fhqwhagads'}}});
 			playlist.setSource(BobDylan)
 			.then(function () {
 				var resultPlaylist = playlist.__get__('state.playlist');
@@ -489,7 +481,6 @@ describe('playlist', function () {
 			revert = playlist.__set__({
 				state: {
 					foundSomeoneElse: false,
-					sourceIndividual: {mid: '/fhqwhagads'},
 					seenTracks: ['/everybody-to-the-limit']
 				}
 			});
@@ -712,6 +703,23 @@ describe('playlist', function () {
 
 			playlist.giveUpIfNoTracks()
 				.catch(handler);
+		});
+	});
+
+	describe('addToSeenIndividuals()', function () {
+		it('should add the argument to state.seenIndividuals', function (done) {
+			playlist.clear();
+			playlist.addToSeenIndividuals('/fhqwhagads');
+			expect(playlist.__get__('state').seenIndividuals).to.deep.equal(['/fhqwhagads']);
+			done();
+		});
+
+		it('should not add a duplicate individual', function (done) {
+			playlist.clear();
+			playlist.addToSeenIndividuals('/fhqwhagads');
+			playlist.addToSeenIndividuals('/fhqwhagads');
+			expect(playlist.__get__('state').seenIndividuals).to.deep.equal(['/fhqwhagads']);
+			done();
 		});
 	});
 });

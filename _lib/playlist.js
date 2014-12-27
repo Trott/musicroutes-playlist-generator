@@ -8,7 +8,6 @@ var state = {
 	seenIndividuals: [],
 	seenTracks: [],
 	seenArtists: [],
-	sourceIndividual: {},
   playlist: []
 };
 
@@ -19,7 +18,6 @@ var clear = function () {
 	state.seenIndividuals = [];
 	state.seenTracks = [];
 	state.seenArtists = [];
-	state.sourceIndividual = {};
   state.playlist = [];
 };
 
@@ -57,7 +55,6 @@ var fetchConnectorDetails = function (index) {
 
 var setSource = function (source) {
   clear();
-  state.sourceIndividual.mid = source;
   state.playlist = [{connectorToNext: {mid: source}}];
   return fetchConnectorDetails(0);
 };
@@ -182,6 +179,12 @@ var giveUpIfNoTracks = function (err) {
   return Promise.reject(myError);
 };
 
+var addToSeenIndividuals = function (connector) {
+  if (state.seenIndividuals.indexOf(connector) === -1) {
+    state.seenIndividuals.push(connector);
+  }
+};
+
 var fetchNewTrack = function () {
 	atDeadEnd = false;
 
@@ -234,7 +237,7 @@ var fetchNewTrack = function () {
 		return promise;
 	};
 
-	state.seenIndividuals.push(state.sourceIndividual.mid);
+  addToSeenIndividuals(_.last(state.playlist).connectorToNext.mid);
 
 	var promise = tracksByUnseenArtists()
 		.then(processTracks, tracksWithContributor)
@@ -319,5 +322,6 @@ module.exports = {
   tracksByUnseenArtists: tracksByUnseenArtists,
   tracksWithArtist: tracksWithArtist,
   tracksWithContributor: tracksWithContributor,
-  giveUpIfNoTracks: giveUpIfNoTracks
+  giveUpIfNoTracks: giveUpIfNoTracks,
+  addToSeenIndividuals: addToSeenIndividuals
 };
