@@ -230,7 +230,7 @@ var fetchNewTrack = function () {
           .then(function (newDetails) {
             newDetails.roles = details.roles;
             _.last(state.playlist).connectorToNext = newDetails;
-            return state.playlist;
+            return _.last(state.playlist, 2);
           });
       });
 

@@ -44,8 +44,7 @@ var error = function (err, options) {
   }
 };
 
-var renderTrackDetails = function (playlist) {
-  var trackDetails = _.last(playlist);
+var renderTrackDetails = function (trackDetails) {
   var p = $('<p>').attr('class', 'track-details');
   p.append(utils.trackAnchor($, trackDetails));
   p.append($('<br>'));
@@ -92,7 +91,7 @@ var renderConnector = function (playlistData) {
   }
 
   resultsElem.append(p);
-  return playlistData;
+  return playlistData[1];
 };
 
 var go = function () {
