@@ -439,6 +439,26 @@ describe('playlist', function () {
 			playlist.hydrate(initial)
 			.done(success);
 		});
+
+		it('should restore seen* properties of state', function (done) {
+			nock.enableNetConnect();
+
+			var initial = [
+				{connectorToNext: {mid: BobDylan}},
+				{artists:[{mid: BobDylan}], mid: '/m/0rc400', connectorToNext: {mid: BobDylan} }
+			];
+
+			var success = function () {
+				var state = playlist.__get__('state');
+				expect(state.seenIndividuals).to.deep.equal([BobDylan]);
+				expect(state.seenArtists).to.deep.equal([BobDylan]);
+				expect(state.seenTracks).to.deep.equal(['/m/0rc400']);
+				done();
+			};
+
+			playlist.hydrate(initial)
+			.done(success);
+		});
 	});
 
 	describe('validatePathOutForTrack()', function () {
