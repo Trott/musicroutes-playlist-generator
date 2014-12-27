@@ -769,6 +769,20 @@ describe('playlist', function () {
 			expect(playlist.__get__('state').seenTracks).to.deep.equal(['/fhqwhagads', '/jake', '/joe']);
 			done();
 		});
+
+		it('should not create duplicate entries', function (done) {
+			var fhqwhagads = {mid: '/fhqwhagads'};
+
+			playlist.__set__({
+				state: {
+					playlist: [fhqwhagads, fhqwhagads]
+				}
+			});
+
+			playlist.recalcSeenTracks();
+			expect(playlist.__get__('state').seenTracks).to.deep.equal(['/fhqwhagads']);
+			done();
+		});
 	});
 
 	describe('recalcSeenArtists()', function () {

@@ -307,7 +307,8 @@ var recalcSeenArtists = function () {
 };
 
 var recalcSeenTracks = function () {
-  state.seenTracks = _.compact(_.pluck(state.playlist, 'mid'));
+  var seenTracks = _.compact(_.pluck(state.playlist, 'mid'));
+  state.seenTracks = _.uniq(seenTracks);
   return state.playlist;
 };
 
