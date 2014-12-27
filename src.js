@@ -153,6 +153,7 @@ var formHandler = function (evt) {
       resultsElem.text('Could not find an artist named ' + startingPoint);
       progress.removeAttr('active');
       continueButtons.css('visibility', 'hidden');
+      enableForm();
       input.focus();
       return;
     }
