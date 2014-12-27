@@ -165,7 +165,7 @@ var tracksWithArtist = function (err) {
     return Promise.reject(err);
   }
 
-  return routes.getTracksByArtists([state.sourceIndividual.mid]).then(pickATrack);
+  return routes.getTracksByArtists([_.last(state.playlist).connectorToNext.mid]).then(pickATrack);
 };
 
 // Give up if we haven't found anything we can use yet

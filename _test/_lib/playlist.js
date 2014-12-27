@@ -643,7 +643,7 @@ describe('playlist', function () {
 		it('should call routes.getTracksWithArtists()', function (done) {
 			playlist.__set__({
 				state: {
-					sourceIndividual: {mid: '/fhqwhagads'}
+					playlist: [{connectorToNext: {mid: '/fhqwhagads'}}]
 				},
 				routes: {
 					getTracksByArtists: function () {
