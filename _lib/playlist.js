@@ -151,7 +151,7 @@ var tracksWithContributor = function (err) {
     return Promise.reject(err);
   }
 
-  return routes.getTracksWithContributors([state.sourceIndividual.mid], {}).then(pickATrack);
+  return routes.getTracksWithContributors([_.last(state.playlist).connectorToNext.mid], {}).then(pickATrack);
 };
 
 // Look for any tracks actually credited to this contributor as the main artist. We are desperate!

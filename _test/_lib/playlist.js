@@ -616,7 +616,7 @@ describe('playlist', function () {
 		it('should call routes.getTracksWithContributors()', function (done) {
 			revert = playlist.__set__({
 				state: {
-					sourceIndividual: {mid: '/fhqwhagads'}
+					playlist: [{connectorToNext: {mid: '/fhqwhagads'}}]
 				},
 				routes: {
 					getTracksWithContributors: function () {
