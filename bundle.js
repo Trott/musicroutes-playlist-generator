@@ -295,8 +295,6 @@ var recalcSeenIndividuals = function () {
     return _.result(value.connectorToNext, 'mid'); 
   });
   state.seenIndividuals = _.uniq(seenIndividuals);
-
-  return state.playlist;
 };
 
 var recalcSeenArtists = function () {
@@ -304,13 +302,11 @@ var recalcSeenArtists = function () {
   seenArtists = _.compact(_.flatten(seenArtists));
   seenArtists = _.pluck(seenArtists, 'mid');
   state.seenArtists = _.uniq(seenArtists);
-  return state.playlist;
 };
 
 var recalcSeenTracks = function () {
   var seenTracks = _.compact(_.pluck(state.playlist, 'mid'));
   state.seenTracks = _.uniq(seenTracks);
-  return state.playlist;
 };
 
 var hydrate = function (data) {
@@ -336,7 +332,8 @@ var hydrate = function (data) {
   )
   .then(recalcSeenTracks)
   .then(recalcSeenIndividuals)
-  .then(recalcSeenArtists);
+  .then(recalcSeenArtists)
+  .then(function () { return state.playlist; });
 };
 
 module.exports = {
