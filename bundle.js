@@ -144,7 +144,7 @@ var tracksByUnseenArtists = function () {
     promise = routes.getTracksByArtists([_.last(state.playlist).connectorToNext.mid]);
   }  else {
     // Otherwise, get one by an artist we haven't seen yet
-    promise = routes.getTracksWithContributors([state.sourceIndividual.mid], optionsNewArtistsOnly);
+    promise = routes.getTracksWithContributors([_.last(state.playlist).connectorToNext.mid], optionsNewArtistsOnly);
   }
 
   return promise.then(pickATrack);

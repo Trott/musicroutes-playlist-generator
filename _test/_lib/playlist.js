@@ -589,7 +589,7 @@ describe('playlist', function () {
 			revert = playlist.__set__({
 				state: {
 					seenArtists: ['/jake', '/joe'],
-					sourceIndividual: {mid: '/fhqwhagads'}
+					playlist: [{connectorToNext: {mid: '/fhqwhagads'}}]
 				},
 				routes: {
 					getTracksWithContributors: function () {
