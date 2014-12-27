@@ -91,7 +91,7 @@ var renderConnector = function (playlistData) {
   }
 
   resultsElem.append(p);
-  return playlistData[1];
+  return Promise.resolve(playlistData[1]);
 };
 
 var go = function () {
@@ -210,15 +210,25 @@ $(document).ready(function () {
       var start = _.result(_.first(data), 'connectorToNext');
       input.val(start.name || start.mid);
 
-      console.log(data);
+      var index = 1;
+      var length = data.length;
+      return utils.promiseUntil(
+          function () { return index === length; },
+          function () {
+            var promise = renderConnector(data.slice(index-1, index+1))
+            .then(renderTrackDetails)
+            .then(videoBlock);
+
+            index = index + 1;
+            return promise;
+          }
+      );
     })
     .catch(function (err) {
       playlist.clear();
       err.message = 'Could not restore playlist: ' + err.message;
       error(err, {preserveUrl: true});
     });
-
-    // render remaining elements
     // re-enable buttons and turn of progress indicator
   }
 });
