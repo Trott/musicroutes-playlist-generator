@@ -22712,14 +22712,18 @@ $(document).ready(function () {
 
     playlist.deserialize(urlParts.query.l)
     .then(playlist.hydrate)
-    .then(function (data) {console.log(data);})
+    .then(function (data) {
+      var start = _.result(_.first(data), 'connectorToNext');
+      input.val(start.name || start.mid);
+
+      console.log(data);
+    })
     .catch(function (err) {
       playlist.clear();
       err.message = 'Could not restore playlist: ' + err.message;
       error(err, {preserveUrl: true});
     });
 
-    // look up initial connector and populate input box
     // render remaining elements
     // re-enable buttons and turn of progress indicator
   }
