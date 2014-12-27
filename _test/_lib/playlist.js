@@ -454,7 +454,7 @@ describe('playlist', function () {
 			revert = playlist.__set__({
 				state: {
 					foundSomeoneElse: false,
-					sourceIndividual: {mid: '/fhqwhagads'},
+					playlist: [{connectorToNext: {mid: '/fhqwhagads'}}],
 					seenTracks: ['/everybody-to-the-limit', '/the-system-is-down']
 				}
 			});
@@ -472,7 +472,7 @@ describe('playlist', function () {
 			revert = playlist.__set__({
 				state: {
 					foundSomeoneElse: false,
-					sourceIndividual: {mid: '/fhqwhagads'},
+					playlist: [{connectorToNext: {mid: '/fhqwhagads'}}],
 					seenTracks: ['/everybody-to-the-limit', '/the-system-is-down']
 				}
 			});
@@ -540,7 +540,7 @@ describe('playlist', function () {
 				atDeadEnd: false,
 				state: {
 					seenTracks: [{mid: '/the-system-is-down'}, {mid: '/trogdor-the-burninator'}],
-					sourceIndividual: {mid: '/fhqwhagads'}
+					playlist: [{connectorToNext: {mid: '/fhqwhagads'}}]
 				},
 				routes: {
 					getArtistsAndContributorsFromTracks: function () {
