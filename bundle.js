@@ -22714,6 +22714,7 @@ $(document).ready(function () {
     .then(function (data) {
       var start = _.result(_.first(data), 'connectorToNext');
       input.val(start.name || start.mid);
+      sourceIndividual = start.mid;
 
       var index = 1;
       var length = data.length;
@@ -22727,7 +22728,13 @@ $(document).ready(function () {
             index = index + 1;
             return promise;
           }
-      );
+      )
+      .then(function () {
+        progress.removeAttr('active');
+        continueButtons.css('visibility', 'visible');
+        resetButtons.css('visibility', 'visible');
+        startOverButtons.css('visibility', 'visible');
+      });
     })
     .catch(function (err) {
       playlist.clear();
