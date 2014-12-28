@@ -26943,6 +26943,12 @@ var enableForm = function () {
   paperInput.removeAttr('disabled');
 };
 
+var disableForm = function () {
+  submit.attr('disabled', 'disabled');
+  input.attr('disabled', 'disabled');
+  paperInput.attr('disabled', 'disabled');
+};
+
 var updateUrl = function (path) {
   window.history.replaceState({}, '', path);
   ga('send', 'pageview', window.location.pathname + window.location.search);
@@ -27024,6 +27030,7 @@ var go = function () {
   if (!sourceIndividual) {
     return;
   }
+  disableForm();
   continueButtons.css('visibility', 'hidden');
   progress.attr('active', 'active');
   var loopCount = 0;
@@ -27062,9 +27069,7 @@ var formHandler = function (evt) {
     return;
   }
 
-  submit.attr('disabled', 'disabled');
-  input.attr('disabled', 'disabled');
-  paperInput.attr('disabled', 'disabled');
+  disableForm();
   resultsElem.empty();
   progress.attr('active', 'active');
   updateUrl('?' + querystring.stringify({q: startingPoint}));
