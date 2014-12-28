@@ -1,5 +1,7 @@
 /*global document*/
 /*global window*/
+/*global ga*/
+/*global -Promise*/
 var routes = require('./_lib/routes.js');
 var playlist = require('./_lib/playlist.js');
 var utils = require('./_lib/utils.js');
@@ -8,6 +10,7 @@ var $ = require('jquery');
 var _ = require('lodash');
 var url = require('url');
 var querystring = require('querystring');
+var Promise = require('promise');
 
 var resultsElem = $('#results');
 var form = $('#startPlaylist');
@@ -26,6 +29,11 @@ var enableForm = function () {
   paperInput.removeAttr('disabled');
 };
 
+var updateUrl = function (path) {
+  window.history.replaceState({}, '', path);
+  ga('send', 'pageview', window.location.pathname + window.location.search);
+};
+
 var error = function (err, options) {
   options = options || {};
   if (err) {
@@ -39,7 +47,7 @@ var error = function (err, options) {
     progress.removeAttr('active');
     enableForm();
     if (! options.preserveUrl) {
-      window.history.replaceState({}, '', '?' + querystring.stringify({l: playlist.serialize()}));
+      updateUrl('?' + querystring.stringify({l: playlist.serialize()}));
     }
     if (! err.deadEnd) {
       continueButtons.css('visibility', 'visible');
@@ -124,7 +132,7 @@ var go = function () {
         progress.removeAttr('active');
         continueButtons.css('visibility', 'visible');
         enableForm();
-        window.history.replaceState({}, '', '?' + querystring.stringify({l: playlist.serialize()}));
+        updateUrl('?' + querystring.stringify({l: playlist.serialize()}));
       }
     }
   );
@@ -145,7 +153,7 @@ var formHandler = function (evt) {
   paperInput.attr('disabled', 'disabled');
   resultsElem.empty();
   progress.attr('active', 'active');
-  window.history.replaceState({}, '', '?' + querystring.stringify({q: startingPoint}));
+  updateUrl('?' + querystring.stringify({q: startingPoint}));
   playlist.clear();
   var lookupUserInput = function(mids) {
     sourceIndividual = mids[0];
