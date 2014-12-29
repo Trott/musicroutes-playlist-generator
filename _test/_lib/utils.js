@@ -29,7 +29,7 @@ describe('utils', function () {
 		it('should reutrn an anchor (<a>) element', function (done) {
 			var rv = utils.anchorFromMid($, '/fhqwhagads');
 			expect(rv.is('a')).to.be.true();
-			done();			
+			done();
 		});
 
 		it('should use mid for href but text for label if text sent', function (done) {

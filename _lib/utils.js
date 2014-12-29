@@ -38,12 +38,12 @@ exports.releaseAnchor = function ($, release) {
 	if (_.result(release, 'name')) {
 		return $('<i>').append(anchorFromMid($, release.mid, release.name));
 	}
-	
+
 	return anchorFromMid($, _.result(release, 'mid'));
 };
 
 exports.mergeArtistsAndContributors = function (artists, contributors) {
-	var myArtists = _.pluck(artists, 'mid'); 
+	var myArtists = _.pluck(artists, 'mid');
 	var myContributors = _.pluck(contributors, 'mid');
 	return _.union(myArtists, myContributors);
 };
@@ -51,7 +51,7 @@ exports.mergeArtistsAndContributors = function (artists, contributors) {
 exports.pickContributor = function (newCandidates, allCandidates, sourceIndividual) {
 	if (newCandidates.length > 0) {
 			return _.sample(newCandidates);
-	} 
+	}
 	return _.sample(_.without(allCandidates, sourceIndividual)) || sourceIndividual;
 };
 

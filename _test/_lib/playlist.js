@@ -215,7 +215,7 @@ describe('playlist', function () {
 		it('should transform release string property to an object with a mid property', function (done) {
 			var success = function (data) {
 				expect(data).to.deep.equal([{
-					connectorToNext: {mid: '/fhqwhagads'}, 
+					connectorToNext: {mid: '/fhqwhagads'},
 					release: {mid: '/live-from-east-reykjavik'}
 				}]);
 				done();
@@ -248,7 +248,7 @@ describe('playlist', function () {
 				state: {
 					playlist: [
 						{connectorToNext: {mid: '/fhqwhagads'}, artists: [{mid: '/fhqwhagads', name: 'Strong Bad'}]},
-						{}	
+						{}
 					]
 				}
 			});
@@ -313,7 +313,7 @@ describe('playlist', function () {
 			}});
 
 			var expectedResults = {
-				mid: '/fhqwhagads', 
+				mid: '/fhqwhagads',
 				release: ''
 			};
 			playlist.setTrackDetails({}, null)
@@ -340,7 +340,7 @@ describe('playlist', function () {
 			playlist.setTrackDetails({}, details)
 			.done(function (trackDetails) {
 				expect(trackDetails).to.deep.equal(expectedResults);
-				done();				
+				done();
 			});
 		});
 	});
@@ -510,7 +510,7 @@ describe('playlist', function () {
 			};
 
 			expect(playlist.validatePathOutFromTrack(folks)).to.be.true();
-			done();			
+			done();
 		});
 	});
 
@@ -555,10 +555,10 @@ describe('playlist', function () {
 				},
 				routes: {
 					getArtistsAndContributorsFromTracks: function () {
-						return {then: function (cb) { 
+						return {then: function (cb) {
 							return Promise.resolve(
 								cb({
-									artists:[{mid: '/fhqwhagads'}], 
+									artists:[{mid: '/fhqwhagads'}],
 									contributors: [{mid: '/jake'}, {mid: '/joe'}]
 								})
 							);

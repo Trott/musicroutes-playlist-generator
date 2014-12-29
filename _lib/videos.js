@@ -61,7 +61,7 @@ exports.embed = function (id) {
 exports.search = function (q) {
 	var myOptions = extend(options, {part: 'id', maxResults: '1', type: 'video', videoEmbeddable: 'true', q: q});
 	var myUrl = 'https://www.googleapis.com/youtube/v3/search?' + querystring.stringify(myOptions);
-	
+
   return new Promise(function (fulfill, reject) {
     var success = function (data) {
       var rv = {items: []};

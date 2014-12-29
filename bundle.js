@@ -28,7 +28,7 @@ var clear = function () {
 
 var fetchConnectorDetails = function (index) {
   // Get properly rendered name if we don't yet have one for the previous connector.
-  
+
   // If this is the first connection and the user entered 'janelle monae'
   // we want to render it as 'Janelle Monae'. Ditto for missing umlauts and whatnot.
   // So just pull from the track details if it's there.
@@ -52,7 +52,7 @@ var fetchConnectorDetails = function (index) {
       return Promise.resolve(state.playlist[index]);
     });
   }
-  
+
   return new Promise(function (resolve) {
     process.nextTick(function () { resolve(state.playlist[index]); });
   });
@@ -84,7 +84,7 @@ var validatePathOutFromTrack = function (folks) {
   if (state.seenTracks.length === 1) {
     return true;
   }
-  var myArtists = _.pluck(folks.artists, 'mid'); 
+  var myArtists = _.pluck(folks.artists, 'mid');
   var myContributors = _.pluck(folks.contributors, 'mid');
   folks = _.union(myArtists, myContributors);
   var contributorPool = _.difference(folks, [_.last(state.playlist).connectorToNext.mid]);
@@ -95,7 +95,7 @@ var validatePathOutFromTrack = function (folks) {
 };
 
 var findTrackWithPathOut = function (tracks) {
-  var track; 
+  var track;
 
   return utils.promiseUntil(
     function() { return foundSomeoneElse || atDeadEnd; },
@@ -110,7 +110,7 @@ var findTrackWithPathOut = function (tracks) {
 
       return routes.getArtistsAndContributorsFromTracks([track])
         .then(validatePathOutFromTrack)
-        .then(function (useIt) { 
+        .then(function (useIt) {
           foundSomeoneElse = useIt;
         });
     }
@@ -223,7 +223,7 @@ var fetchNewTrack = function () {
 
 		var promise = routes.getTrackDetails(mid)
 			.then(setTrackDetails.bind(null, {}))
-			.then(function (trackDetails) { 
+			.then(function (trackDetails) {
         var currentArtists = _.pluck(trackDetails.artists, 'mid');
 				state.seenArtists = state.seenArtists.concat(_.difference(currentArtists, state.seenArtists));
         return trackDetails.mid;
@@ -291,8 +291,8 @@ var deserialize = function (data) {
 };
 
 var recalcSeenIndividuals = function () {
-  var seenIndividuals = _.map(state.playlist, function (value) { 
-    return _.result(value.connectorToNext, 'mid'); 
+  var seenIndividuals = _.map(state.playlist, function (value) {
+    return _.result(value.connectorToNext, 'mid');
   });
   state.seenIndividuals = _.uniq(seenIndividuals);
 };
@@ -356,6 +356,7 @@ module.exports = {
   recalcSeenArtists: recalcSeenArtists,
   recalcSeenIndividuals: recalcSeenIndividuals
 };
+
 }).call(this,require('_process'))
 },{"./routes.js":3,"./utils.js":4,"_process":20,"lodash":65,"promise":67}],3:[function(require,module,exports){
 /* global -Promise */
@@ -489,7 +490,7 @@ exports.getArtistsAndContributorsFromTracks = function (mids) {
             mid: _.result(value.contributor, 'mid'),
             roles: _.result(value, 'role')
           };
-        }); 
+        });
       });
 
       fulfill(rv);
@@ -557,6 +558,7 @@ exports.getTrackDetails = function (mid) {
     freebase.mqlread(query, options, cleanup);
   });
 };
+
 },{"../.apikey":1,"lodash":65,"mqlread":66,"promise":67}],4:[function(require,module,exports){
 /* global -Promise */
 var videos = require('./videos.js');
@@ -598,12 +600,12 @@ exports.releaseAnchor = function ($, release) {
 	if (_.result(release, 'name')) {
 		return $('<i>').append(anchorFromMid($, release.mid, release.name));
 	}
-	
+
 	return anchorFromMid($, _.result(release, 'mid'));
 };
 
 exports.mergeArtistsAndContributors = function (artists, contributors) {
-	var myArtists = _.pluck(artists, 'mid'); 
+	var myArtists = _.pluck(artists, 'mid');
 	var myContributors = _.pluck(contributors, 'mid');
 	return _.union(myArtists, myContributors);
 };
@@ -611,7 +613,7 @@ exports.mergeArtistsAndContributors = function (artists, contributors) {
 exports.pickContributor = function (newCandidates, allCandidates, sourceIndividual) {
 	if (newCandidates.length > 0) {
 			return _.sample(newCandidates);
-	} 
+	}
 	return _.sample(_.without(allCandidates, sourceIndividual)) || sourceIndividual;
 };
 
@@ -671,6 +673,7 @@ exports.wrapVideo = function (data) {
 	}
 	return embedCode;
 };
+
 },{"./videos.js":5,"lodash":65,"promise":67}],5:[function(require,module,exports){
 /* global -Promise */
 var hyperquest = require('hyperquest');
@@ -735,7 +738,7 @@ exports.embed = function (id) {
 exports.search = function (q) {
 	var myOptions = extend(options, {part: 'id', maxResults: '1', type: 'video', videoEmbeddable: 'true', q: q});
 	var myUrl = 'https://www.googleapis.com/youtube/v3/search?' + querystring.stringify(myOptions);
-	
+
   return new Promise(function (fulfill, reject) {
     var success = function (data) {
       var rv = {items: []};
@@ -749,6 +752,7 @@ exports.search = function (q) {
     run(myUrl).then(success, reject);
   });
 };
+
 },{"../.apikey":1,"flat":41,"hyperquest":42,"promise":67,"querystring":24,"xtend":73}],6:[function(require,module,exports){
 (function (process){
 /*!

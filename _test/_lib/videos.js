@@ -53,7 +53,7 @@ describe('videos', function () {
 			  .filteringPath(/\?.*$/, '')
 				.get('/youtube/v3/videos')
 				.reply(200, JSON.stringify({items:[]}));
-			
+
 			var success = function (data) {
 				expect(data.items).to.deep.equal([]);
 				done();
@@ -95,7 +95,7 @@ describe('videos', function () {
 			  .filteringPath(/\?.*$/, '')
 				.get('/youtube/v3/search')
 				.reply(200, JSON.stringify({items:[]}));
-			
+
 			var success = function (data) {
 				expect(data.items).to.deep.equal([]);
 				done();

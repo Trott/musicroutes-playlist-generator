@@ -259,11 +259,11 @@ describe('routes', function () {
 			var success = function (data) {
 				expect(data.name).to.equal('Original Faubus Fables');
 				expect(data.artists).to.deep.equal([{
-					name: 'Charles Mingus', 
+					name: 'Charles Mingus',
 					mid: CharlesMingus
 				}]);
 				expect(data.releases).to.deep.contain({
-					name: 'Charles Mingus Presents Charles Mingus', 
+					name: 'Charles Mingus Presents Charles Mingus',
 					mid: CharlesMingusPresentsCharlesMingus
 				});
 				done();

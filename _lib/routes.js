@@ -129,7 +129,7 @@ exports.getArtistsAndContributorsFromTracks = function (mids) {
             mid: _.result(value.contributor, 'mid'),
             roles: _.result(value, 'role')
           };
-        }); 
+        });
       });
 
       fulfill(rv);

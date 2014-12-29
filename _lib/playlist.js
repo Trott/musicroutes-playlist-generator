@@ -23,7 +23,7 @@ var clear = function () {
 
 var fetchConnectorDetails = function (index) {
   // Get properly rendered name if we don't yet have one for the previous connector.
-  
+
   // If this is the first connection and the user entered 'janelle monae'
   // we want to render it as 'Janelle Monae'. Ditto for missing umlauts and whatnot.
   // So just pull from the track details if it's there.
@@ -47,7 +47,7 @@ var fetchConnectorDetails = function (index) {
       return Promise.resolve(state.playlist[index]);
     });
   }
-  
+
   return new Promise(function (resolve) {
     process.nextTick(function () { resolve(state.playlist[index]); });
   });
@@ -79,7 +79,7 @@ var validatePathOutFromTrack = function (folks) {
   if (state.seenTracks.length === 1) {
     return true;
   }
-  var myArtists = _.pluck(folks.artists, 'mid'); 
+  var myArtists = _.pluck(folks.artists, 'mid');
   var myContributors = _.pluck(folks.contributors, 'mid');
   folks = _.union(myArtists, myContributors);
   var contributorPool = _.difference(folks, [_.last(state.playlist).connectorToNext.mid]);
@@ -90,7 +90,7 @@ var validatePathOutFromTrack = function (folks) {
 };
 
 var findTrackWithPathOut = function (tracks) {
-  var track; 
+  var track;
 
   return utils.promiseUntil(
     function() { return foundSomeoneElse || atDeadEnd; },
@@ -105,7 +105,7 @@ var findTrackWithPathOut = function (tracks) {
 
       return routes.getArtistsAndContributorsFromTracks([track])
         .then(validatePathOutFromTrack)
-        .then(function (useIt) { 
+        .then(function (useIt) {
           foundSomeoneElse = useIt;
         });
     }
@@ -218,7 +218,7 @@ var fetchNewTrack = function () {
 
 		var promise = routes.getTrackDetails(mid)
 			.then(setTrackDetails.bind(null, {}))
-			.then(function (trackDetails) { 
+			.then(function (trackDetails) {
         var currentArtists = _.pluck(trackDetails.artists, 'mid');
 				state.seenArtists = state.seenArtists.concat(_.difference(currentArtists, state.seenArtists));
         return trackDetails.mid;
@@ -286,8 +286,8 @@ var deserialize = function (data) {
 };
 
 var recalcSeenIndividuals = function () {
-  var seenIndividuals = _.map(state.playlist, function (value) { 
-    return _.result(value.connectorToNext, 'mid'); 
+  var seenIndividuals = _.map(state.playlist, function (value) {
+    return _.result(value.connectorToNext, 'mid');
   });
   state.seenIndividuals = _.uniq(seenIndividuals);
 };
