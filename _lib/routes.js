@@ -90,6 +90,41 @@ exports.getTracksByArtists = function (mids) {
   });
 };
 
+exports.getRole = function (contributor, track) {
+  var query = JSON.stringify({
+    mid: track,
+    type: '/music/track',
+    contributions: [{
+      mid: null,
+      role: [{
+        name: null
+      }],
+      contributor: {
+        mid: contributor
+      }
+    }]
+  });
+
+  return new Promise(function (fulfill, reject) {
+    var cleanup = function (err, data) {
+      if (err) {
+        return reject(err);
+      }
+      var rv = {};
+      var contributions = _.result(data.result, 'contributions');
+      var roles = _.map(contributions, function (contribution) {
+        return _.map(contribution.role, function (role) {
+          return role.name;
+        });
+      });
+      rv.roles = _.flatten(roles);
+      return fulfill(rv);
+    };
+
+    freebase.mqlread(query, options, cleanup);
+  });
+};
+
 exports.getArtistsAndContributorsFromTracks = function (mids) {
   var query = JSON.stringify([{
     'mid|=': mids,

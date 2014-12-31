@@ -217,7 +217,41 @@ describe('routes', function () {
 
 			routes.getArtistsAndContributorsFromTracks([YouKnowMyName]).then(success);
 		});
+
+    it('should not return a role for artists', function (done) {
+      var success = function (data) {
+        var todd = data.artists.filter(function (value) { return value.mid === ToddRundgren; });
+        expect(todd.length).to.equal(1);
+        todd = todd[0];
+        expect(todd.hasOwnProperty('roles')).to.be.false();
+        expect(todd.hasOwnProperty('role')).to.be.false();
+        done();
+      };
+
+      routes.getArtistsAndContributorsFromTracks([Afraid]).done(success);
+    });
 	});
+
+  describe('getRole()', function () {
+    it('should try to retrieve a role for contributor', function (done) {
+      var success = function (data) {
+        expect(data.roles).to.deep.equal(['Saxophone']);
+        done();
+      };
+
+      routes.getRole(BrianJones, YouKnowMyName).done(success);
+    });
+
+    it('should reject with an error if callback is given an error', function (done) {
+      nock.disableNetConnect();
+      var failure = function (err) {
+        expect(err instanceof Error).to.be.true();
+        done();
+      };
+
+      routes.getRole(BrianJones, YouKnowMyName).done(null, failure);
+    });
+  });
 
 	describe('getArtistDetails()', function () {
 		it('should return the artist name', function (done) {
