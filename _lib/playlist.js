@@ -330,7 +330,7 @@ var hydrate = function (data) {
     return Promise.all(
       _.map(connectors, function (value, index) {
         if (value) {
-          if (! value.roles && state.playlist[index].mid) {
+          if (state.playlist[index].mid) {
             return routes.getRoles(value.mid, state.playlist[index].mid)
             .then(function (data) {
               state.playlist[index].connectorToNext.roles = data.roles;
