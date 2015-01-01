@@ -431,7 +431,7 @@ describe('playlist', function () {
       ];
 
       var success = function (data) {
-        expect(data[2].connectorToNext.roles).to.deep.equal(['Baritone saxophone']);
+        expect(data[2].connectorToNext.roles).to.deep.equal([{name: 'Baritone saxophone'}]);
         done();
       };
 

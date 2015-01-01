@@ -114,10 +114,11 @@ exports.fetchRoles = function (contributor, track) {
       var contributions = _.result(data.result, 'contributions');
       var roles = _.map(contributions, function (contribution) {
         return _.map(contribution.role, function (role) {
-          return role.name;
+          return role;
         });
       });
-      rv.roles = _.uniq(_.flatten(roles));
+      roles = _.flatten(roles);
+      rv.roles = _.uniq(roles, false, function (value) { return value.name; });
       return fulfill(rv);
     };
 

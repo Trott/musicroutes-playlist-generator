@@ -235,7 +235,7 @@ describe('routes', function () {
   describe('fetchRoles()', function () {
     it('should retrieve a role for a contributor', function (done) {
       var success = function (data) {
-        expect(data.roles).to.deep.equal(['Saxophone']);
+        expect(data.roles).to.deep.equal([{name: 'Saxophone'}]);
         done();
       };
 
@@ -254,7 +254,7 @@ describe('routes', function () {
 
     it('should de-duplicate values', function (done) {
       var success = function (data) {
-        expect(data.roles).to.deep.equal(['Piano']);
+        expect(data.roles).to.deep.equal([{name: 'Piano'}]);
         done();
       };
 
