@@ -88,20 +88,26 @@ var renderConnector = function (playlistData) {
     return utils.anchorFromMid($, details.mid, details.name);
   };
 
+  var renderRoles = function (roles) {
+    if (! roles || roles.length === 0) {
+      return '';
+    }
+    return $('<span>').text(' (' + _.pluck(roles, 'name').join(', ') + ')');
+  };
+
   var p = $('<p>');
 
   var previousConnector = playlistData[playlistData.length - 2].connectorToNext;
   previous = $('<b>').append(renderNameOrMid(previousConnector));
   p.append(previous);
+  p.append(renderRoles(previousConnector.rolesInNext));
 
   var currentConnector = _.last(playlistData).connectorToNext;
 
   if (previousConnector.mid !== currentConnector.mid) {
     current = $('<b>').append(renderNameOrMid(currentConnector));
     p.append(' recorded with ').append(current);
-    if (currentConnector.roles) {
-      p.append($('<span>').text(' (' + _.pluck(currentConnector.roles, 'name').join(', ') + ')'));
-    }
+    p.append(renderRoles(currentConnector.roles));
     p.append(' on:');
   } else {
     p.append(' appeared on:');

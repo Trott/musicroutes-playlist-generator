@@ -59,6 +59,19 @@ var setSource = function (source) {
   return fetchConnectorDetails(0);
 };
 
+var setRolesInNext = function (index) {
+  // Check the previous connectorToNext and add the roles for this track if absent
+  var previousConnector = _.result(state.playlist[index-1], 'connectorToNext');
+  if (previousConnector && ! previousConnector.rolesInNext) {
+    return routes.fetchRoles(previousConnector.mid, state.playlist[index].mid)
+      .then(function (data) {
+        state.playlist[index-1].connectorToNext.rolesInNext = data.roles;
+        return state.playlist[index];
+      });
+  }
+  return Promise.resolve(state.playlist[index]);
+};
+
 var setTrackDetails = function (options, details) {
   if (! _.isPlainObject(details)) {
     details = {};
@@ -72,6 +85,7 @@ var setTrackDetails = function (options, details) {
   } else {
     state.playlist[index].release = _.sample(state.playlist[index].releases) || '';
   }
+
   return Promise.resolve(state.playlist[index]);
 };
 
@@ -218,6 +232,7 @@ var fetchNewTrack = function () {
 
 		var promise = routes.getTrackDetails(mid)
 			.then(setTrackDetails.bind(null, {}))
+      .then(setRolesInNext.bind(null, state.playlist.length))
 			.then(function (trackDetails) {
         var currentArtists = _.pluck(trackDetails.artists, 'mid');
 				state.seenArtists = state.seenArtists.concat(_.difference(currentArtists, state.seenArtists));
@@ -319,9 +334,10 @@ var hydrate = function (data) {
       .then(function () {
         if (value.connectorToNext) {
           state.playlist[index].connectorToNext = value.connectorToNext;
-          return fetchConnectorDetails(index);
+          return fetchConnectorDetails(index)
+            .then(setRolesInNext.bind(null, index));
         }
-        return Promise.resolve(state.playlist[index]);
+        return setRolesInNext(index);
       });
     })
   )
