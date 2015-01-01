@@ -90,7 +90,7 @@ exports.getTracksByArtists = function (mids) {
   });
 };
 
-exports.getRoles = function (contributor, track) {
+exports.fetchRoles = function (contributor, track) {
   var query = JSON.stringify({
     mid: track,
     type: '/music/track',

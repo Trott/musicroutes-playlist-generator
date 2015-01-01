@@ -331,7 +331,7 @@ var hydrate = function (data) {
       _.map(connectors, function (value, index) {
         if (value) {
           if (state.playlist[index].mid) {
-            return routes.getRoles(value.mid, state.playlist[index].mid)
+            return routes.fetchRoles(value.mid, state.playlist[index].mid)
             .then(function (data) {
               state.playlist[index].connectorToNext.roles = data.roles;
               return state.playlist[index].connectorToNext;
