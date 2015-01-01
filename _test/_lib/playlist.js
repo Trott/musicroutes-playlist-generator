@@ -437,6 +437,25 @@ describe('playlist', function () {
       .done(success);
     });
 
+    it('should restore rolesInNext property for connectors where applicable', function (done) {
+      nock.enableNetConnect();
+
+      var initial = [
+        {connectorToNext: {mid: '/m/012cfv3t'}},
+        {connectorToNext: {mid: '/m/012gf52n'}, mid: '/m/01c2y4z', release: {mid: '/m/0327t5v'}},
+        {connectorToNext: {mid: '/m/03qk5_f'}, mid: '/m/01c2y6q', release: {mid: '/m/0327t5v'}}
+      ];
+
+      var success = function (data) {
+        expect(data[1].connectorToNext.rolesInNext.length).to.be.above(0);
+        done();
+      };
+
+      playlist.hydrate(initial)
+      .done(success);
+    });
+
+
     it('should hydrate even if state.playlist is empty', function (done) {
       nock.enableNetConnect();
 
