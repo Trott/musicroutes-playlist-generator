@@ -72,6 +72,16 @@ var setTrackDetails = function (options, details) {
   } else {
     state.playlist[index].release = _.sample(state.playlist[index].releases) || '';
   }
+
+  // Check the previous connectorToNext and add the roles for this track if absent
+  var previousConnector = _.result(state.playlist[index-1], 'connectorToNext');
+  if (previousConnector && ! previousConnector.rolesInNext) {
+    return routes.fetchRoles(previousConnector.mid, details.mid)
+      .then(function (data) {
+        state.playlist[index-1].connectorToNext.rolesInNext = data.roles;
+        return Promise.resolve(state.playlist[index]);
+      });
+  }
   return Promise.resolve(state.playlist[index]);
 };
 
