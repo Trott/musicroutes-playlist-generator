@@ -217,7 +217,51 @@ describe('routes', function () {
 
 			routes.getArtistsAndContributorsFromTracks([YouKnowMyName]).then(success);
 		});
+
+    it('should not return a role for artists', function (done) {
+      var success = function (data) {
+        var todd = data.artists.filter(function (value) { return value.mid === ToddRundgren; });
+        expect(todd.length).to.equal(1);
+        todd = todd[0];
+        expect(todd.hasOwnProperty('roles')).to.be.false();
+        expect(todd.hasOwnProperty('role')).to.be.false();
+        done();
+      };
+
+      routes.getArtistsAndContributorsFromTracks([Afraid]).done(success);
+    });
 	});
+
+  describe('fetchRoles()', function () {
+    it('should retrieve a role for a contributor', function (done) {
+      var success = function (data) {
+        expect(data.roles).to.deep.equal([{name: 'Saxophone'}]);
+        done();
+      };
+
+      routes.fetchRoles(BrianJones, YouKnowMyName).done(success);
+    });
+
+    it('should reject with an error if callback is given an error', function (done) {
+      nock.disableNetConnect();
+      var failure = function (err) {
+        expect(err instanceof Error).to.be.true();
+        done();
+      };
+
+      routes.fetchRoles(BrianJones, YouKnowMyName).done(null, failure);
+    });
+
+    it('should de-duplicate values', function (done) {
+      var success = function (data) {
+        expect(data.roles).to.deep.equal([{name: 'Piano'}]);
+        done();
+      };
+
+      // This one has Vince Guaraldi on piano 20 times.
+      routes.fetchRoles('/m/0blhx', '/m/0dsz0t3').done(success);
+    });
+  });
 
 	describe('getArtistDetails()', function () {
 		it('should return the artist name', function (done) {
