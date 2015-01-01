@@ -421,6 +421,24 @@ describe('playlist', function () {
 			.done(success);
 		});
 
+    it('should include roles of connectors', function (done) {
+      nock.enableNetConnect();
+
+      var initial = [
+        {connectorToNext: {mid: '/m/0blhx'}},
+        {connectorToNext: {mid: '/m/0blhx'}, mid: '/m/0f7p36v', release: {mid: '/m/0flmn9r'}},
+        {connectorToNext: {mid: '/m/07qbjn'}, mid: '/m/0dsz0t3', release: {mid: '/m/0dsz0t0'}}
+      ];
+
+      var success = function (data) {
+        expect(data[2].connectorToNext.roles).to.deep.equal(['Baritone saxophone']);
+        done();
+      };
+
+      playlist.hydrate(initial)
+      .done(success);
+    });
+
 		it('should hydrate even if state.playlist is empty', function (done) {
 			nock.enableNetConnect();
 
