@@ -90,7 +90,7 @@ exports.getTracksByArtists = function (mids) {
   });
 };
 
-exports.getRole = function (contributor, track) {
+exports.getRoles = function (contributor, track) {
   var query = JSON.stringify({
     mid: track,
     type: '/music/track',
@@ -110,14 +110,14 @@ exports.getRole = function (contributor, track) {
       if (err) {
         return reject(err);
       }
-      var rv = {};
+      var rv = [];
       var contributions = _.result(data.result, 'contributions');
       var roles = _.map(contributions, function (contribution) {
         return _.map(contribution.role, function (role) {
           return role.name;
         });
       });
-      rv.roles = _.flatten(roles);
+      rv.roles = _.uniq(_.flatten(roles));
       return fulfill(rv);
     };
 

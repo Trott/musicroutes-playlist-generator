@@ -232,14 +232,14 @@ describe('routes', function () {
     });
 	});
 
-  describe('getRole()', function () {
-    it('should try to retrieve a role for contributor', function (done) {
+  describe('getRoles()', function () {
+    it('should retrieve a role for a contributor', function (done) {
       var success = function (data) {
         expect(data.roles).to.deep.equal(['Saxophone']);
         done();
       };
 
-      routes.getRole(BrianJones, YouKnowMyName).done(success);
+      routes.getRoles(BrianJones, YouKnowMyName).done(success);
     });
 
     it('should reject with an error if callback is given an error', function (done) {
@@ -249,7 +249,17 @@ describe('routes', function () {
         done();
       };
 
-      routes.getRole(BrianJones, YouKnowMyName).done(null, failure);
+      routes.getRoles(BrianJones, YouKnowMyName).done(null, failure);
+    });
+
+    it('should de-duplicate values', function (done) {
+      var success = function (data) {
+        expect(data.roles).to.deep.equal(['Piano']);
+        done();
+      };
+
+      // This one has Vince Guaraldi on piano 20 times.
+      routes.getRoles('/m/0blhx', '/m/0dsz0t3').done(success);
     });
   });
 
