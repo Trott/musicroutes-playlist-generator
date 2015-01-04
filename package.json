@@ -5,7 +5,8 @@
   "scripts": {
     "test": "lab -t 100 -m 5000 _test",
     "build": "browserify src.js -o bundle.js && vulcanize -o index.html src.html",
-    "build-ie": "browserify src.js -o bundle.js && cp src.html index.html"
+    "build-ie": "browserify src.js -o bundle.js && cp src.html index.html",
+    "build-debug": "browserify --debug src.js -o bundle.js && cp src.html index.html"
   },
   "repository": {
     "type": "git",
