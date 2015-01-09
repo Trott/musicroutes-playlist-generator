@@ -1,6 +1,6 @@
 {
   "name": "musicroutes-playlist-generator",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "description": "musicroutes-playlist-generator",
   "scripts": {
     "test": "lab -t 100 -m 5000 _test",
