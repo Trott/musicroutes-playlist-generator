@@ -5,7 +5,6 @@
 var routes = require('./_lib/routes.js');
 var playlist = require('./_lib/playlist.js');
 var utils = require('./_lib/utils.js');
-var async = require('async');
 var $ = require('jquery');
 var _ = require('lodash');
 var url = require('url');
@@ -117,6 +116,13 @@ var renderConnector = function (playlistData) {
   return Promise.resolve(playlistData[1]);
 };
 
+var end = function () {
+  progress.removeAttr('active');
+  continueButtons.css('visibility', 'visible');
+  enableForm();
+  updateUrl('?' + querystring.stringify({l: playlist.serialize()}));
+};
+
 var go = function () {
   // If lookupUserInput() didn't find an individual, don't do anything.
   if (!sourceIndividual) {
@@ -125,30 +131,12 @@ var go = function () {
   disableForm();
   continueButtons.css('visibility', 'hidden');
   progress.attr('active', 'active');
-  var loopCount = 0;
-  async.until(
-    function () {
-      return loopCount > 4;
-    },
-    function (next) {
-      loopCount = loopCount + 1;
-      playlist.fetchNewTrack()
-      .then(renderConnector)
-      .then(renderTrackDetails)
-      .then(videoBlock)
-      .then(next, next);
-    },
-    function (err) {
-      if (err) {
-        error(err);
-      } else {
-        progress.removeAttr('active');
-        continueButtons.css('visibility', 'visible');
-        enableForm();
-        updateUrl('?' + querystring.stringify({l: playlist.serialize()}));
-      }
-    }
-  );
+
+  playlist.fetchNewTrack()
+  .then(renderConnector)
+  .then(renderTrackDetails)
+  .then(videoBlock)
+  .then(end, error);
 };
 
 continueButtons.on('click', go);
