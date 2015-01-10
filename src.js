@@ -16,7 +16,8 @@ var form = $('#startPlaylist');
 var submit = $('#startPointSubmit');
 var input = $('#startPoint');
 var paperInput = $('#paperStartPoint');
-var continueButtons = $('.continue');
+var buttonGroup = $('.button-group');
+var continueButton = $('.continue');
 var progress = $('#progress');
 var formInstructions = $('.form-instructions');
 
@@ -55,7 +56,7 @@ var error = function (err, options) {
       updateUrl('?' + querystring.stringify({l: playlist.serialize()}));
     }
     if (! err.deadEnd) {
-      continueButtons.css('visibility', 'visible');
+      buttonGroup.css('visibility', 'visible');
     }
   }
 };
@@ -118,7 +119,7 @@ var renderConnector = function (playlistData) {
 
 var end = function () {
   progress.removeAttr('active');
-  continueButtons.css('visibility', 'visible');
+  buttonGroup.css('visibility', 'visible');
   enableForm();
   updateUrl('?' + querystring.stringify({l: playlist.serialize()}));
 };
@@ -129,7 +130,7 @@ var go = function () {
     return;
   }
   disableForm();
-  continueButtons.css('visibility', 'hidden');
+  buttonGroup.css('visibility', 'hidden');
   progress.attr('active', 'active');
 
   playlist.fetchNewTrack()
@@ -139,7 +140,7 @@ var go = function () {
   .then(end, error);
 };
 
-continueButtons.on('click', go);
+continueButton.on('click', go);
 
 var formHandler = function (evt) {
   evt.preventDefault();
@@ -159,7 +160,7 @@ var formHandler = function (evt) {
     if (! sourceIndividual) {
       resultsElem.text('Could not find an artist named ' + startingPoint);
       progress.removeAttr('active');
-      continueButtons.css('visibility', 'hidden');
+      buttonGroup.css('visibility', 'hidden');
       enableForm();
       input.focus();
       return;
@@ -209,7 +210,7 @@ $(document).ready(function () {
       )
       .then(function () {
         progress.removeAttr('active');
-        continueButtons.css('visibility', 'visible');
+        buttonGroup.css('visibility', 'visible');
         enableForm();
       });
     })

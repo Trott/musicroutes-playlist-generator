@@ -39,11 +39,14 @@
         </paper-shadow>
 
 		<div id="results" class="results"></div>
-		<div>
+		<div horizontal center-justified layout>
 			<paper-spinner id="progress"></paper-spinner>
     	</div>
 
-        <paper-button class="continue hidden" raised>Get More Tracks</paper-button>
+        <div horizontal center-justified layout class="button-group hidden">
+            <paper-button class="continue" raised>Accept This Track</paper-button>
+            <paper-button class="retry" raised>Reject This Track</paper-button>
+        </div>
     </main>
     <footer>
         <paper-shadow z="1">

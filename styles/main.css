@@ -114,7 +114,6 @@ a:active {
 paper-button {
   background: #2196f3;
   color: #ffffff;
-  margin: 0 0 1em 0;
 }
 
 paper-fab {
@@ -131,6 +130,7 @@ paper-input-decorator[disabled] {
 
 .results {
   min-height: 1em;
+  margin-bottom: 1em;
 }
 
 .track-details {
@@ -163,19 +163,19 @@ paper-input-decorator[disabled] {
 }
 
 .video-outer-wrapper {
-  max-width: 640px; 
-  margin: 0 auto; 
+  max-width: 640px;
+  margin: 0 auto;
 }
 
 .video-inner-wrapper {
-  position:relative; 
+  position:relative;
   padding-top: 53%;
 }
 
 .video-inner-wrapper iframe {
   position: absolute;
   top: 0;
-  width: 100%; 
+  width: 100%;
   height: 100%;
 }
 
