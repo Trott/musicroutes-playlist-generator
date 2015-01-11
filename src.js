@@ -172,7 +172,12 @@ var formHandler = function (evt) {
   var lookupUserInput = function(mids) {
     sourceIndividual = mids[0];
     if (! sourceIndividual) {
-      resultsElem.text('Could not find an artist named ' + startingPoint);
+      var noResultsFoundMsg = $('<p>');
+      var searchTerm = $('<b>').text(startingPoint);
+      noResultsFoundMsg.text('Could not find an artist named ').append(searchTerm).append('. ');
+      noResultsFoundMsg.append('Try variations. For example:');
+      noResultsFoundMsg.append('<ul><li>Instead of <i>Beach Boys</i>, try <a href="?q=The%20Beach%20Boys">The Beach Boys</a></li><li>Instead of Beyonce, try <a href="?q=Beyoncé%20Knowles">Beyoncé Knowles</a></li></ul>');
+      resultsElem.append(noResultsFoundMsg);
       progress.removeAttr('active');
       buttonGroup.css('visibility', 'hidden');
       enableForm();
