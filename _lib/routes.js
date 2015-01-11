@@ -178,8 +178,7 @@ exports.getArtistsAndContributorsFromTracks = function (mids) {
 exports.getArtistDetails = function (mid) {
   var query = JSON.stringify({
     mid: mid,
-    name: null,
-    type: '/music/artist'
+    name: null
   });
 
   return new Promise(function (fulfill, reject) {
