@@ -365,6 +365,10 @@ var hydrate = function (data) {
   .then(function () { return state.playlist; });
 };
 
+var removeTrack = function () {
+  state.playlist.pop();
+};
+
 module.exports = {
   clear: clear,
   setSource: setSource,
@@ -383,5 +387,6 @@ module.exports = {
   addToSeenIndividuals: addToSeenIndividuals,
   recalcSeenTracks: recalcSeenTracks,
   recalcSeenArtists: recalcSeenArtists,
-  recalcSeenIndividuals: recalcSeenIndividuals
+  recalcSeenIndividuals: recalcSeenIndividuals,
+  removeTrack: removeTrack
 };

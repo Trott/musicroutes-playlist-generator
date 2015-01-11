@@ -869,4 +869,23 @@ describe('playlist', function () {
       done();
     });
   });
+
+  describe('removeTrack()', function () {
+    it('should remove the last track by default', function (done) {
+      var fhqwhagads = {artists: [{mid: '/fhqwhagads'}]};
+      var jakeAndJoe = {artists: [{mid: '/jake'}, {mid: '/joe'}]};
+      playlist.__set__({
+        state: {
+          playlist: [{}, fhqwhagads, jakeAndJoe]
+        }
+      });
+
+      playlist.removeTrack();
+      var result = playlist.__get__('state').playlist;
+      expect(result[0]).to.deep.equal({});
+      expect(result[1].artists[0].mid).to.equal('/fhqwhagads');
+      expect(result[2]).to.be.undefined();
+      done();
+    });
+  });
 });

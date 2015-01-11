@@ -18,6 +18,7 @@ var input = $('#startPoint');
 var paperInput = $('#paperStartPoint');
 var buttonGroup = $('.button-group');
 var continueButton = $('.continue');
+var retryButton = $('.retry');
 var progress = $('#progress');
 var formInstructions = $('.form-instructions');
 
@@ -95,7 +96,7 @@ var renderConnector = function (playlistData) {
     return $('<span>').text(' (' + _.pluck(roles, 'name').join(', ') + ')');
   };
 
-  var p = $('<p>');
+  var p = $('<p class="connector">');
 
   var previousConnector = playlistData[playlistData.length - 2].connectorToNext;
   previous = $('<b>').append(renderNameOrMid(previousConnector));
@@ -140,7 +141,20 @@ var go = function () {
   .then(end, error);
 };
 
+var replace = function () {
+  playlist.removeTrack();
+  var children;
+  var removedConnector = false;
+  while (! removedConnector) {
+    children = $('#results').children();
+    removedConnector = children.last().hasClass('connector');
+    children = children.last().remove();
+  }
+  go();
+};
+
 continueButton.on('click', go);
+retryButton.on('click', replace);
 
 var formHandler = function (evt) {
   evt.preventDefault();
