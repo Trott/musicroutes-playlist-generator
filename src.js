@@ -172,11 +172,12 @@ var formHandler = function (evt) {
   var lookupUserInput = function(mids) {
     sourceIndividual = mids[0];
     if (! sourceIndividual) {
-      var noResultsFoundMsg = $('<p>');
-      var searchTerm = $('<b>').text(startingPoint);
-      noResultsFoundMsg.text('Could not find an artist named ').append(searchTerm).append('. ');
-      noResultsFoundMsg.append('Try variations. For example:');
-      noResultsFoundMsg.append('<ul><li>Instead of <i>Beach Boys</i>, try <a href="?q=The%20Beach%20Boys">The Beach Boys</a></li><li>Instead of Beyonce, try <a href="?q=Beyoncé%20Knowles">Beyoncé Knowles</a></li></ul>');
+      var noResultsFoundMsg = $('<div>');
+      var searchTerm = $('<b>').append($('<i>').text(startingPoint));
+      var p = $('<p>').text('Could not find an artist named ').append(searchTerm).append('. ');
+      noResultsFoundMsg.append(p);
+      noResultsFoundMsg.append('<p>Try variations. For example:<ul><li>Instead of <b><i>Cure</i></b>, try <b><i>The Cure</i></b>.</li><li>Instead of <b><i>Beyonce</i></b>, try <b><i>Beyoncé Knowles</i></b>.</li></ul></p>');
+      noResultsFoundMsg.append('<p>Yeah, that sucks. Will be fixed soon.</p>');
       resultsElem.append(noResultsFoundMsg);
       progress.removeAttr('active');
       buttonGroup.css('visibility', 'hidden');
