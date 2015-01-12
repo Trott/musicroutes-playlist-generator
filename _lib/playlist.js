@@ -62,7 +62,6 @@ var setSource = function (source) {
 var setRolesInNext = function (index) {
   // Check the previous connectorToNext and add the roles for this track if absent
   var previousConnector = _.result(state.playlist[index-1], 'connectorToNext');
-  console.log(previousConnector);
   if (previousConnector && ! previousConnector.rolesInNext) {
     return routes.fetchRoles(previousConnector.mid, state.playlist[index].mid)
       .then(function (data) {
