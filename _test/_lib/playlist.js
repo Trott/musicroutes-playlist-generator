@@ -887,5 +887,20 @@ describe('playlist', function () {
       expect(result[2]).to.be.undefined();
       done();
     });
+
+    it('should remove role from previous track connectorToNext', function (done) {
+      var fhqwhagads = {connectorToNext: {mid: '/jake', rolesInNext: ['jocking']}, artists: [{mid: '/fhqwhagads'}]};
+      var jakeAndJoe = {artists: [{mid: '/jake'}, {mid: '/joe'}]};
+      playlist.__set__({
+        state: {
+          playlist: [{}, fhqwhagads, jakeAndJoe]
+        }
+      });
+
+      playlist.removeTrack();
+      var result = playlist.__get__('state').playlist;
+      expect(result[1].connectorToNext.rolesInNext).to.be.undefined();
+      done();
+    });
   });
 });
