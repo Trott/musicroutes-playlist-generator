@@ -156,6 +156,8 @@ var replace = function () {
 continueButton.on('click', go);
 retryButton.on('click', replace);
 
+var getMids = _.memoize(routes.getMids);
+
 var formHandler = function (evt) {
   evt.preventDefault();
 
@@ -188,7 +190,7 @@ var formHandler = function (evt) {
     return playlist.setSource(sourceIndividual);
   };
 
-  routes.getMids(startingPoint, '/music/artist').then(lookupUserInput).then(go).catch(error);
+  getMids(startingPoint, '/music/artist').then(lookupUserInput).then(go).catch(error);
 };
 
 form.on('submit', formHandler);
