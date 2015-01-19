@@ -64,7 +64,7 @@ describe('playlist', function () {
         nock.enableNetConnect();
       } else {
         revert = playlist.__set__({routes: {getArtistDetails: function () {
-          return Promise.resolve({name: 'Bob Dylan'});
+          return Promise.resolve({mid: '/m/01vrncs', name: 'Bob Dylan'});
         }}});
       }
       // $lab:coverage:on$
@@ -92,7 +92,34 @@ describe('playlist', function () {
     });
 
     it('should return content if given a valid start point', function (done) {
-      nock.enableNetConnect();
+      // $lab:coverage:off$
+      if (! process.env.TRAVIS) {
+        nock.enableNetConnect();
+      } else {
+        revert = playlist.__set__({routes: {
+          getArtistDetails: function () {
+            return Promise.resolve({mid: '/m/01vrncs', name: 'Bob Dylan'});
+          },
+          getTracksByArtists: function () {
+            return Promise.resolve([ '/m/012lvqsy', '/m/012lyc7y', '/m/012lykjs' ]);
+          },
+          getArtistsAndContributorsFromTracks: function () {
+            return Promise.resolve({ artists: [ { mid: '/m/01vrncs' } ], contributors: [] });
+          },
+          getTrackDetails: function () {
+            return Promise.resolve({
+              mid: '/m/0nk0qh',
+              name: 'Knockin\' on Heaven\'s Door',
+              artists: [ { mid: '/m/01vrncs', name: 'Bob Dylan' } ],
+              releases: [ { mid: '/m/035j50b', name: 'The Bootleg Series' }]
+            });
+          },
+          fetchRoles: function () {
+            return Promise.resolve({ roles: [] });
+          }
+        }});
+      }
+      // $lab:coverage:on$
 
       var success = function (data) {
         expect(data[0].connectorToNext.mid).to.equal(BobDylan);
