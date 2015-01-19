@@ -59,7 +59,15 @@ describe('playlist', function () {
 
   describe('setSource()', function () {
     it('should set the source Individual', function (done) {
-      nock.enableNetConnect();
+      // $lab:coverage:off$
+      if (process.env.TRAVIS) {
+        nock.enableNetConnect();
+      } else {
+        revert = playlist.__set__({routes: {getArtistDetails: function () {
+          return Promise.resolve({name: 'Bob Dylan'});
+        }}});
+      }
+      // $lab:coverage:on$
 
       playlist.setSource(BobDylan)
       .then(function () {

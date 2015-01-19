@@ -44,7 +44,7 @@ var fetchConnectorDetails = function (index) {
     .then(function (value) {
       connector.name = value.name;
       state.playlist[index].connectorToNext = connector;
-      return Promise.resolve(state.playlist[index]);
+      return state.playlist[index];
     });
   }
 
