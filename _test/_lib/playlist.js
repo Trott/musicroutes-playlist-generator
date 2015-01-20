@@ -64,7 +64,7 @@ describe('playlist', function () {
         nock.enableNetConnect();
       } else {
         revert = playlist.__set__({routes: {getArtistDetails: function () {
-          return Promise.resolve({mid: '/m/01vrncs', name: 'Bob Dylan'});
+          return Promise.resolve({mid: BobDylan, name: 'Bob Dylan'});
         }}});
       }
       // $lab:coverage:on$
@@ -93,24 +93,24 @@ describe('playlist', function () {
 
     it('should return content if given a valid start point', function (done) {
       // $lab:coverage:off$
-      if (! process.env.TRAVIS) {
+      if (process.env.TRAVIS) {
         nock.enableNetConnect();
       } else {
         revert = playlist.__set__({routes: {
           getArtistDetails: function () {
-            return Promise.resolve({mid: '/m/01vrncs', name: 'Bob Dylan'});
+            return Promise.resolve({mid: BobDylan, name: 'Bob Dylan'});
           },
           getTracksByArtists: function () {
             return Promise.resolve([ '/m/012lvqsy', '/m/012lyc7y', '/m/012lykjs' ]);
           },
           getArtistsAndContributorsFromTracks: function () {
-            return Promise.resolve({ artists: [ { mid: '/m/01vrncs' } ], contributors: [] });
+            return Promise.resolve({ artists: [ { mid: BobDylan } ], contributors: [] });
           },
           getTrackDetails: function () {
             return Promise.resolve({
               mid: '/m/0nk0qh',
               name: 'Knockin\' on Heaven\'s Door',
-              artists: [ { mid: '/m/01vrncs', name: 'Bob Dylan' } ],
+              artists: [ { mid: BobDylan, name: 'Bob Dylan' } ],
               releases: [ { mid: '/m/035j50b', name: 'The Bootleg Series' }]
             });
           },
@@ -132,7 +132,40 @@ describe('playlist', function () {
     });
 
     it('should populate a rolesInNext property for the previous connectorToNext when applicable', function (done) {
-      nock.enableNetConnect();
+      // $lab:coverage:off$
+      if (process.env.TRAVIS) {
+        nock.enableNetConnect();
+      } else {
+        revert = playlist.__set__({routes: {
+          getArtistDetails: function () {
+            return Promise.resolve({mid: '/m/06mtrb', name: 'Berry Oakley'});
+          },
+          getTracksByArtists: function () {
+            return Promise.resolve([]);
+          },
+          getTracksWithContributors: function () {
+            return Promise.resolve(['/m/0_wjb6', '/m/0m2sjk', '/m/0q9qjb']);
+          },
+          getArtistsAndContributorsFromTracks: function () {
+            return Promise.resolve({
+              artists: [ { mid: '/m/0134tg' } ],
+              contributors: [{mid: '/m/06mtrb', roles: [{name: 'Bass'}]}]
+            });
+          },
+          getTrackDetails: function () {
+            return Promise.resolve({
+              mid: '/m/0lpznv',
+              name: 'Rambin\' Man',
+              artists: [ { name: 'The Allman Brothers Band', mid: '/m/0134tg' } ],
+              releases: [ { name: 'The Rolling Stone Collection: 1971–1973', mid: '/m/035_g2g' }]
+            });
+          },
+          fetchRoles: function () {
+            return Promise.resolve({roles: [{name: 'Bass'}]});
+          }
+        }});
+      }
+      // $lab:coverage:on$
 
       var success = function (data) {
         expect(data[0].connectorToNext.rolesInNext.length).to.be.above(0);
