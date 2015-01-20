@@ -413,8 +413,31 @@ describe('playlist', function () {
 
   describe('hydrate()', function () {
     it('should restore track title', function (done) {
-      nock.enableNetConnect();
-
+      // $lab:coverage:off$
+      if (process.env.TRAVIS) {
+        nock.enableNetConnect();
+      } else {
+        revert = playlist.__set__({routes: {
+          getTrackDetails: function () {
+            return Promise.resolve({
+              mid: '/m/0g6vkcm',
+              name: 'Mean',
+              artists: [ { mid: '/m/0dl567', name: 'Taylor Swift' } ],
+              releases: [ { mid: '/m/0g6vkbg', name: 'Speak Now' } ]
+            });
+          },
+          getArtistDetails: function () {
+            return Promise.resolve({
+              mid: '/m/0dl567',
+              name: 'Taylor Swift'
+            });
+          },
+          fetchRoles: function () {
+            return Promise.resolve({roles: []});
+          }
+        }});
+      }
+      // $lab:coverage:on$
       var initial = [
         {connectorToNext: {mid: '/m/0dl567'}},
         {mid: '/m/0g6vkcm'}
@@ -431,7 +454,31 @@ describe('playlist', function () {
     });
 
     it('should restore artists', function (done) {
-      nock.enableNetConnect();
+      // $lab:coverage:off$
+      if (process.env.TRAVIS) {
+        nock.enableNetConnect();
+      } else {
+        revert = playlist.__set__({routes: {
+          getTrackDetails: function () {
+            return Promise.resolve({
+              mid: '/m/0g6vkcm',
+              name: 'Mean',
+              artists: [ { mid: '/m/0dl567', name: 'Taylor Swift' } ],
+              releases: [ { mid: '/m/0g6vkbg', name: 'Speak Now' } ]
+            });
+          },
+          getArtistDetails: function () {
+            return Promise.resolve({
+              mid: '/m/0dl567',
+              name: 'Taylor Swift'
+            });
+          },
+          fetchRoles: function () {
+            return Promise.resolve({roles: []});
+          }
+        }});
+      }
+      // $lab:coverage:on$
 
       var initial = [
         {connectorToNext: {mid: '/m/0dl567'}},
@@ -470,7 +517,31 @@ describe('playlist', function () {
     });
 
     it('should hydrate connectorToNext properties', function (done) {
-      nock.enableNetConnect();
+      // $lab:coverage:off$
+      if (process.env.TRAVIS) {
+        nock.enableNetConnect();
+      } else {
+        revert = playlist.__set__({routes: {
+          getTrackDetails: function () {
+            return Promise.resolve({
+              mid: '/m/0g6vkcm',
+              name: 'Mean',
+              artists: [ { mid: '/m/0dl567', name: 'Taylor Swift' } ],
+              releases: [ { mid: '/m/0g6vkbg', name: 'Speak Now' } ]
+            });
+          },
+          getArtistDetails: function () {
+            return Promise.resolve({
+              mid: '/m/0dl567',
+              name: 'Taylor Swift'
+            });
+          },
+          fetchRoles: function () {
+            return Promise.resolve({roles: []});
+          }
+        }});
+      }
+      // $lab:coverage:on$
 
       var initial = [
         {connectorToNext: {mid: '/m/0dl567'}}
