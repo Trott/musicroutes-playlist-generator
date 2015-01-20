@@ -499,8 +499,31 @@ describe('playlist', function () {
     });
 
     it('should use the release provided', function (done) {
-      nock.enableNetConnect();
-
+      // $lab:coverage:off$
+      if (process.env.TRAVIS) {
+        nock.enableNetConnect();
+      } else {
+        revert = playlist.__set__({routes: {
+          getTrackDetails: function () {
+            return Promise.resolve({
+              mid: '/m/0g6vkcm',
+              name: 'Mean',
+              artists: [ { mid: '/m/0dl567', name: 'Taylor Swift' } ],
+              releases: [ { mid: '/m/0g6vkbg', name: 'Speak Later' }, {mid: '/m/0g7z202', name: 'Speak Now'} ]
+            });
+          },
+          getArtistDetails: function () {
+            return Promise.resolve({
+              mid: '/m/0dl567',
+              name: 'Taylor Swift'
+            });
+          },
+          fetchRoles: function () {
+            return Promise.resolve({roles: []});
+          }
+        }});
+      }
+      // $lab:coverage:on$
       var initial = [
         {connectorToNext: {mid: '/m/0dl567'}},
         {mid: '/m/0g6vkcm', release: {mid: '/m/0g7z202'}}
