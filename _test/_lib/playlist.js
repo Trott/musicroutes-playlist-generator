@@ -545,22 +545,11 @@ describe('playlist', function () {
         nock.enableNetConnect();
       } else {
         revert = playlist.__set__({routes: {
-          getTrackDetails: function () {
-            return Promise.resolve({
-              mid: '/m/0g6vkcm',
-              name: 'Mean',
-              artists: [ { mid: '/m/0dl567', name: 'Taylor Swift' } ],
-              releases: [ { mid: '/m/0g6vkbg', name: 'Speak Now' } ]
-            });
-          },
           getArtistDetails: function () {
             return Promise.resolve({
               mid: '/m/0dl567',
               name: 'Taylor Swift'
             });
-          },
-          fetchRoles: function () {
-            return Promise.resolve({roles: []});
           }
         }});
       }
@@ -619,7 +608,20 @@ describe('playlist', function () {
 
 
     it('should hydrate even if state.playlist is empty', function (done) {
-      nock.enableNetConnect();
+      // $lab:coverage:off$
+      if (process.env.TRAVIS) {
+        nock.enableNetConnect();
+      } else {
+        revert = playlist.__set__({routes: {
+          getArtistDetails: function () {
+            return Promise.resolve({
+              mid: '/m/0dl567',
+              name: 'Taylor Swift'
+            });
+          }
+        }});
+      }
+      // $lab:coverage:on$
 
       var initial = [
         {connectorToNext: {mid: '/m/0dl567'}}
