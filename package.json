@@ -3,7 +3,7 @@
   "version": "1.1.7",
   "description": "musicroutes-playlist-generator",
   "scripts": {
-    "test": "lab -t 100 -m 5000 _test",
+    "test": "lab -t 100 _test",
     "build": "browserify src.js -o bundle.js -d -p [minifyify --map bundle.map.json --output bundle.map.json] && vulcanize -o index.html src.html",
     "build-ie": "browserify src.js -o bundle.js -d -p [minifyify --map bundle.map.json --output bundle.map.json] && cp src.html index.html",
     "watch": "watchify --debug src.js -o bundle.js"
