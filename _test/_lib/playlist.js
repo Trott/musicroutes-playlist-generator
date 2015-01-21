@@ -59,7 +59,15 @@ describe('playlist', function () {
 
   describe('setSource()', function () {
     it('should set the source Individual', function (done) {
-      nock.enableNetConnect();
+      // $lab:coverage:off$
+      if (process.env.TRAVIS) {
+        nock.enableNetConnect();
+      } else {
+        revert = playlist.__set__({routes: {getArtistDetails: function () {
+          return Promise.resolve({mid: BobDylan, name: 'Bob Dylan'});
+        }}});
+      }
+      // $lab:coverage:on$
 
       playlist.setSource(BobDylan)
       .then(function () {
@@ -84,7 +92,34 @@ describe('playlist', function () {
     });
 
     it('should return content if given a valid start point', function (done) {
-      nock.enableNetConnect();
+      // $lab:coverage:off$
+      if (process.env.TRAVIS) {
+        nock.enableNetConnect();
+      } else {
+        revert = playlist.__set__({routes: {
+          getArtistDetails: function () {
+            return Promise.resolve({mid: BobDylan, name: 'Bob Dylan'});
+          },
+          getTracksByArtists: function () {
+            return Promise.resolve([ '/m/012lvqsy', '/m/012lyc7y', '/m/012lykjs' ]);
+          },
+          getArtistsAndContributorsFromTracks: function () {
+            return Promise.resolve({ artists: [ { mid: BobDylan } ], contributors: [] });
+          },
+          getTrackDetails: function () {
+            return Promise.resolve({
+              mid: '/m/0nk0qh',
+              name: 'Knockin\' on Heaven\'s Door',
+              artists: [ { mid: BobDylan, name: 'Bob Dylan' } ],
+              releases: [ { mid: '/m/035j50b', name: 'The Bootleg Series' }]
+            });
+          },
+          fetchRoles: function () {
+            return Promise.resolve({ roles: [] });
+          }
+        }});
+      }
+      // $lab:coverage:on$
 
       var success = function (data) {
         expect(data[0].connectorToNext.mid).to.equal(BobDylan);
@@ -97,7 +132,40 @@ describe('playlist', function () {
     });
 
     it('should populate a rolesInNext property for the previous connectorToNext when applicable', function (done) {
-      nock.enableNetConnect();
+      // $lab:coverage:off$
+      if (process.env.TRAVIS) {
+        nock.enableNetConnect();
+      } else {
+        revert = playlist.__set__({routes: {
+          getArtistDetails: function () {
+            return Promise.resolve({mid: '/m/06mtrb', name: 'Berry Oakley'});
+          },
+          getTracksByArtists: function () {
+            return Promise.resolve([]);
+          },
+          getTracksWithContributors: function () {
+            return Promise.resolve(['/m/0_wjb6', '/m/0m2sjk', '/m/0q9qjb']);
+          },
+          getArtistsAndContributorsFromTracks: function () {
+            return Promise.resolve({
+              artists: [ { mid: '/m/0134tg' } ],
+              contributors: [{mid: '/m/06mtrb', roles: [{name: 'Bass'}]}]
+            });
+          },
+          getTrackDetails: function () {
+            return Promise.resolve({
+              mid: '/m/0lpznv',
+              name: 'Rambin\' Man',
+              artists: [ { name: 'The Allman Brothers Band', mid: '/m/0134tg' } ],
+              releases: [ { name: 'The Rolling Stone Collection: 1971–1973', mid: '/m/035_g2g' }]
+            });
+          },
+          fetchRoles: function () {
+            return Promise.resolve({roles: [{name: 'Bass'}]});
+          }
+        }});
+      }
+      // $lab:coverage:on$
 
       var success = function (data) {
         expect(data[0].connectorToNext.rolesInNext.length).to.be.above(0);
@@ -345,8 +413,31 @@ describe('playlist', function () {
 
   describe('hydrate()', function () {
     it('should restore track title', function (done) {
-      nock.enableNetConnect();
-
+      // $lab:coverage:off$
+      if (process.env.TRAVIS) {
+        nock.enableNetConnect();
+      } else {
+        revert = playlist.__set__({routes: {
+          getTrackDetails: function () {
+            return Promise.resolve({
+              mid: '/m/0g6vkcm',
+              name: 'Mean',
+              artists: [ { mid: '/m/0dl567', name: 'Taylor Swift' } ],
+              releases: [ { mid: '/m/0g6vkbg', name: 'Speak Now' } ]
+            });
+          },
+          getArtistDetails: function () {
+            return Promise.resolve({
+              mid: '/m/0dl567',
+              name: 'Taylor Swift'
+            });
+          },
+          fetchRoles: function () {
+            return Promise.resolve({roles: []});
+          }
+        }});
+      }
+      // $lab:coverage:on$
       var initial = [
         {connectorToNext: {mid: '/m/0dl567'}},
         {mid: '/m/0g6vkcm'}
@@ -363,7 +454,31 @@ describe('playlist', function () {
     });
 
     it('should restore artists', function (done) {
-      nock.enableNetConnect();
+      // $lab:coverage:off$
+      if (process.env.TRAVIS) {
+        nock.enableNetConnect();
+      } else {
+        revert = playlist.__set__({routes: {
+          getTrackDetails: function () {
+            return Promise.resolve({
+              mid: '/m/0g6vkcm',
+              name: 'Mean',
+              artists: [ { mid: '/m/0dl567', name: 'Taylor Swift' } ],
+              releases: [ { mid: '/m/0g6vkbg', name: 'Speak Now' } ]
+            });
+          },
+          getArtistDetails: function () {
+            return Promise.resolve({
+              mid: '/m/0dl567',
+              name: 'Taylor Swift'
+            });
+          },
+          fetchRoles: function () {
+            return Promise.resolve({roles: []});
+          }
+        }});
+      }
+      // $lab:coverage:on$
 
       var initial = [
         {connectorToNext: {mid: '/m/0dl567'}},
@@ -384,8 +499,31 @@ describe('playlist', function () {
     });
 
     it('should use the release provided', function (done) {
-      nock.enableNetConnect();
-
+      // $lab:coverage:off$
+      if (process.env.TRAVIS) {
+        nock.enableNetConnect();
+      } else {
+        revert = playlist.__set__({routes: {
+          getTrackDetails: function () {
+            return Promise.resolve({
+              mid: '/m/0g6vkcm',
+              name: 'Mean',
+              artists: [ { mid: '/m/0dl567', name: 'Taylor Swift' } ],
+              releases: [ { mid: '/m/0g6vkbg', name: 'Speak Later' }, {mid: '/m/0g7z202', name: 'Speak Now'} ]
+            });
+          },
+          getArtistDetails: function () {
+            return Promise.resolve({
+              mid: '/m/0dl567',
+              name: 'Taylor Swift'
+            });
+          },
+          fetchRoles: function () {
+            return Promise.resolve({roles: []});
+          }
+        }});
+      }
+      // $lab:coverage:on$
       var initial = [
         {connectorToNext: {mid: '/m/0dl567'}},
         {mid: '/m/0g6vkcm', release: {mid: '/m/0g7z202'}}
@@ -402,7 +540,20 @@ describe('playlist', function () {
     });
 
     it('should hydrate connectorToNext properties', function (done) {
-      nock.enableNetConnect();
+      // $lab:coverage:off$
+      if (process.env.TRAVIS) {
+        nock.enableNetConnect();
+      } else {
+        revert = playlist.__set__({routes: {
+          getArtistDetails: function () {
+            return Promise.resolve({
+              mid: '/m/0dl567',
+              name: 'Taylor Swift'
+            });
+          }
+        }});
+      }
+      // $lab:coverage:on$
 
       var initial = [
         {connectorToNext: {mid: '/m/0dl567'}}
@@ -457,7 +608,20 @@ describe('playlist', function () {
 
 
     it('should hydrate even if state.playlist is empty', function (done) {
-      nock.enableNetConnect();
+      // $lab:coverage:off$
+      if (process.env.TRAVIS) {
+        nock.enableNetConnect();
+      } else {
+        revert = playlist.__set__({routes: {
+          getArtistDetails: function () {
+            return Promise.resolve({
+              mid: '/m/0dl567',
+              name: 'Taylor Swift'
+            });
+          }
+        }});
+      }
+      // $lab:coverage:on$
 
       var initial = [
         {connectorToNext: {mid: '/m/0dl567'}}

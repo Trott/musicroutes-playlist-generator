@@ -226,6 +226,7 @@ exports.getTrackDetails = function (mid) {
           rv.releases.push(value.release);
         });
       }
+
       fulfill(rv);
     };
 
