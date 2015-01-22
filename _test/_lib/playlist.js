@@ -571,7 +571,33 @@ describe('playlist', function () {
     });
 
     it('should include roles of connectors', function (done) {
-      nock.enableNetConnect();
+      // $lab:coverage:off$
+      if (process.env.TRAVIS) {
+        nock.enableNetConnect();
+      } else {
+        revert = playlist.__set__({routes: {
+          getArtistDetails: function (mid) {
+            var name = mid==='/m/0blhx' ? 'Vince Guaraldi' : 'Bill Holman';
+            return Promise.resolve({
+              mid: mid,
+              name: name
+            });
+          },
+          getTrackDetails: function (mid) {
+            return Promise.resolve({
+              mid: mid,
+              name: 'Who Cares?',
+              artists: [{name: 'Vince Guaraldi', mid: '/m/0blhx'}],
+              releases: [{name: 'It Does Not Matter', mid: '/unused'}]
+            });
+          },
+          fetchRoles: function (contributor) {
+            var roles = contributor === '/m/07qbjn' ? [{ name: 'Baritone saxophone'}] : [];
+            return Promise.resolve({roles: roles});
+          }
+        }});
+      }
+      // $lab:coverage:on$
 
       var initial = [
         {connectorToNext: {mid: '/m/0blhx'}},
