@@ -4,8 +4,8 @@
   "description": "musicroutes-playlist-generator",
   "scripts": {
     "test": "lab -t 100 _test",
-    "build": "browserify src.js -o bundle.js -d -p [minifyify --map bundle.map.json --output bundle.map.json] && vulcanize -o index.html src.html",
-    "build-ie": "browserify src.js -o bundle.js -d -p [minifyify --map bundle.map.json --output bundle.map.json] && cp src.html index.html",
+    "build": "browserify src.js -o bundle.js -d -p bundle-collapser/plugin -p [minifyify --map bundle.map.json --output bundle.map.json] && vulcanize -o index.html src.html",
+    "build-ie": "browserify src.js -o bundle.js -d -p bundle-collapser/plugin -p [minifyify --map bundle.map.json --output bundle.map.json] && cp src.html index.html",
     "watch": "watchify --debug src.js -o bundle.js"
   },
   "repository": {
@@ -29,6 +29,7 @@
     "xtend": "^4.0.0"
   },
   "devDependencies": {
+    "bundle-collapser": "^1.1.1",
     "cheerio": "^0.18.0",
     "code": "^1.2.1",
     "jshint": "^2.5.10",
