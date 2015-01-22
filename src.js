@@ -73,12 +73,15 @@ var renderTrackDetails = function (trackDetails) {
   return trackDetails;
 };
 
+// Need to bind resultsElem as this of append to use in shallow prosmises
+var resultsElemAppend = resultsElem.append.bind(resultsElem);
+
 var videoBlock = function (trackData) {
   return utils.searchForVideoFromTrackDetails(trackData)
     .then(utils.extractVideoId)
     .then(utils.getVideoEmbedCode)
     .then(utils.wrapVideo)
-    .then(function (embedCode) { resultsElem.append(embedCode); });
+    .then(resultsElemAppend);
 };
 
 var renderConnector = function (playlistData) {
