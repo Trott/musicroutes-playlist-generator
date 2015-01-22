@@ -615,7 +615,31 @@ describe('playlist', function () {
     });
 
     it('should restore rolesInNext property for connectors where applicable', function (done) {
-      nock.enableNetConnect();
+      // $lab:coverage:off$
+      if (process.env.TRAVIS) {
+        nock.enableNetConnect();
+      } else {
+        revert = playlist.__set__({routes: {
+          getArtistDetails: function (mid) {
+            return Promise.resolve({
+              mid: mid,
+              name: 'Does Not Matter'
+            });
+          },
+          getTrackDetails: function (mid) {
+            return Promise.resolve({
+              mid: mid,
+              name: 'Who Cares?',
+              artists: [{name: 'Vince Guaraldi', mid: '/m/0blhx'}],
+              releases: [{name: 'It Does Not Matter', mid: '/unused'}]
+            });
+          },
+          fetchRoles: function () {
+            return Promise.resolve({roles: [{name: 'Drums'}]});
+          }
+        }});
+      }
+      // $lab:coverage:on$
 
       var initial = [
         {connectorToNext: {mid: '/m/012cfv3t'}},
