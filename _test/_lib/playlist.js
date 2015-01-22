@@ -640,7 +640,31 @@ describe('playlist', function () {
     });
 
     it('should restore seen* properties of state', function (done) {
-      nock.enableNetConnect();
+      // $lab:coverage:off$
+      if (process.env.TRAVIS) {
+        nock.enableNetConnect();
+      } else {
+        revert = playlist.__set__({routes: {
+          getArtistDetails: function () {
+            return Promise.resolve({
+              mid: BobDylan,
+              name: 'Bob Dylan'
+            });
+          },
+          getTrackDetails: function () {
+            return Promise.resolve({
+              mid: '/m/0rc400',
+              name: 'Idiot Wind',
+              artists: [ { name: 'Bob Dylan', mid: '/m/01vrncs' } ],
+              releases: [ { name: 'Blood on the Tracks', mid: '/m/0shxfbt' } ]
+            });
+          },
+          fetchRoles: function () {
+            return Promise.resolve({ roles: [] });
+          }
+        }});
+      }
+      // $lab:coverage:on$
 
       var initial = [
         {connectorToNext: {mid: BobDylan}},
