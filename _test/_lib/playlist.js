@@ -317,6 +317,24 @@ describe('playlist', function () {
       });
     });
 
+    it('should not release Zalgo', function (done) {
+      revert = playlist.__set__({
+        state: {
+          playlist: [
+            {connectorToNext: {name: 'fhqwhagads'}},
+            {}
+          ]
+        }
+      });
+      var after = false;
+      playlist.fetchConnectorDetails(0)
+      .done(function () {
+        expect(after).to.be.true();
+        done();
+      });
+      after = true;
+    });
+
     it('should use the artist name if the mid matches', function (done) {
       revert = playlist.__set__({
         state: {

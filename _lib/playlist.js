@@ -48,9 +48,7 @@ var fetchConnectorDetails = function (index) {
     });
   }
 
-  return new Promise(function (resolve) {
-    process.nextTick(function () { resolve(state.playlist[index]); });
-  });
+  return Promise.resolve(state.playlist[index]);
 };
 
 var setSource = function (source) {
