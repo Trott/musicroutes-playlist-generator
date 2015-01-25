@@ -37,7 +37,6 @@ describe('videos', function () {
       videos.embed('JLpTCwOoa4M').then(success);
     });
 
-
     it('should report an error if there was an error', function (done) {
       nock.disableNetConnect();
       var failure = function (err) {
@@ -62,6 +61,21 @@ describe('videos', function () {
       videos.embed('asdkfhaskdjfhakdjhfkajsdfh').then(success);
     });
 
+    it('should handle a missing videoId gracefully', function (done) {
+      videos.embed().then(function (data) {
+        expect(data).to.be.undefined();
+        done();
+      });
+    });
+
+    it('should not release Zalgo', function (done) {
+      var after = false;
+      videos.embed().then(function () {
+        expect(after).to.be.true();
+        done();
+      });
+      after = true;
+    });
   });
 
   describe('search()', function () {

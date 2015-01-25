@@ -5,6 +5,7 @@
 var routes = require('./_lib/routes.js');
 var playlist = require('./_lib/playlist.js');
 var utils = require('./_lib/utils.js');
+var videos = require('./_lib/videos.js');
 var $ = require('jquery');
 var _ = require('lodash');
 var url = require('url');
@@ -79,7 +80,7 @@ var resultsElemAppend = resultsElem.append.bind(resultsElem);
 var videoBlock = function (trackData) {
   return utils.searchForVideoFromTrackDetails(trackData)
     .then(utils.extractVideoId)
-    .then(utils.getVideoEmbedCode)
+    .then(videos.embed)
     .then(utils.wrapVideo)
     .then(resultsElemAppend);
 };

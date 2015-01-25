@@ -42,6 +42,10 @@ var run = function (url) {
 };
 
 exports.embed = function (id) {
+  if (! id) {
+    return Promise.resolve(undefined);
+  }
+
   var myOptions = extend(options, {part: 'player', id: id});
   var myUrl = 'https://www.googleapis.com/youtube/v3/videos?' + querystring.stringify(myOptions);
 
@@ -54,6 +58,7 @@ exports.embed = function (id) {
       }
       fulfill(rv);
     };
+
     run(myUrl).then(success, reject);
   });
 };

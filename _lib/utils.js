@@ -94,10 +94,6 @@ exports.extractVideoId = function (data) {
 	return _.result(first, 'videoId');
 };
 
-exports.getVideoEmbedCode = function (videoId) {
-	return videoId && videos.embed(videoId);
-};
-
 exports.wrapVideo = function (data) {
 	var items = _.result(data, 'items');
 	var first = _.first(items);

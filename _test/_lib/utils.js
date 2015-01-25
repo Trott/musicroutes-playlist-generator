@@ -21,7 +21,6 @@ describe('utils', function () {
 	utils.__set__({
 		videos: {
 			search: function (q) { return q; },
-			embed: function (videoId) { return videoId; }
 		}
 	});
 
@@ -171,6 +170,17 @@ describe('utils', function () {
 				done();
 			});
 		});
+
+    it('should not release Zalgo', function (done) {
+      var after = false;
+      utils.promiseUntil(
+        function () { return true; }
+      ).then(function () {
+        expect(after).to.be.true();
+        done();
+      });
+      after = true;
+    });
 	});
 
 	describe('searchForVideoFromTrackDetails()', function () {
@@ -237,18 +247,6 @@ describe('utils', function () {
 
 		it('should handle a missing data object gracefully', function (done) {
 			expect(utils.extractVideoId()).to.be.undefined();
-			done();
-		});
-	});
-
-	describe('getVideoEmbedCode()', function () {
-		it('should request embed code for provided videoId', function (done) {
-			expect(utils.getVideoEmbedCode('fhqwhagads')).to.equal('fhqwhagads');
-			done();
-		});
-
-		it('should handle a missing videoId gracefully', function (done) {
-			expect(utils.getVideoEmbedCode()).to.be.undefined();
 			done();
 		});
 	});
