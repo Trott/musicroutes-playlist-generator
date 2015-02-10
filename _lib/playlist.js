@@ -243,7 +243,7 @@ var fetchNewTrack = function () {
           .then(function (newDetails) {
             newDetails.roles = details.roles;
             _.last(state.playlist).connectorToNext = newDetails;
-            return _.last(state.playlist, 2);
+            return _.takeRight(state.playlist, 2);
           });
       });
 
@@ -273,7 +273,7 @@ var serialize = function () {
     return rv;
   });
 
-  return JSON.stringify(_.first(bareBones, 11));
+  return JSON.stringify(_.take(bareBones, 11));
 };
 
 var deserialize = function (data) {
