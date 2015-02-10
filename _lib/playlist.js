@@ -2,7 +2,24 @@
 var routes = require('./routes.js');
 var utils = require('./utils.js');
 var Promise = require('promise');
-var _ = require('lodash');
+var _ = {
+  where: require('lodash/collection/where'),
+  result: require('lodash/object/result'),
+  isPlainObject: require('lodash/lang/isPlainObject'),
+  find: require('lodash/collection/find'),
+  sample: require('lodash/collection/sample'),
+  pluck: require('lodash/collection/pluck'),
+  union: require('lodash/array/union'),
+  difference: require('lodash/array/difference'),
+  last: require('lodash/array/last'),
+  pull: require('lodash/array/pull'),
+  takeRight: require('lodash/array/takeRight'),
+  map: require('lodash/collection/map'),
+  take: require('lodash/array/take'),
+  uniq: require('lodash/array/uniq'),
+  compact: require('lodash/array/compact'),
+  flatten: require('lodash/array/flatten')
+};
 
 var state = {
 	seenIndividuals: [],

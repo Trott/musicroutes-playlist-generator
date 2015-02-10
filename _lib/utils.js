@@ -1,7 +1,16 @@
 /* global -Promise */
 var videos = require('./videos.js');
 var Promise = require('promise');
-var _ = require('lodash');
+var _ = {
+  forEach: require('lodash/collection/forEach'),
+  result: require('lodash/object/result'),
+  pluck: require('lodash/collection/pluck'),
+  union: require('lodash/array/union'),
+  sample: require('lodash/collection/sample'),
+  without: require('lodash/array/without'),
+  reduce: require('lodash/collection/reduce'),
+  first: require('lodash/array/first')
+};
 
 var anchorFromMid = exports.anchorFromMid = function ($, mid, text) {
 	if (! mid) {

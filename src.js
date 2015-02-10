@@ -7,7 +7,13 @@ var playlist = require('./_lib/playlist.js');
 var utils = require('./_lib/utils.js');
 var videos = require('./_lib/videos.js');
 var $ = require('jquery');
-var _ = require('lodash');
+var _ = {
+  pluck: require('lodash/collection/pluck'),
+  last: require('lodash/array/last'),
+  memoize: require('lodash/function/memoize'),
+  result: require('lodash/object/result'),
+  first: require('lodash/array/first')
+};
 var url = require('url');
 var querystring = require('querystring');
 var Promise = require('promise');

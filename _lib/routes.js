@@ -2,7 +2,14 @@
 var freebase = require('mqlread');
 var Promise = require('promise');
 var apikey = require('../.apikey');
-var _ = require('lodash');
+var _ = {
+  map: require('lodash/collection/map'),
+  assign: require('lodash/object/assign'),
+  forEach: require('lodash/collection/forEach'),
+  result: require('lodash/object/result'),
+  flatten: require('lodash/array/flatten'),
+  uniq: require('lodash/array/uniq')
+};
 
 var options = {
   html_escape: false,
