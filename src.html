@@ -1,23 +1,36 @@
-<!doctype html>
-<html lang="en">
-<head>
+<!DOCTYPE html><html lang="en"><head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="description" content="Create a playlist of songs with common musicians. Like Six Degrees of Kevin Bacon but for music. Sort of.">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Music Routes Playlist Generator</title>
-    <script src="bower_components/webcomponentsjs/webcomponents.min.js"></script>
+    <script src="bower_components/webcomponentsjs/webcomponents-lite.min.js"></script>
     <link rel="import" href="bower_components/paper-input/paper-input-decorator.html">
     <link rel="import" href="bower_components/paper-fab/paper-fab.html">
     <link rel="import" href="bower_components/paper-button/paper-button.html">
     <link rel="import" href="bower_components/paper-spinner/paper-spinner.html">
-    <link rel="import" href="bower_components/paper-shadow/paper-shadow.html">
+    <link rel="import" href="bower_components/paper-material/paper-material.html">
     <link rel="stylesheet" href="styles/main.css">
 
-    <meta property="og:title" content="Music Routes Playlist Generator" />
-    <meta property="og:site_name" content="Music Routes" />
-    <meta property="og:image" content="http://musicroutes.com/images/og.png" />
-    <meta property="fb:app_id" content="147311265342826" />
+    <meta property="og:title" content="Music Routes Playlist Generator">
+    <meta property="og:site_name" content="Music Routes">
+    <meta property="og:image" content="http://musicroutes.com/images/og.png">
+    <meta property="fb:app_id" content="147311265342826">
+  <style is="custom-style">
+    /* TODO(polyup): For speed, consider reworking these styles with .classes
+                     and #ids rather than [attributes].
+    */
+    [layout] {
+      @apply(--layout);
+    }
+    [layout][horizontal] {
+      @apply(--layout-horizontal);
+    }
+    [layout][center-justified] {
+      @apply(--layout-center-justified);
+    }
+  </style>
+  <link rel="import" href="bower_components/iron-flex-layout/iron-flex-layout.html">
 </head>
 <body>
     <header class="app-bar promote-layer">
@@ -27,43 +40,48 @@
       </div>
     </header>
     <main>
-        <paper-shadow z="1">
+        <paper-material elevation="1">
 			<form id="startPlaylist">
                 <div class="form-instructions">To get started, enter a musical artist.</div>
-				<paper-input-decorator floatingLabel label="Musicial Artist" id="paperStartPoint">
-					<input is="core-input" id="startPoint" autofocus>
+				<paper-input-decorator floatinglabel="" label="Musicial Artist" id="paperStartPoint">
+					<input is="core-input" id="startPoint" autofocus="">
 				</paper-input-decorator>
 
 				<paper-fab id="startPointSubmit" class="right" icon="arrow-forward">Start</paper-fab>
 			</form>
-        </paper-shadow>
+        </paper-material>
 
 		<div id="results" class="results"></div>
-		<div horizontal center-justified layout>
+		<div horizontal="" center-justified="" layout="">
 			<paper-spinner id="progress"></paper-spinner>
     	</div>
 
-        <div horizontal center-justified layout class="button-group hidden">
-            <paper-button class="continue" raised>Accept This Track</paper-button>
-            <paper-button class="retry" raised>Reject This Track</paper-button>
+        <div horizontal="" center-justified="" layout="" class="button-group hidden">
+            <paper-button class="continue" raised="">Accept This Track</paper-button>
+            <paper-button class="retry" raised="">Reject This Track</paper-button>
         </div>
     </main>
     <footer>
-        <paper-shadow z="1">
+        <paper-material elevation="1">
             <p>Have some feedback? </p>
             <p>File an issue in <a href="https://github.com/Trott/musicroutes-playlist-generator">the GitHub repo</a>.</p>
-            <P>Or <a href="mailto:rtrott@gmail.com">send an email to rtrott@gmail.com</a>.</p>
-        </paper-shadow>
+            <p>Or <a href="mailto:rtrott@gmail.com">send an email to rtrott@gmail.com</a>.</p>
+        </paper-material>
     </footer>
 <script>
-  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-
+  (function (i, s, o, g, r, a, m) {
+    i['GoogleAnalyticsObject'] = r;
+    i[r] = i[r] || function () {
+      (i[r].q = i[r].q || []).push(arguments);
+    }, i[r].l = 1 * new Date();
+    a = s.createElement(o), m = s.getElementsByTagName(o)[0];
+    a.async = 1;
+    a.src = g;
+    m.parentNode.insertBefore(a, m);
+  }(window, document, 'script', '//www.google-analytics.com/analytics.js', 'ga'));
   ga('create', 'UA-7422407-1', 'auto');
   ga('send', 'pageview');
 </script>
 <script src="bundle.js"></script>
-</body>
-</html>
+
+
