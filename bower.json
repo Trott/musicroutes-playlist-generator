@@ -14,11 +14,11 @@
     "tests"
   ],
   "dependencies": {
-    "paper-shadow": "Polymer/paper-shadow#~0.5.4",
-    "paper-spinner": "Polymer/paper-spinner#~0.5.4",
-    "paper-fab": "Polymer/paper-fab#~0.5.4",
-    "paper-button": "Polymer/paper-button#~0.5.4",
-    "paper-input": "Polymer/paper-input#~0.5.4",
-    "polymer": "~0.5.4"
+    "iron-flex-layout": "PolymerElements/iron-flex-layout#~1.0.2",
+    "paper-fab": "PolymerElements/paper-fab#~1.0.3",
+    "paper-button": "PolymerElements/paper-button#~1.0.3",
+    "polymer": "~1.0.8",
+    "paper-spinner": "PolymerElements/paper-spinner#~1.0.2",
+    "paper-input": "PolymerElements/paper-input#~1.0.10"
   }
 }
