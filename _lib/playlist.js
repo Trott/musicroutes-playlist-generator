@@ -101,10 +101,6 @@ var setTrackDetails = function (options, details) {
     state.playlist[index].release = _.sample(state.playlist[index].releases) || '';
   }
 
-  if (index === 0) {
-    state.playlist[0].mid = state.track;
-  }
-
   return Promise.resolve(state.playlist[index]);
 };
 

@@ -1,37 +1,32 @@
 {
   "name": "polymer",
-  "version": "1.0.8",
-  "main": [
-    "polymer.html"
+  "description": "Polymer is a new type of library for the web, built on top of Web Components, and designed to leverage the evolving web platform on modern browsers.",
+  "homepage": "http://www.polymer-project.org/",
+  "keywords": [
+    "util",
+    "client",
+    "browser",
+    "web components",
+    "web-components"
   ],
-  "license": "http://polymer.github.io/LICENSE.txt",
-  "ignore": [
-    "/.*",
-    "/test/"
-  ],
-  "authors": [
-    "The Polymer Authors (http://polymer.github.io/AUTHORS.txt)"
-  ],
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/Polymer/polymer.git"
-  },
+  "author": "Polymer Authors <polymer-dev@googlegroups.com>",
+  "private": true,
   "dependencies": {
-    "webcomponentsjs": "^0.7.2"
+    "core-component-page": "Polymer/core-component-page#^0.5",
+    "webcomponentsjs": "Polymer/webcomponentsjs#^0.5"
   },
   "devDependencies": {
-    "web-component-tester": "*"
+    "tools": "Polymer/tools#master",
+    "web-component-tester": "Polymer/web-component-tester#^1.4.2"
   },
-  "private": true,
-  "homepage": "https://github.com/Polymer/polymer",
-  "_release": "1.0.8",
+  "version": "0.5.4",
+  "_release": "0.5.4",
   "_resolution": {
     "type": "version",
-    "tag": "v1.0.8",
-    "commit": "61968bc4e5db93e76306a13517014d4d3b787021"
+    "tag": "0.5.4",
+    "commit": "17f0b5d75b1ceeb4414556d44eca197f7dacbde2"
   },
   "_source": "git://github.com/Polymer/polymer.git",
-  "_target": "~1.0.8",
-  "_originalSource": "polymer",
-  "_direct": true
+  "_target": "^0.5",
+  "_originalSource": "Polymer/polymer"
 }
