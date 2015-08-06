@@ -417,7 +417,6 @@ describe('playlist', function () {
       var details = {releases: [{mid: '/live-from-east-reykjavik'}]};
 
       var expectedResults = {
-        mid: '/fhqwhagads',
         releases: [{mid: '/live-from-east-reykjavik'}],
         release: {mid: '/live-from-east-reykjavik'}
       };
