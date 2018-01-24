@@ -16,109 +16,101 @@ var nock = require('nock');
 
 describe('videos', function () {
 
-  beforeEach(function (done) {
+  beforeEach(function () {
     nock.cleanAll();
     nock.disableNetConnect();
-    done();
   });
 
   describe('embed()', function () {
-    it('should retrieve embed code', function (done) {
+    it('should retrieve embed code', function () {
       nock('https://www.googleapis.com')
         .filteringPath(/\?.*/, '')
         .get('/youtube/v3/videos')
         .reply(200, JSON.stringify({items: [{player: {embedHtml: '<iframe>Embedded!</iframe>'}}]}));
 
       var success = function (data) {
-        expect(data).to.deep.equal({items: [{embedHtml: '<iframe>Embedded!</iframe>'}]});
-        done();
+        expect(data).to.equal({items: [{embedHtml: '<iframe>Embedded!</iframe>'}]});
       };
 
-      videos.embed('JLpTCwOoa4M').then(success);
+      return videos.embed('JLpTCwOoa4M').then(success);
     });
 
-    it('should report an error if there was an error', function (done) {
+    it('should report an error if there was an error', function () {
       nock.disableNetConnect();
       var failure = function (err) {
         expect(err).to.be.not.null();
-        done();
       };
 
-      videos.embed('fhqwhagads').catch(failure);
+      return videos.embed('fhqwhagads').catch(failure);
     });
 
-    it('should return an empty items array if no items were found', function (done) {
+    it('should return an empty items array if no items were found', function () {
       nock('https://www.googleapis.com')
         .filteringPath(/\?.*$/, '')
         .get('/youtube/v3/videos')
         .reply(200, JSON.stringify({items:[]}));
 
       var success = function (data) {
-        expect(data.items).to.deep.equal([]);
-        done();
+        expect(data.items).to.equal([]);
       };
 
-      videos.embed('asdkfhaskdjfhakdjhfkajsdfh').then(success);
+      return videos.embed('asdkfhaskdjfhakdjhfkajsdfh').then(success);
     });
 
-    it('should handle a missing videoId gracefully', function (done) {
-      videos.embed().then(function (data) {
+    it('should handle a missing videoId gracefully', function () {
+      return videos.embed().then(function (data) {
         expect(data).to.be.undefined();
-        done();
       });
     });
 
-    it('should not release Zalgo', function (done) {
+    it('should not release Zalgo', function () {
       var after = false;
-      videos.embed().then(function () {
+      var promise = videos.embed().then(function () {
         expect(after).to.be.true();
-        done();
       });
       after = true;
+      return promise;
     });
   });
 
   describe('search()', function () {
-    it('should retrieve information for a video', function (done) {
+    it('should retrieve information for a video', function () {
       nock('https://www.googleapis.com')
         .filteringPath(/\?.*$/, '')
         .get('/youtube/v3/search')
         .reply(200, JSON.stringify({ items: [{ id: { videoId: 'F-QR4dY1jbQ' }}]}));
 
       var success = function (data) {
-        expect(data).to.deep.equal({items: [{videoId: 'F-QR4dY1jbQ'}]});
-        done();
+        expect(data).to.equal({items: [{videoId: 'F-QR4dY1jbQ'}]});
       };
 
-      videos.search('"The Beatles" "Strawberry Fields Forever" "Magical Mystery Tour"')
+      return videos.search('"The Beatles" "Strawberry Fields Forever" "Magical Mystery Tour"')
         .then(success);
     });
 
-    it('should report an error if there was an error', function (done) {
+    it('should report an error if there was an error', function () {
       nock.disableNetConnect();
       var failure = function (err) {
         expect(err).to.be.not.null();
-        done();
       };
 
-      videos.search('fhqwhagads').catch(failure);
+      return videos.search('fhqwhagads').catch(failure);
     });
 
-    it('should return an empty items array if no items were found', function (done) {
+    it('should return an empty items array if no items were found', function () {
       nock('https://www.googleapis.com')
         .filteringPath(/\?.*$/, '')
         .get('/youtube/v3/search')
         .reply(200, JSON.stringify({items:[]}));
 
       var success = function (data) {
-        expect(data.items).to.deep.equal([]);
-        done();
+        expect(data.items).to.equal([]);
       };
 
-      videos.search('asdkfhaskdjfhakdjhfkajsdfh').then(success);
+      return videos.search('asdkfhaskdjfhakdjhfkajsdfh').then(success);
     });
 
-    it('should return an error if HTTP response code is not 200', function (done) {
+    it('should return an error if HTTP response code is not 200', function () {
       nock('https://www.googleapis.com')
         .filteringPath(/\?.*$/, '')
         .get('/youtube/v3/search')
@@ -126,13 +118,12 @@ describe('videos', function () {
 
       var failure = function (err) {
         expect(err).to.be.not.null();
-        done();
       };
 
-      videos.search('fhqwhagads').catch(failure);
+      return videos.search('fhqwhagads').catch(failure);
     });
 
-    it('should return an error if body cannot be parsed as JSON', function (done) {
+    it('should return an error if body cannot be parsed as JSON', function () {
       nock('https://www.googleapis.com')
         .filteringPath(/\?.*$/, '')
         .get('/youtube/v3/search')
@@ -140,10 +131,9 @@ describe('videos', function () {
 
       var failure = function (err) {
         expect(err).to.be.not.null();
-        done();
       };
 
-      videos.search('fhqwhagads').catch(failure);
+      return videos.search('fhqwhagads').catch(failure);
     });
   });
 });

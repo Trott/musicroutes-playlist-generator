@@ -30,18 +30,17 @@ describe('routes', function () {
   var CharlesMingusPresentsCharlesMingus = '/m/03bc6qj';
   var revert;
 
-  beforeEach(function (done) {
+  beforeEach(function () {
     if (typeof revert === 'function') {
       revert();
       revert = null;
     }
     nock.cleanAll();
     nock.disableNetConnect();
-    done();
   });
 
   describe('getMids()', function () {
-    it('should retrieve MIDs for all artists with the supplied name when artists specified', function (done) {
+    it('should retrieve MIDs for all artists with the supplied name when artists specified', function () {
       // $lab:coverage:off$
       if (process.env.TRAVIS) {
         nock.enableNetConnect();
@@ -55,13 +54,13 @@ describe('routes', function () {
 
       var success = function (data) {
         expect(data).to.contain('/m/0160yj');
-        done();
+
       };
 
-      routes.getMids('Magma', '/music/artist').then(success);
+      return routes.getMids('Magma', '/music/artist').then(success);
     });
 
-    it('should retrieve MIDs for all tracks with the supplied name when tracks specified', function (done) {
+    it('should retrieve MIDs for all tracks with the supplied name when tracks specified', function () {
       // $lab:coverage:off$
       if (process.env.TRAVIS) {
         nock.enableNetConnect();
@@ -76,13 +75,13 @@ describe('routes', function () {
 
       var success = function (data) {
         expect(data).to.contain('/m/0lgj3t');
-        done();
+
       };
 
-      routes.getMids('Penny Lane', '/music/track').then(success);
+      return routes.getMids('Penny Lane', '/music/track').then(success);
     });
 
-    it('should retrieve only the MIDs for specified type', function (done) {
+    it('should retrieve only the MIDs for specified type', function () {
       // $lab:coverage:off$
       if (process.env.TRAVIS) {
         nock.enableNetConnect();
@@ -96,24 +95,24 @@ describe('routes', function () {
       var success = function (data) {
         expect(data).to.contain('/m/01czx');
         expect(data).to.not.contain('/m/0f2hrtz');
-        done();
+
       };
 
-      routes.getMids('Black Sabbath', '/music/artist').then(success);
+      return routes.getMids('Black Sabbath', '/music/artist').then(success);
     });
 
-    it('should return an error if there is a network error', function (done) {
+    it('should return an error if there is a network error', function () {
       var failure = function (err) {
         expect(err instanceof Error).to.be.true();
-        done();
+
       };
 
-      routes.getMids('Black Sabbath', '/music/artist').catch(failure);
+      return routes.getMids('Black Sabbath', '/music/artist').catch(failure);
     });
   });
 
   describe('getTracksWithContributors()', function () {
-    it('should retrieve tracks with any of the supplied contributors', function (done) {
+    it('should retrieve tracks with any of the supplied contributors', function () {
       // $lab:coverage:off$
       if (process.env.TRAVIS) {
         nock.enableNetConnect();
@@ -127,22 +126,22 @@ describe('routes', function () {
       var success = function (data) {
         expect(data).to.be.array();
         expect(data).to.contain(Something);
-        done();
+
       };
 
-      routes.getTracksWithContributors([PaulMcCartney], {}).then(success);
+      return routes.getTracksWithContributors([PaulMcCartney], {}).then(success);
     });
 
-    it('should return an error if there is a network error', function (done) {
+    it('should return an error if there is a network error', function () {
       var failure = function (err) {
         expect(err instanceof Error).to.be.true();
-        done();
+
       };
 
-      routes.getTracksWithContributors([PaulMcCartney], {}).catch(failure);
+      return routes.getTracksWithContributors([PaulMcCartney], {}).catch(failure);
     });
 
-    it('should return undefined for track_contributions for which there is no track', function (done) {
+    it('should return undefined for track_contributions for which there is no track', function () {
       // This should never happen but since we don't actually control what we get
       // back from Freebase, it conceivably could. There's a defensive coding check
       // in grabMid() so we have this test to get to 100% code coverage.
@@ -151,14 +150,14 @@ describe('routes', function () {
       }}});
 
       var success = function (data) {
-        expect(data).to.deep.equal([undefined]);
-        done();
+        expect(data).to.equal([undefined]);
+
       };
 
-      routes.getTracksWithContributors([PaulMcCartney], {}).then(success);
+      return routes.getTracksWithContributors([PaulMcCartney], {}).then(success);
     });
 
-    it('should run subquery to omit artists specified in options', function (done) {
+    it('should run subquery to omit artists specified in options', function () {
       // $lab:coverage:off$
       if (process.env.TRAVIS) {
         nock.enableNetConnect();
@@ -170,7 +169,7 @@ describe('routes', function () {
       // $lab:coverage:on$
       var success = function (data) {
         expect(data.indexOf(Something)).to.equal(-1);
-        done();
+
       };
 
       var omitTheBeatles = {
@@ -180,12 +179,12 @@ describe('routes', function () {
         }]
       };
 
-      routes.getTracksWithContributors([PaulMcCartney], {subquery: omitTheBeatles}).then(success);
+      return routes.getTracksWithContributors([PaulMcCartney], {subquery: omitTheBeatles}).then(success);
     });
   });
 
   describe('getTracksByArtists()', function () {
-    it('should retrieve tracks by any of the supplied artists', function (done) {
+    it('should retrieve tracks by any of the supplied artists', function () {
       // $lab:coverage:off$
       if (process.env.TRAVIS) {
         nock.enableNetConnect();
@@ -198,24 +197,24 @@ describe('routes', function () {
 
       var success = function (data) {
         expect(data).to.contain('/m/0155j9k');
-        done();
+
       };
 
-      routes.getTracksByArtists([PaulMcCartney]).then(success);
+      return routes.getTracksByArtists([PaulMcCartney]).then(success);
     });
 
-    it('should return an error if there is a network error', {}, function (done) {
+    it('should return an error if there is a network error', {}, function () {
       var failure = function (err) {
         expect(err instanceof Error).to.be.true();
-        done();
+
       };
 
-      routes.getTracksByArtists([PaulMcCartney]).catch(failure);
+      return routes.getTracksByArtists([PaulMcCartney]).catch(failure);
     });
   });
 
   describe('getArtistsAndContributorsFromTracks()', function () {
-    it('should retrieve Beatles and Brian Jones from "You Know My Name (Look Up The Number)"', function (done) {
+    it('should retrieve Beatles and Brian Jones from "You Know My Name (Look Up The Number)"', function () {
       // $lab:coverage:off$
       if (process.env.TRAVIS) {
         nock.enableNetConnect();
@@ -227,15 +226,15 @@ describe('routes', function () {
       // $lab:coverage:on$
 
       var success = function (data) {
-        expect(data.artists).to.deep.contain({mid: TheBeatles});
-        expect(data.contributors).to.deep.contain({mid: BrianJones, roles: [{name: 'Saxophone'}]});
-        done();
+        expect(data.artists).to.contain({mid: TheBeatles});
+        expect(data.contributors).to.contain({mid: BrianJones, roles: [{name: 'Saxophone'}]});
+
       };
 
-      routes.getArtistsAndContributorsFromTracks([YouKnowMyName]).then(success);
+      return routes.getArtistsAndContributorsFromTracks([YouKnowMyName]).then(success);
     });
 
-    it('should retrieve Todd Rundgren for "Afraid"', function (done) {
+    it('should retrieve Todd Rundgren for "Afraid"', function () {
       // $lab:coverage:off$
       if (process.env.TRAVIS) {
         nock.enableNetConnect();
@@ -246,14 +245,14 @@ describe('routes', function () {
       }
       // $lab:coverage:on$
       var success = function (data) {
-        expect(data.artists).to.deep.contain({mid: ToddRundgren});
-        done();
+        expect(data.artists).to.contain({mid: ToddRundgren});
+
       };
 
-      routes.getArtistsAndContributorsFromTracks([Afraid]).then(success);
+      return routes.getArtistsAndContributorsFromTracks([Afraid]).then(success);
     });
 
-    it('should retrieve Beatles, Brian Jones, and Todd Rundgren for "You Know My Name" and "Afraid"', function (done) {
+    it('should retrieve Beatles, Brian Jones, and Todd Rundgren for "You Know My Name" and "Afraid"', function () {
       // $lab:coverage:off$
       if (process.env.TRAVIS) {
         nock.enableNetConnect();
@@ -264,16 +263,16 @@ describe('routes', function () {
       }
       // $lab:coverage:on$
       var success = function (data) {
-        expect(data.artists).to.deep.contain({mid: TheBeatles});
-        expect(data.contributors).to.deep.contain({mid: BrianJones, roles: [{name: 'Saxophone'}]});
-        expect(data.artists).to.deep.contain({mid: ToddRundgren});
-        done();
+        expect(data.artists).to.contain({mid: TheBeatles});
+        expect(data.contributors).to.contain({mid: BrianJones, roles: [{name: 'Saxophone'}]});
+        expect(data.artists).to.contain({mid: ToddRundgren});
+
       };
 
-      routes.getArtistsAndContributorsFromTracks([YouKnowMyName, Afraid]).then(success);
+      return routes.getArtistsAndContributorsFromTracks([YouKnowMyName, Afraid]).then(success);
     });
 
-    it('should retrieve roles for contributors', function (done) {
+    it('should retrieve roles for contributors', function () {
       // $lab:coverage:off$
       if (process.env.TRAVIS) {
         nock.enableNetConnect();
@@ -284,37 +283,37 @@ describe('routes', function () {
       }
       // $lab:coverage:on$
       var success = function (data) {
-        expect(data.contributors).to.deep.contain({mid: BrianJones, roles: [{name: 'Saxophone'}]});
-        done();
+        expect(data.contributors).to.contain({mid: BrianJones, roles: [{name: 'Saxophone'}]});
+
       };
 
-      routes.getArtistsAndContributorsFromTracks([YouKnowMyName]).then(success);
+      return routes.getArtistsAndContributorsFromTracks([YouKnowMyName]).then(success);
     });
 
-    it('should return an error if there is a network error', function (done) {
+    it('should return an error if there is a network error', function () {
       var failure = function (err) {
         expect(err instanceof Error).to.be.true();
-        done();
+
       };
 
-      routes.getArtistsAndContributorsFromTracks([YouKnowMyName]).catch(failure);
+      return routes.getArtistsAndContributorsFromTracks([YouKnowMyName]).catch(failure);
     });
 
-    it('should handle unexpected but valid JSON gracefully', function (done) {
+    it('should handle unexpected but valid JSON gracefully', function () {
       nock('https://www.googleapis.com')
         .filteringPath(/.*/, '/')
         .get('/')
         .reply(200, '{"result": [false]}');
 
       var success = function (data) {
-        expect(data).to.deep.equal({artists:[], contributors: []});
-        done();
+        expect(data).to.equal({artists:[], contributors: []});
+
       };
 
-      routes.getArtistsAndContributorsFromTracks([YouKnowMyName]).then(success);
+      return routes.getArtistsAndContributorsFromTracks([YouKnowMyName]).then(success);
     });
 
-    it('should not return a role for artists', function (done) {
+    it('should not return a role for artists', function () {
       // $lab:coverage:off$
       if (process.env.TRAVIS) {
         nock.enableNetConnect();
@@ -330,15 +329,15 @@ describe('routes', function () {
         todd = todd[0];
         expect(todd.hasOwnProperty('roles')).to.be.false();
         expect(todd.hasOwnProperty('role')).to.be.false();
-        done();
+
       };
 
-      routes.getArtistsAndContributorsFromTracks([Afraid]).done(success);
+      return routes.getArtistsAndContributorsFromTracks([Afraid]).done(success);
     });
   });
 
   describe('fetchRoles()', function () {
-    it('should retrieve a role for a contributor', function (done) {
+    it('should retrieve a role for a contributor', function () {
       // $lab:coverage:off$
       if (process.env.TRAVIS) {
         nock.enableNetConnect();
@@ -350,23 +349,23 @@ describe('routes', function () {
       // $lab:coverage:on$
 
       var success = function (data) {
-        expect(data.roles).to.deep.equal([{name: 'Saxophone'}]);
-        done();
+        expect(data.roles).to.equal([{name: 'Saxophone'}]);
+
       };
 
-      routes.fetchRoles(BrianJones, YouKnowMyName).done(success);
+      return routes.fetchRoles(BrianJones, YouKnowMyName).done(success);
     });
 
-    it('should reject with an error if callback is given an error', function (done) {
+    it('should reject with an error if callback is given an error', function () {
       var failure = function (err) {
         expect(err instanceof Error).to.be.true();
-        done();
+
       };
 
-      routes.fetchRoles(BrianJones, YouKnowMyName).done(null, failure);
+      return routes.fetchRoles(BrianJones, YouKnowMyName).done(null, failure);
     });
 
-    it('should de-duplicate values', function (done) {
+    it('should de-duplicate values', function () {
       // $lab:coverage:off$
       if (process.env.TRAVIS) {
         nock.enableNetConnect();
@@ -377,17 +376,17 @@ describe('routes', function () {
       }
       // $lab:coverage:on$
       var success = function (data) {
-        expect(data.roles).to.deep.equal([{name: 'Piano'}]);
-        done();
+        expect(data.roles).to.equal([{name: 'Piano'}]);
+
       };
 
       // This one has Vince Guaraldi on piano multiple times.
-      routes.fetchRoles('/m/0blhx', '/m/0dsz0t3').done(success);
+      return routes.fetchRoles('/m/0blhx', '/m/0dsz0t3').done(success);
     });
   });
 
   describe('getArtistDetails()', function () {
-    it('should return the artist name', function (done) {
+    it('should return the artist name', function () {
       // $lab:coverage:off$
       if (process.env.TRAVIS) {
         nock.enableNetConnect();
@@ -400,22 +399,22 @@ describe('routes', function () {
 
       var success = function (data) {
         expect(data.name).to.equal('Bob Dylan');
-        done();
+
       };
 
-      routes.getArtistDetails('/m/01vrncs').then(success);
+      return routes.getArtistDetails('/m/01vrncs').then(success);
     });
 
-    it('should return an error if there is a network error', function (done) {
+    it('should return an error if there is a network error', function () {
       var failure = function (err) {
         expect(err instanceof Error).to.be.true();
-        done();
+
       };
 
-      routes.getArtistDetails(BobDylan).catch(failure);
+      return routes.getArtistDetails(BobDylan).catch(failure);
     });
 
-    it('should return undefined if data from MQL query is, somehow, null', function (done) {
+    it('should return undefined if data from MQL query is, somehow, null', function () {
       // Should never happen, but you know, defensive programming and all that.
       revert = routes.__set__({freebase: {mqlread: function (query, options, callback) {
         callback(null, null);
@@ -423,15 +422,15 @@ describe('routes', function () {
 
       var success = function (data) {
         expect(data).to.be.undefined();
-        done();
+
       };
 
-      routes.getArtistDetails(BobDylan).then(success);
+      return routes.getArtistDetails(BobDylan).then(success);
     });
   });
 
   describe('getTrackDetails()', function () {
-    it('should return the track name, artist, and release', function (done) {
+    it('should return the track name, artist, and release', function () {
       // $lab:coverage:off$
       if (process.env.TRAVIS) {
         nock.enableNetConnect();
@@ -450,30 +449,30 @@ describe('routes', function () {
 
       var success = function (data) {
         expect(data.name).to.equal('Original Faubus Fables');
-        expect(data.artists).to.deep.equal([{
+        expect(data.artists).to.equal([{
           name: 'Charles Mingus',
           mid: CharlesMingus
         }]);
-        expect(data.releases).to.deep.contain({
+        expect(data.releases).to.contain({
           name: 'Charles Mingus Presents Charles Mingus',
           mid: CharlesMingusPresentsCharlesMingus
         });
-        done();
+
       };
 
-      routes.getTrackDetails(OriginalFaubusFables).then(success);
+      return routes.getTrackDetails(OriginalFaubusFables).then(success);
     });
 
-    it('should return an error if there is a network error', function (done) {
+    it('should return an error if there is a network error', function () {
       var failure = function (err) {
         expect(err instanceof Error).to.be.true();
-        done();
+
       };
 
-      routes.getTrackDetails(OriginalFaubusFables).catch(failure);
+      return routes.getTrackDetails(OriginalFaubusFables).catch(failure);
     });
 
-    it('should return null if data from MQL query is, somehow, null', function (done) {
+    it('should return null if data from MQL query is, somehow, null', function () {
       // Should never happen, but you know, defensive programming and all that.
       revert = routes.__set__({freebase: {mqlread: function (query, options, callback) {
         callback(null, null);
@@ -481,10 +480,10 @@ describe('routes', function () {
 
       var success = function (data) {
         expect(data).to.be.null();
-        done();
+
       };
 
-      routes.getTrackDetails(OriginalFaubusFables).then(success);
+      return routes.getTrackDetails(OriginalFaubusFables).then(success);
     });
   });
 });
