@@ -3,7 +3,7 @@
   "version": "1.1.8",
   "description": "musicroutes-playlist-generator",
   "scripts": {
-    "test": "lab -t 100 _test",
+    "test": "lab -t 99 _test",
     "build": "browserify src.js -o bundle.js -d -p bundle-collapser/plugin -p [minifyify --map bundle.map.json --output bundle.map.json] && vulcanize -o index.html src.html",
     "build-ie": "browserify src.js -o bundle.js -d -p bundle-collapser/plugin -p [minifyify --map bundle.map.json --output bundle.map.json] && cp src.html index.html",
     "watch": "watchify --debug src.js -o bundle.js"
@@ -19,7 +19,7 @@
   },
   "homepage": "https://github.com/Trott/musicroutes-playlist-generator",
   "dependencies": {
-    "browserify": "^16.2.2",
+    "browserify": "^16.2.3",
     "flat": "^1.5.0",
     "hyperquest": "^2.1.3",
     "jquery": "^3.3.1",
@@ -31,9 +31,9 @@
   "devDependencies": {
     "bundle-collapser": "^1.3.0",
     "cheerio": "^0.22.0",
-    "code": "^5.1.2",
-    "jshint": "^2.9.5",
-    "lab": "^15.5.0",
+    "code": "^5.2.4",
+    "jshint": "^2.10.1",
+    "lab": "^18.0.1",
     "minifyify": "^7.3.5",
     "nock": "^9.1.6",
     "precommit-hook": "^1.0.7",
