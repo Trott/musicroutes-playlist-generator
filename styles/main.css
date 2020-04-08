@@ -23,21 +23,10 @@ main {
   display: block;
 }
 
-form {
-  margin: 2em;
-  padding: 2em;
-}
-
 input {
   color: inherit;
   font: inherit;
   margin: 0;
-}
-
-button::-moz-focus-inner,
-input::-moz-focus-inner {
-  border: 0;
-  padding: 0;
 }
 
 input {
@@ -264,10 +253,6 @@ main, footer {
   /* Height of the header */
   padding: 16px;
   min-height: 100%;
-}
-
-p {
-  padding: 0 1em;
 }
 
 @media all and (min-width: 990px) {
