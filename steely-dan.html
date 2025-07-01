@@ -2,13 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta name="description" content="Create a playlist of songs with common musicians. Like Six Degrees of Kevin Bacon but for music. Sort of.">
+    <meta name="description" content="Like Six Degrees of Kevin Bacon but for music. Sort of.">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Music Routes Playlist Generator</title>
+    <title>Six Degrees of Steely Dan</title>
     <link rel="stylesheet" href="styles/main.css">
 
-    <meta property="og:title" content="Music Routes Playlist Generator" />
-    <meta property="og:site_name" content="Music Routes" />
+    <meta property="og:title" content="Six Degrees of Steely Dan" />
+    <meta property="og:site_name" content="Six Degrees of Steely Dan" />
     <meta property="og:image" content="http://musicroutes.com/images/og.png" />
     <meta property="fb:app_id" content="147311265342826" />
 </head>
@@ -16,16 +16,17 @@
     <header class="app-bar promote-layer">
         <a class="github-ribbon" href="https://github.com/Trott/musicroutes-playlist-generator"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/a6677b08c955af8400f44c6298f40e7d19cc5b2d/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f677261795f3664366436642e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png"></a>
       <div class="app-bar-container">
-        <h1 class="logo"><a href="//musicroutes.com"><img src="images/logo.png" alt="Music Routes"></a> Playlist Generator</h1>
+        <h1 class="logo"><a href="//musicroutes.com"><img src="images/logo.png" alt="Music Routes"></a> Six Degrees of Steely Dan</h1>
       </div>
     </header>
     <main>
-        <p>Enter the names of two musicians to connect.</p>
+        <p>Enter the name of a musician to connect to Steely Dan.</p>
         <form action="https://music-routing-cs8hu4cfc-rich-trotts-projects.vercel.app/go">
-            <div><label>Start point:</label></div><input autofocus="" name="start">
-            <div><label>End point:</label></div><input name="end">
+            <div><label>Musician:</label></div><input autofocus="" name="start">
+            <input id="end" type="hidden" name="end" value="">
             <div><input type="submit"></div>
         </form>
     </main>
+    <script>document.getElementById("end").value = Math.random() < 0.5 ? "Walter Becker" : "Donald Fagen";</script>
 </body>
 </html>
